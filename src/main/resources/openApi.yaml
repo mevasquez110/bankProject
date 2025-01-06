@@ -1,0 +1,446 @@
+openapi: 3.0.0
+info:
+  title: NTTData Bank API
+  description: API for managing bank accounts, credits, credit cards, customers, and transactions.
+  version: 1.0.0
+paths:
+  /accounts/savings:
+    post:
+      summary: Create a savings account
+      operationId: createSavingsAccount
+      requestBody:
+        description: Account request data for savings account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '200':
+          description: Savings account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/current:
+    post:
+      summary: Create a current account
+      operationId: createCurrentAccount
+      requestBody:
+        description: Account request data for current account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '200':
+          description: Current account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/fixed-term:
+    post:
+      summary: Create a fixed-term account
+      operationId: createFixedTermAccount
+      requestBody:
+        description: Account request data for fixed-term account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '200':
+          description: Fixed-term account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/balance/{accountId}:
+    get:
+      summary: Get balance of an account
+      operationId: checkBalance
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Balance retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+
+  /credits/personal:
+    post:
+      summary: Grant personal credit
+      operationId: grantPersonalCredit
+      requestBody:
+        description: Credit request data for personal credit
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditRequest'
+      responses:
+        '200':
+          description: Personal credit granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditResponse'
+
+  /credits/business:
+    post:
+      summary: Grant business credit
+      operationId: grantBusinessCredit
+      requestBody:
+        description: Credit request data for business credit
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditRequest'
+      responses:
+        '200':
+          description: Business credit granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditResponse'
+
+  /credits/debt/{creditId}:
+    get:
+      summary: Get debt details for a credit
+      operationId: checkDebt
+      parameters:
+        - in: path
+          name: creditId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Debt details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtResponse'
+
+  /credit-cards/request:
+    post:
+      summary: Request a credit card
+      operationId: requestCreditCard
+      requestBody:
+        description: Credit card request data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '200':
+          description: Credit card requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+
+  /credit-cards/charge:
+    post:
+      summary: Charge a consumption to a credit card
+      operationId: chargeConsumption
+      requestBody:
+        description: Transaction data for charging consumption
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Consumption charged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /credit-cards/{creditCardId}:
+    get:
+      summary: Get debt details for a credit card
+      operationId: checkCreditCardDebt
+      parameters:
+        - in: path
+          name: creditCardId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Credit card debt details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtResponse'
+
+  /customers/personal:
+    post:
+      summary: Register a personal customer
+      operationId: registerCustomer
+      requestBody:
+        description: Customer data for registration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        '200':
+          description: Customer registered
+
+  /customers/{customerId}:
+    get:
+      summary: Get customer details by ID
+      operationId: getCustomerById
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /transactions/deposit:
+    post:
+      summary: Make a deposit
+      operationId: makeDeposit
+      requestBody:
+        description: Deposit transaction data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Deposit made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/withdraw:
+    post:
+      summary: Make a withdrawal
+      operationId: makeWithdrawal
+      requestBody:
+        description: Withdrawal transaction data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Withdrawal made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/pay-installment:
+    post:
+      summary: Pay an installment
+      operationId: payInstallment
+      requestBody:
+        description: Installment payment transaction data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Installment paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/{accountId}:
+    get:
+      summary: Get transactions for an account
+      operationId: checkTransactions
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Transactions retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+components:
+  schemas:
+    AccountRequest:
+      type: object
+      properties:
+        accountId:
+          type: integer
+        customerId:
+          type: array
+          items:
+            type: integer
+        authorizedSignatory:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizedSignatory'
+
+    AccountResponse:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+        monthlyTransactionLimit:
+          type: integer
+        maintenanceCommission:
+          type: number
+          format: float
+        withdrawalDepositDate:
+          type: string
+          format: date
+
+    BalanceResponse:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+        amount:
+          type: number
+          format: float
+
+    CreditRequest:
+      type: object
+      properties:
+        creditId:
+          type: integer
+        customerId:
+          type: integer
+        amount:
+          type: number
+          format: float
+
+    CreditResponse:
+      type: object
+      properties:
+        creditId:
+          type: integer
+        amount:
+          type: number
+          format: float
+        interestRate:
+          type: number
+          format: float
+        numberOfInstallments:
+          type: integer
+        installmentAmount:
+          type: number
+          format: float
+        paymentDay:
+          type: integer
+
+    DebtResponse:
+      type: object
+      properties:
+        creditNumber:
+          type: string
+        creditId:
+          type: integer
+        totalDebt:
+          type: number
+          format: float
+        share:
+          type: number
+          format: float
+
+    Transaction:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+        accountNumber:
+          type: string
+        creditCardNumber:
+          type: string
+        creditId:
+          type: integer
+        amount:
+          type: number
+          format: float
+        transactionDate:
+          type: string
+          format: date
+        transactionType:
+          type: string
+
+    AuthorizedSignatory:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        phoneNumber:
+          type: string
+        documentNumber:
+          type: string
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        phoneNumber:
+          type: string
+        documentNumber:
+          type: string
+        personType:
+          type: string
+
+    CreditCardRequest:
+      type: object
+      properties:
+        creditId:
+          type: integer
+        customerId:
+          type: integer
+
+    CreditCardResponse:
+      type: object
+      properties:
+        creditId:
+          type: integer
+        amount:
+          type: number
+          format: float
+        interestRate:
+          type: number
+          format: float
+        paymentDay:
+          type: integer
