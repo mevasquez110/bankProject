@@ -8,6 +8,7 @@ import lombok.Data;
 public class CreditDebtResponse {
 
     private String creditId;
+    private Double availableAmount;
 	private Double totalDebt;
 	private Double share;
 

@@ -6,13 +6,13 @@ import com.nttdata.bank.controller.CreditCardsAPI;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
-import com.nttdata.bank.service.CreditCardsService;
+import com.nttdata.bank.service.CreditCardService;
 
 @RestController
 public class CreditCardsController implements CreditCardsAPI {
 
 	@Autowired
-	CreditCardsService creditCardsService;
+	CreditCardService creditCardsService;
 
 	@Override
 	public ApiResponse<CreditCardResponse> requestCreditCard(String customerId) {

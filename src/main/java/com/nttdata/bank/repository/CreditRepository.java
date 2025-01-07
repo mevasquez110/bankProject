@@ -5,4 +5,6 @@ import com.nttdata.bank.entity.CreditEntity;
 
 public interface CreditRepository extends MongoRepository<CreditEntity, String> {
 
+	boolean existsByCustomerIdAndStatus(String customerId, String status);
+
 }
