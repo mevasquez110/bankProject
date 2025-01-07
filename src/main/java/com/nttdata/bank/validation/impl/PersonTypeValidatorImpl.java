@@ -3,6 +3,7 @@ package com.nttdata.bank.validation.impl;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import com.nttdata.bank.request.CustomerRequest;
+import com.nttdata.bank.util.Constants;
 import com.nttdata.bank.validation.PersonTypeValidator;
 
 public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeValidator, CustomerRequest> {
@@ -15,9 +16,9 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 
 		boolean isValid = true;
 
-		if ("personal".equals(customerRequest.getPersonType())) {
+		if (Constants.PERSON_TYPE_PERSONAL.equals(customerRequest.getPersonType())) {
 			isValid &= validatePersonalCustomer(customerRequest, context);
-		} else if ("empresarial".equals(customerRequest.getPersonType())) {
+		} else if (Constants.PERSON_TYPE_BUSINESS.equals(customerRequest.getPersonType())) {
 			isValid &= validateBusinessCustomer(customerRequest, context);
 		} else {
 			addViolation(context, "Person type must be 'personal' or 'empresarial'", "personType");
@@ -30,15 +31,15 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 	private boolean validatePersonalCustomer(CustomerRequest customerRequest, ConstraintValidatorContext context) {
 		boolean isValid = true;
 
-		if (!"CE".equals(customerRequest.getDocumentType()) && !"DNI".equals(customerRequest.getDocumentType())) {
+		if (!Constants.DOCUMENT_TYPE_CE.equals(customerRequest.getDocumentType()) && !Constants.DOCUMENT_TYPE_DNI.equals(customerRequest.getDocumentType())) {
 			addViolation(context, "Document type must be 'CE' or 'DNI' for personal person type", "documentType");
 			isValid = false;
 		}
-		if ("DNI".equals(customerRequest.getDocumentType()) && customerRequest.getDocumentNumber().length() != 8) {
+		if (Constants.DOCUMENT_TYPE_DNI.equals(customerRequest.getDocumentType()) && customerRequest.getDocumentNumber().length() != 8) {
 			addViolation(context, "Document number must have 8 digits for DNI", "documentNumber");
 			isValid = false;
 		}
-		if ("CE".equals(customerRequest.getDocumentType()) && customerRequest.getDocumentNumber().length() > 20) {
+		if (Constants.DOCUMENT_TYPE_CE.equals(customerRequest.getDocumentType()) && customerRequest.getDocumentNumber().length() > 20) {
 			addViolation(context, "Document number must have up to 20 digits for CE", "documentNumber");
 			isValid = false;
 		}
@@ -53,7 +54,7 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 	private boolean validateBusinessCustomer(CustomerRequest customerRequest, ConstraintValidatorContext context) {
 		boolean isValid = true;
 
-		if (!"RUC".equals(customerRequest.getDocumentType())) {
+		if (!Constants.DOCUMENT_TYPE_RUC.equals(customerRequest.getDocumentType())) {
 			addViolation(context, "Document type must be 'RUC' for empresarial person type", "documentType");
 			isValid = false;
 		}

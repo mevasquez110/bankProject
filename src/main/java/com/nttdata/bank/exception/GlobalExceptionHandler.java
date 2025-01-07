@@ -5,8 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.support.WebExchangeBindException;
-
-import com.mongodb.DuplicateKeyException;
 import com.nttdata.bank.response.ApiResponse;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +32,6 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception ex) {
-		System.out.println("Tipo de excepción: " + ex.getClass().getName());
 		ApiResponse<Object> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		response.setMessage("An unexpected error occurred");

@@ -26,19 +26,8 @@ public class CustomerController implements CustomersAPI {
 	}
 
 	@Override
-	public ApiResponse<CustomerResponse> getCustomerById(String customerId) {
-		ApiResponse<CustomerResponse> response = new ApiResponse<>();
-		CustomerResponse customerResponse = customerService.getCustomerById(customerId);
-
-		if (customerResponse != null) {
-			response.setStatusCode(HttpStatus.OK.value());
-			response.setMessage("Customer retrieved successfully");
-			response.setData(customerResponse);
-		} else {
-			response.setStatusCode(HttpStatus.NOT_FOUND.value());
-			response.setMessage("Customer not found");
-		}
-
-		return response;
+	public ApiResponse<CustomerResponse> getCustomerByDocumentNumber(String documentNumber) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

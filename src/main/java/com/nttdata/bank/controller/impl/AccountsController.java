@@ -1,6 +1,7 @@
 package com.nttdata.bank.controller.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.AccountsAPI;
 import com.nttdata.bank.request.AccountRequest;
@@ -16,25 +17,17 @@ public class AccountsController implements AccountsAPI {
 	AccountsService accountService;
 
 	@Override
-	public ApiResponse<AccountResponse> createSavingsAccount(AccountRequest accountRequest) {
-		// TODO Auto-generated method stub
-		return null;
+	public ApiResponse<AccountResponse> createAccount(AccountRequest accountRequest) {
+		ApiResponse<AccountResponse> response = new ApiResponse<>();
+		AccountResponse accountResponse = accountService.registerAccount(accountRequest);
+		response.setStatusCode(HttpStatus.CREATED.value());
+		response.setMessage("Account createded successfully");
+		response.setData(accountResponse);
+		return response;
 	}
 
 	@Override
-	public ApiResponse<AccountResponse> createCurrentAccount(AccountRequest accountRequest) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ApiResponse<AccountResponse> createFixedTermAccount(AccountRequest accountRequest) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ApiResponse<BalanceResponse> checkBalance(Integer accountId) {
+	public ApiResponse<BalanceResponse> checkBalance(String accountNumber) {
 		// TODO Auto-generated method stub
 		return null;
 	}

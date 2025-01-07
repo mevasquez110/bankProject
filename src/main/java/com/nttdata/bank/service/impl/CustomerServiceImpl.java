@@ -16,20 +16,13 @@ public class CustomerServiceImpl implements CustomerService {
 	private CustomerRepository customerRepository;
 
 	public CustomerResponse registerCustomer(CustomerRequest customerRequest) {
+		if (customerRepository.existsByDocumentNumber(customerRequest.getDocumentNumber())) {
+			throw new IllegalArgumentException("The document is already registered");
+		}
+
 		CustomerResponse customerResponse = new CustomerResponse();
 		CustomerEntity customerEntity = CustomerMapper.mapperToEntity(customerRequest);
 		customerEntity = customerRepository.save(customerEntity);
-		
-		if (customerEntity != null) {
-			customerResponse = CustomerMapper.mapperToResponse(customerEntity);
-		}
-		
-		return customerResponse;
-	}
-
-	public CustomerResponse getCustomerById(String customerId) {
-		CustomerResponse customerResponse = new CustomerResponse();
-		CustomerEntity customerEntity = customerRepository.findById(customerId).orElse(null);
 
 		if (customerEntity != null) {
 			customerResponse = CustomerMapper.mapperToResponse(customerEntity);
@@ -37,4 +30,15 @@ public class CustomerServiceImpl implements CustomerService {
 
 		return customerResponse;
 	}
+
+	public CustomerResponse getCustomerByDocumentNumber(String documentNumber) {
+		CustomerEntity customerEntity = customerRepository.findByDocumentNumber(documentNumber);
+		
+		if (customerEntity == null) {
+			throw new IllegalArgumentException("Customer not found with document number: " + documentNumber);
+		}
+		
+		return CustomerMapper.mapperToResponse(customerEntity);
+	}
+
 }

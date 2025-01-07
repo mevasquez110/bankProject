@@ -4,8 +4,9 @@ import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 
 public interface CustomerService {
-	
+
 	CustomerResponse registerCustomer(CustomerRequest customer);
-	
-	CustomerResponse getCustomerById(String customerId);
+
+	CustomerResponse getCustomerByDocumentNumber(String documentNumber);
+
 }
