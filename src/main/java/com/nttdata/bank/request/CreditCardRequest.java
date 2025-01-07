@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class CreditCardRequest {
 
-    private int creditId;
-    private int customerId;
+    private String creditId;
+    private String customerId;
 
 }

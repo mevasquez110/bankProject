@@ -1,7 +1,7 @@
 package com.nttdata.bank.request;
 
 import java.util.List;
-import com.nttdata.bank.bean.AuthorizedSignatory;
+
 import com.nttdata.bank.validation.AccountRequestValidator;
 
 import lombok.Data;
@@ -11,6 +11,6 @@ import lombok.Data;
 public class AccountRequest {
 
 	private List<String> customerId;
-	private List<AuthorizedSignatory> authorizedSignatory;
+	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 	private String accountType;
 }

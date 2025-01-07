@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class ApiResponse<T>  {
 
 	private String message;
-    private int statusCode;
+    private Integer statusCode;
     private T data;
 }

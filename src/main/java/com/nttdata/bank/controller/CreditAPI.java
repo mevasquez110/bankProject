@@ -1,5 +1,6 @@
 package com.nttdata.bank.controller;
 
+import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,18 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditResponse;
-import com.nttdata.bank.response.DebtResponse;
+import com.nttdata.bank.response.CreditDebtResponse;
 
 @RestController
 @RequestMapping("/credits")
 public interface CreditAPI {
 
-	@PostMapping("/personal")
-	ApiResponse<CreditResponse> grantPersonalCredit(@RequestBody CreditRequest creditRequest);
-
-	@PostMapping("/business")
-	ApiResponse<CreditResponse> grantBusinessCredit(@RequestBody CreditRequest creditRequest);
+	@PostMapping("/grant")
+	ApiResponse<CreditResponse> grantCredit(@RequestBody @Valid CreditRequest creditRequest);
 
 	@GetMapping("/debt/{creditId}")
-	ApiResponse<DebtResponse> checkDebt(@PathVariable int creditId);
+	ApiResponse<CreditDebtResponse> checkDebt(@PathVariable String creditId);
 }

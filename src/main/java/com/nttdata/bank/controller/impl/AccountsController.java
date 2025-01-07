@@ -13,7 +13,7 @@ import com.nttdata.bank.service.AccountsService;
 @RestController
 public class AccountsController implements AccountsAPI {
 
-	@Autowired 
+	@Autowired
 	AccountsService accountService;
 
 	@Override
@@ -28,8 +28,12 @@ public class AccountsController implements AccountsAPI {
 
 	@Override
 	public ApiResponse<BalanceResponse> checkBalance(String accountNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		ApiResponse<BalanceResponse> response = new ApiResponse<>();
+		BalanceResponse balanceResponse = accountService.checkBalance(accountNumber);
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Balance retrieved successfully");
+		response.setData(balanceResponse);
+		return response;
 	}
 
 }

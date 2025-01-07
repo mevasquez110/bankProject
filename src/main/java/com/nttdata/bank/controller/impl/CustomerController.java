@@ -27,7 +27,11 @@ public class CustomerController implements CustomersAPI {
 
 	@Override
 	public ApiResponse<CustomerResponse> getCustomerByDocumentNumber(String documentNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		ApiResponse<CustomerResponse> response = new ApiResponse<>();
+		CustomerResponse customerResponse = customerService.getCustomerByDocumentNumber(documentNumber);
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Customer retrieved successfully");
+		response.setData(customerResponse);
+		return response;
 	}
 }

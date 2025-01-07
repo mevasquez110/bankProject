@@ -49,28 +49,41 @@ public class AccountsServiceImpl implements AccountsService {
 	}
 
 	private void validateAccountRequest(AccountRequest accountRequest) {
+		if (accountRequest.getCustomerId() == null || accountRequest.getCustomerId().isEmpty()) {
+			throw new IllegalArgumentException("CustomerId is mandatory.");
+		}
+
+		if (accountRequest.getAuthorizedSignatory() != null
+				&& Constants.PERSON_TYPE_PERSONAL.equals(getPersonType(accountRequest.getCustomerId().get(0)))) {
+			throw new IllegalArgumentException("AuthorizedSignatory must be null for personal customers.");
+		}
+
 		for (String customerId : accountRequest.getCustomerId()) {
 			List<AccountEntity> customerAccounts = accountRepository.findByCustomerId(customerId);
+			String personType = getPersonType(customerId);
 
-			long personalAccountCount = customerAccounts.stream()
-					.filter(account -> Constants.PERSON_TYPE_PERSONAL.equals(getPersonType(customerId)))
-					.filter(account -> Constants.ACCOUNT_TYPE_SAVINGS.equals(account.getAccountType())
-							|| Constants.ACCOUNT_TYPE_CHECKING.equals(account.getAccountType())
-							|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(account.getAccountType()))
-					.count();
-
-			if (Constants.PERSON_TYPE_PERSONAL.equals(getPersonType(customerId))) {
+			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
+				if (accountRequest.getCustomerId().size() > 1) {
+					throw new IllegalArgumentException("A personal customer can only have one customer ID.");
+				}
+				long personalAccountCount = customerAccounts.stream()
+						.filter(account -> Constants.ACCOUNT_TYPE_SAVINGS.equals(account.getAccountType())
+								|| Constants.ACCOUNT_TYPE_CHECKING.equals(account.getAccountType())
+								|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(account.getAccountType()))
+						.count();
 				if (personalAccountCount > 0 && (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
 						|| Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())
 						|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType()))) {
 					throw new IllegalArgumentException("A personal customer can only have one account of each type.");
 				}
-			} else if (Constants.PERSON_TYPE_BUSINESS.equals(getPersonType(customerId))) {
+			} else if (Constants.PERSON_TYPE_BUSINESS.equals(personType)) {
 				if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
 						|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
 					throw new IllegalArgumentException(
 							"Business customers cannot have savings or fixed-term accounts.");
 				}
+			} else {
+				throw new IllegalArgumentException("Invalid person type.");
 			}
 		}
 	}
@@ -97,7 +110,7 @@ public class AccountsServiceImpl implements AccountsService {
 			accountNumber.append(Constants.ACCOUNT_TYPE_CODE_FIXED_TERM);
 			break;
 		default:
-			throw new IllegalArgumentException("Tipo de cuenta no válido");
+			throw new IllegalArgumentException("Invalid account type");
 		}
 		for (int i = 0; i < 10; i++) {
 			accountNumber.append(random.nextInt(10));
@@ -118,11 +131,11 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public BalanceResponse checkBalance(String accountNumber) {
 		AccountEntity accountEntity = accountRepository.findByAccountNumber(accountNumber);
-		
+
 		if (accountEntity == null) {
 			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
 		}
-		
+
 		BalanceResponse balanceResponse = new BalanceResponse();
 		balanceResponse.setAccountNumber(accountEntity.getAccountNumber());
 		balanceResponse.setAmount(accountEntity.getAmount());

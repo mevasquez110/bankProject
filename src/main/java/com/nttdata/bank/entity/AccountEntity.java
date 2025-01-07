@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.nttdata.bank.bean.AuthorizedSignatory;
+import com.nttdata.bank.request.AuthorizedSignatoryRequest;
 import lombok.Data;
 
 @Data
@@ -22,6 +22,6 @@ public class AccountEntity {
 	private LocalDateTime createDate;
 	private Double amount;
 	private List<String> customerId;
-	private List<AuthorizedSignatory> authorizedSignatory;
+	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 	private String accountType;
 }

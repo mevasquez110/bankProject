@@ -19,7 +19,7 @@ public interface AccountsAPI {
 	@PostMapping("/create")
 	ApiResponse<AccountResponse> createAccount(@RequestBody @Valid AccountRequest accountRequest);
 
-	@GetMapping("/balance/{accountNumber}")
+	@GetMapping("/balance")
 	ApiResponse<BalanceResponse> checkBalance(@RequestParam String accountNumber);
 
 }
