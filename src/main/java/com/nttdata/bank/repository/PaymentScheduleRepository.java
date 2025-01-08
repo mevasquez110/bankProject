@@ -12,4 +12,8 @@ public interface PaymentScheduleRepository extends MongoRepository<PaymentSchedu
 
 	List<PaymentScheduleEntity> findByCreditCardNumberAndPaymentDateBetween(String creditCardNumber,
 			LocalDate startDate, LocalDate endDate);
+
+	List<PaymentScheduleEntity> findByPaymentDateBeforeAndPaidFalse(LocalDate today);
+
+	List<PaymentScheduleEntity> findByCreditCardNumber(String creditCardId);
 }

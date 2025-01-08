@@ -1,7 +1,6 @@
 package com.nttdata.bank.service.impl;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +29,7 @@ public class CreditServiceImpl implements CreditService {
 	public CreditResponse grantCredit(CreditRequest creditRequest) {
 		boolean hasActiveCredit = creditRepository.existsByCustomerIdAndStatus(creditRequest.getCustomerId(),
 				"APPROVED");
+
 		if (hasActiveCredit) {
 			throw new RuntimeException("El cliente ya tiene un crédito activo");
 		}
@@ -37,35 +37,31 @@ public class CreditServiceImpl implements CreditService {
 		CreditEntity creditEntity = CreditMapper.mapperToEntity(creditRequest);
 		creditEntity.setStatus("APPROVED");
 		creditEntity = creditRepository.save(creditEntity);
-
 		List<PaymentScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
-
 		paymentScheduleRepository.saveAll(schedule);
 		return CreditMapper.mapperToResponse(creditEntity);
 	}
 
 	private List<PaymentScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
 		List<PaymentScheduleEntity> schedule = new ArrayList<>();
+		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
 		Double monthlyInterestRate = Utility.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
 
-		Double installmentAmount = Utility.calculateInstallmentAmount(creditEntity.getAmount(),
-				creditEntity.getAnnualInterestRate(), creditEntity.getNumberOfInstallments());
+		Double fixedInstallment = Utility.calculateInstallmentAmount(creditEntity.getAmount(), monthlyInterestRate,
+				creditEntity.getNumberOfInstallments());
 
-		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
-		Double amount = creditEntity.getAmount();
+		Double remainingPrincipal = creditEntity.getAmount();
 
 		for (int i = 1; i <= creditEntity.getNumberOfInstallments(); i++) {
 			PaymentScheduleEntity payment = new PaymentScheduleEntity();
 			payment.setPaymentDate(firstPaymentDate.plusMonths(i - 1));
-			Double interestAmount = amount * monthlyInterestRate;
-			Double principalAmount = installmentAmount - interestAmount;
-			payment.setPrincipalAmount(principalAmount);
-			payment.setInterestAmount(interestAmount);
-			payment.setTotalPayment(installmentAmount);
+			Double interestPayment = remainingPrincipal * monthlyInterestRate;
+			payment.setDebtAmount(remainingPrincipal - (fixedInstallment - interestPayment));
+			payment.setSharePayment(fixedInstallment);
 			payment.setCreditId(creditEntity.getCreditId());
 			payment.setPaid(false);
+			remainingPrincipal -= fixedInstallment - interestPayment;
 			schedule.add(payment);
-			amount -= principalAmount;
 		}
 
 		return schedule;
@@ -73,35 +69,19 @@ public class CreditServiceImpl implements CreditService {
 
 	@Override
 	public CreditDebtResponse checkDebt(String creditId) {
-		List<PaymentScheduleEntity> payments = paymentScheduleRepository.findByCreditId(creditId);
+		creditRepository.findById(creditId).orElseThrow(() -> new RuntimeException("Crédito no encontrado"));
+		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditId(creditId);
+		LocalDate today = LocalDate.now();
+		int currentMonth = today.getMonthValue();
+		int currentYear = today.getYear();
 
-		if (payments.isEmpty()) {
-			return null;
-		}
+		Double totalDebt = paymentSchedule.stream().filter(payment -> !payment.getPaid())
+				.mapToDouble(PaymentScheduleEntity::getDebtAmount).sum();
 
-		CreditEntity creditEntity = creditRepository.findById(creditId)
-				.orElseThrow(() -> new RuntimeException("Credit not found"));
-
-		double totalDebt = 0.0;
-		double share = 0.0;
-		double dailyLateInterestRate = Utility.getDailyInterestRate(creditEntity.getAnnualLateInterestRate());
-
-		LocalDate now = LocalDate.now();
-
-		for (PaymentScheduleEntity payment : payments) {
-			if (!payment.getPaid()) {
-				double lateFee = 0.0;
-
-				if (payment.getPaymentDate().isBefore(now)) {
-					long daysLate = ChronoUnit.DAYS.between(payment.getPaymentDate(), now);
-					lateFee = payment.getTotalPayment() * Math.pow((1 + dailyLateInterestRate), daysLate)
-							- payment.getTotalPayment();
-				}
-
-				totalDebt += payment.getTotalPayment() + lateFee;
-				share = payment.getTotalPayment() + lateFee;
-			}
-		}
+		Double share = paymentSchedule.stream().filter(payment -> !payment.getPaid())
+				.filter(payment -> payment.getPaymentDate().getMonthValue() == currentMonth
+						&& payment.getPaymentDate().getYear() == currentYear)
+				.mapToDouble(PaymentScheduleEntity::getSharePayment).sum();
 
 		CreditDebtResponse response = new CreditDebtResponse();
 		response.setCreditId(creditId);
@@ -109,4 +89,5 @@ public class CreditServiceImpl implements CreditService {
 		response.setShare(share);
 		return response;
 	}
+
 }

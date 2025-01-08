@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreditCardResponse {
-	
+
 	private Integer creditCardNumber;
-	private Double amount;
+	private Double availableCredit;
 	private Double annualInterestRate;
 	private Double annualLateInterestRate;
 	private Integer paymentDay;

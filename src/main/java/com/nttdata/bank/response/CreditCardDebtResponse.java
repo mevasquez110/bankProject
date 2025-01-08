@@ -10,5 +10,6 @@ public class CreditCardDebtResponse {
     private String creditCardNumber;
 	private Double totalDebt;
 	private Double share;
+	private Double availableCredit;
 
 }
