@@ -1,7 +1,9 @@
 openapi: 3.0.0
 info:
-  title: Bank API
+  title: Banking API
   version: 1.0.0
+servers:
+  - url: /api
 paths:
   /account/create:
     post:
@@ -14,28 +16,75 @@ paths:
               $ref: '#/components/schemas/AccountRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Account created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountResponse'
+                $ref: '#/components/schemas/ApiResponseAccountResponse'
   /account/balance:
     get:
       summary: Check Balance
       parameters:
-        - in: query
-          name: accountNumber
+        - name: accountNumber
+          in: query
+          required: true
           schema:
             type: string
-          required: true
-          description: Account number
       responses:
         '200':
-          description: Successful operation
+          description: Balance retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BalanceResponse'
+                $ref: '#/components/schemas/ApiResponseBalanceResponse'
+  /account/all:
+    get:
+      summary: Find All Accounts
+      responses:
+        '200':
+          description: All accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseListAccountResponse'
+  /account/update/{accountId}:
+    put:
+      summary: Update Account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '200':
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAccountResponse'
+  /account/delete/{accountId}:
+    delete:
+      summary: Delete Account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
   /credits/grant:
     post:
       summary: Grant Credit
@@ -47,27 +96,69 @@ paths:
               $ref: '#/components/schemas/CreditRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Credit granted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreditResponse'
+                $ref: '#/components/schemas/ApiResponseCreditResponse'
   /credits/debt/{creditId}:
     get:
       summary: Check Credit Debt
       parameters:
-        - in: path
-          name: creditId
+        - name: creditId
+          in: path
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Credit debt retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreditDebtResponse'
+                $ref: '#/components/schemas/ApiResponseCreditDebtResponse'
+  /credits/reprogram:
+    put:
+      summary: Update Reprogram Debt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReprogramDebtRequest'
+      responses:
+        '200':
+          description: Credit debt reprogrammed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCreditResponse'
+  /credits/all:
+    get:
+      summary: Find All Credits
+      responses:
+        '200':
+          description: All credits retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseListCreditResponse'
+  /credits/{creditId}:
+    delete:
+      summary: Delete Credit
+      parameters:
+        - name: creditId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
   /credit-cards/request:
     post:
       summary: Request Credit Card
@@ -79,30 +170,78 @@ paths:
               $ref: '#/components/schemas/CreditCardRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Credit card requested successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreditCardResponse'
+                $ref: '#/components/schemas/ApiResponseCreditCardResponse'
   /credit-cards/{creditCardId}:
     get:
       summary: Check Credit Card Debt
       parameters:
-        - in: path
-          name: creditCardId
+        - name: creditCardId
+          in: path
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Credit card debt retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreditCardDebtResponse'
+                $ref: '#/components/schemas/ApiResponseCreditCardDebtResponse'
+  /credit-cards/all:
+    get:
+      summary: Find All Credit Cards
+      responses:
+        '200':
+          description: All credit cards retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseListCreditCardResponse'
+  /credit-cards/update/{creditCardId}:
+    put:
+      summary: Update Credit Card
+      parameters:
+        - name: creditCardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '200':
+          description: Credit card updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCreditCardResponse'
+  /credit-cards/delete/{creditCardId}:
+    delete:
+      summary: Delete Credit Card
+      parameters:
+        - name: creditCardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit card deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
   /customers/register:
     post:
-      summary: Register Customer
+      summary: Create Customer
       requestBody:
         required: true
         content:
@@ -111,28 +250,75 @@ paths:
               $ref: '#/components/schemas/CustomerRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Customer registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomerResponse'
+                $ref: '#/components/schemas/ApiResponseCustomerResponse'
   /customers/search:
     get:
       summary: Get Customer by Document Number
       parameters:
-        - in: query
-          name: documentNumber
+        - name: documentNumber
+          in: query
+          required: true
           schema:
             type: string
-          required: true
-          description: Document number
       responses:
         '200':
-          description: Successful operation
+          description: Customer retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomerResponse'
+                $ref: '#/components/schemas/ApiResponseCustomerResponse'
+  /customers/all:
+    get:
+      summary: Find All Customers
+      responses:
+        '200':
+          description: All customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseListCustomerResponse'
+  /customers/update/{customerId}:
+    put:
+      summary: Update Customer
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCustomerResponse'
+  /customers/delete/{customerId}:
+    delete:
+      summary: Delete Customer
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseVoid'
   /transactions/deposit:
     post:
       summary: Make Deposit
@@ -144,11 +330,11 @@ paths:
               $ref: '#/components/schemas/TransactionRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Deposit made successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
+                $ref: '#/components/schemas/ApiResponseTransactionResponse'
   /transactions/withdraw:
     post:
       summary: Make Withdrawal
@@ -160,11 +346,11 @@ paths:
               $ref: '#/components/schemas/TransactionRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Withdrawal made successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
+                $ref: '#/components/schemas/ApiResponseTransactionResponse'
   /transactions/pay-installment:
     post:
       summary: Pay Installment
@@ -176,27 +362,27 @@ paths:
               $ref: '#/components/schemas/TransactionRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Installment paid successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
+                $ref: '#/components/schemas/ApiResponseTransactionResponse'
   /transactions/{accountId}:
     get:
       summary: Check Transactions
       parameters:
-        - in: path
-          name: accountId
+        - name: accountId
+          in: path
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Successful operation
+          description: Transactions retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
+                $ref: '#/components/schemas/ApiResponseListTransactionResponse'
   /transactions/charge:
     post:
       summary: Charge Consumption
@@ -208,11 +394,11 @@ paths:
               $ref: '#/components/schemas/TransactionRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Consumption charged successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
+                $ref: '#/components/schemas/ApiResponseTransactionResponse'
 components:
   schemas:
     AccountRequest:
@@ -228,20 +414,137 @@ components:
             $ref: '#/components/schemas/AuthorizedSignatoryRequest'
         accountType:
           type: string
-          description: Account type
+          description: Account type is mandatory
     AuthorizedSignatoryRequest:
       type: object
       properties:
         name:
           type: string
+          description: Name is mandatory
         address:
           type: string
+          description: Address is mandatory
         phoneNumber:
           type: string
+          description: Phone number must have a maximum of 9 digits and only contain digits
         documentType:
           type: string
+          description: Document type is mandatory
         documentNumber:
           type: string
+          description: Document number is mandatory
+    CreditCardRequest:
+      type: object
+      properties:
+        customerId:
+          type: string
+          description: Customer id is mandatory
+        availableCredit:
+          type: number
+          format: double
+          description: Available credit is mandatory and must be greater than zero
+        annualInterestRate:
+          type: number
+          format: double
+          description: Annual interest rate is mandatory and must be greater than zero
+        paymentDay:
+          type: integer
+          description: Payment day is mandatory and must be a positive number
+        annualLateInterestRate:
+          type: number
+          format: double
+          description: Annual late interest rate is mandatory and must be greater than zero
+    CreditRequest:
+      type: object
+      properties:
+        customerId:
+          type: string
+          description: Customer id is mandatory
+        amount:
+          type: number
+          format: double
+          description: Amount is mandatory and must be greater than zero
+        accountNumber:
+          type: string
+          description: Account number is mandatory
+        annualInterestRate:
+          type: number
+          format: double
+          description: Annual interest rate is mandatory and must be greater than zero
+        numberOfInstallments:
+          type: integer
+          description: Number of installments is mandatory and must be greater than zero
+        paymentDay:
+          type: integer
+          description: Payment day is mandatory and must be a positive number
+        annualLateInterestRate:
+          type: number
+          format: double
+          description: Annual late interest rate is mandatory and must be greater than zero
+    CustomerRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        companyName:
+          type: string
+        email:
+          type: string
+          description: Email is mandatory and must be in valid email format
+        address:
+          type: string
+          description: Address is mandatory
+        phoneNumber:
+          type: string
+          description: Phone number must have a maximum of 9 digits and only contain digits
+        documentType:
+          type: string
+          description: Document type is mandatory
+        documentNumber:
+          type: string
+          description: Document number is mandatory
+        personType:
+          type: string
+          description: Person type is mandatory
+    ReprogramDebtRequest:
+      type: object
+      properties:
+        creditId:
+          type: string
+          description: Credit id is mandatory
+        newInstallments:
+          type: integer
+          description: New installments is mandatory and must be greater than zero
+        newInterestRate:
+          type: number
+          format: double
+          description: New interest rate is mandatory and must be greater than zero
+        newLateInterestRate:
+          type: number
+          format: double
+          description: New late interest rate is mandatory and must be greater than zero
+        newNumberOfInstallments:
+          type: integer
+          description: New number of installments is mandatory and must be greater than zero
+        newPaymentDay:
+          type: integer
+          description: New payment day is mandatory and must be a positive number
+    TransactionRequest:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          description: Account number is mandatory
+        creditCardNumber:
+          type: string
+          description: Credit card number is mandatory
+        creditId:
+          type: string
+          description: Credit id is mandatory
+        amount:
+          type: number
+          format: double
+          description: Amount is mandatory and must be greater than zero
     AccountResponse:
       type: object
       properties:
@@ -258,6 +561,35 @@ components:
         createDate:
           type: string
           format: date-time
+    ApiResponseAccountResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          $ref: '#/components/schemas/AccountResponse'
+    ApiResponseBalanceResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          $ref: '#/components/schemas/BalanceResponse'
+    ApiResponseListAccountResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountResponse'
     BalanceResponse:
       type: object
       properties:
@@ -266,24 +598,82 @@ components:
         amount:
           type: number
           format: double
-    CreditRequest:
+        allowWithdrawals:
+          type: boolean
+    CreditCardDebtResponse:
       type: object
       properties:
-        customerId:
+        creditCardNumber:
           type: string
-        amount:
+        totalDebt:
           type: number
           format: double
-        accountNumber:
+        share:
+          type: number
+          format: double
+        availableCredit:
+          type: number
+          format: double
+    CreditCardResponse:
+      type: object
+      properties:
+        creditCardNumber:
           type: string
+        availableCredit:
+          type: number
+          format: double
         annualInterestRate:
           type: number
           format: double
-        numberOfInstallments:
-          type: integer
+        annualLateInterestRate:
+          type: number
+          format: double
         paymentDay:
           type: integer
-        annualLateInterestRate:
+        createDate:
+          type: string
+          format: date-time
+    ApiResponseCreditCardResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          $ref: '#/components/schemas/CreditCardResponse'
+    ApiResponseCreditCardDebtResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          $ref: '#/components/schemas/CreditCardDebtResponse'
+    ApiResponseListCreditCardResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditCardResponse'
+    CreditDebtResponse:
+      type: object
+      properties:
+        creditId:
+          type: string
+        availableAmount:
+          type: number
+          format: double
+        totalDebt:
+          type: number
+          format: double
+        share:
           type: number
           format: double
     CreditResponse:
@@ -310,85 +700,35 @@ components:
         annualLateInterestRate:
           type: number
           format: double
-    CreditDebtResponse:
+    ApiResponseCreditResponse:
       type: object
       properties:
-        creditId:
+        message:
           type: string
-        availableAmount:
-          type: number
-          format: double
-        totalDebt:
-          type: number
-          format: double
-        share:
-          type: number
-          format: double
-    CreditCardRequest:
-      type: object
-      properties:
-        customerId:
-          type: string
-        availableCredit:
-          type: number
-          format: double
-        annualInterestRate:
-          type: number
-          format: double
-        paymentDay:
+        statusCode:
           type: integer
-        annualLateInterestRate:
-          type: number
-          format: double
-    CreditCardResponse:
+        data:
+          $ref: '#/components/schemas/CreditResponse'
+    ApiResponseCreditDebtResponse:
       type: object
       properties:
-        creditCardNumber:
+        message:
           type: string
-        availableCredit:
-          type: number
-          format: double
-        annualInterestRate:
-          type: number
-          format: double
-        paymentDay:
+        statusCode:
           type: integer
-        createDate:
-          type: string
-          format: date
-    CreditCardDebtResponse:
+        data:
+          $ref: '#/components/schemas/CreditDebtResponse'
+    ApiResponseListCreditResponse:
       type: object
       properties:
-        creditCardNumber:
+        message:
           type: string
-        totalDebt:
-          type: number
-          format: double
-        share:
-          type: number
-          format: double
-        availableCredit:
-          type: number
-          format: double
-    CustomerRequest:
-      type: object
-      properties:
-        fullName:
-          type: string
-        companyName:
-          type: string
-        email:
-          type: string
-        address:
-          type: string
-        phoneNumber:
-          type: string
-        documentType:
-          type: string
-        documentNumber:
-          type: string
-        personType:
-          type: string
+        statusCode:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditResponse'
     CustomerResponse:
       type: object
       properties:
@@ -402,31 +742,50 @@ components:
           type: string
         address:
           type: string
-    phoneNumber:
+        phoneNumber:
           type: string
-    TransactionRequest:
+        documentNumber:
+          type: string
+        personType:
+          type: string
+    ApiResponseCustomerResponse:
       type: object
       properties:
-        accountNumber:
+        message:
           type: string
-        creditCardNumber:
+        statusCode:
+          type: integer
+        data:
+          $ref: '#/components/schemas/CustomerResponse'
+    ApiResponseListCustomerResponse:
+      type: object
+      properties:
+        message:
           type: string
-        creditId:
+        statusCode:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerResponse'
+    ApiResponseVoid:
+      type: object
+      properties:
+        message:
           type: string
-        amount:
-          type: number
-          format: double
+        statusCode:
+          type: integer
     TransactionResponse:
       type: object
       properties:
         transactionId:
-          type: integer
+          type: string
         accountNumber:
           type: string
         creditCardNumber:
           type: string
         creditId:
-          type: integer
+          type: string
         amount:
           type: number
           format: double
@@ -435,7 +794,7 @@ components:
           format: date-time
         transactionType:
           type: string
-    ApiResponse:
+    ApiResponseTransactionResponse:
       type: object
       properties:
         message:
@@ -443,6 +802,15 @@ components:
         statusCode:
           type: integer
         data:
-          type: object
-          additionalProperties: true
- 
+          $ref: '#/components/schemas/TransactionResponse'
+    ApiResponseListTransactionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'

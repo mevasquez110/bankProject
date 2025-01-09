@@ -6,7 +6,13 @@ import com.nttdata.bank.response.AccountResponse;
 
 public class AccountMapper {
 
-	public static AccountEntity mapperToEntity(AccountRequest accountRequest) {
+    /**
+     * Maps an AccountRequest object to an AccountEntity object.
+     *
+     * @param accountRequest The account request to map
+     * @return The mapped account entity
+     */
+    public static AccountEntity mapperToEntity(AccountRequest accountRequest) {
         AccountEntity accountEntity = new AccountEntity();
 
         if (accountRequest != null) {
@@ -18,6 +24,12 @@ public class AccountMapper {
         return accountEntity;
     }
 
+    /**
+     * Maps an AccountEntity object to an AccountResponse object.
+     *
+     * @param accountEntity The account entity to map
+     * @return The mapped account response
+     */
     public static AccountResponse mapperToResponse(AccountEntity accountEntity) {
         AccountResponse accountResponse = new AccountResponse();
 

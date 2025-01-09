@@ -6,5 +6,5 @@ import com.nttdata.bank.entity.TransactionEntity;
 
 public interface TransactionRepository extends MongoRepository<TransactionEntity, String> {
 
-    List<TransactionEntity> findByAccountNumber(String accountNumber);
+	List<TransactionEntity> findByAccountNumberAndIsActiveTrue(String accountNumber);
 }

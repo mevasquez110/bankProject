@@ -6,6 +6,12 @@ import com.nttdata.bank.response.CreditCardResponse;
 
 public class CreditCardMapper {
 
+    /**
+     * Maps a CreditCardRequest object to a CreditCardEntity object.
+     *
+     * @param creditCardRequest The credit card request to map
+     * @return The mapped credit card entity
+     */
     public static CreditCardEntity mapperToEntity(CreditCardRequest creditCardRequest) {
         CreditCardEntity creditCardEntity = new CreditCardEntity();
 
@@ -20,6 +26,12 @@ public class CreditCardMapper {
         return creditCardEntity;
     }
 
+    /**
+     * Maps a CreditCardEntity object to a CreditCardResponse object.
+     *
+     * @param creditCardEntity The credit card entity to map
+     * @return The mapped credit card response
+     */
     public static CreditCardResponse mapperToResponse(CreditCardEntity creditCardEntity) {
         CreditCardResponse creditCardResponse = new CreditCardResponse();
 

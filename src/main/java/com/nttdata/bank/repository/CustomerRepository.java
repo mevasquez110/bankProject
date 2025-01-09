@@ -9,11 +9,11 @@ import com.nttdata.bank.entity.CustomerEntity;
 @Repository
 public interface CustomerRepository extends MongoRepository<CustomerEntity, String> {
 
-    Boolean existsActiveByDocumentNumber(String documentNumber);
+	Boolean existsByDocumentNumberAndIsActiveTrue(String documentNumber);
 
-    CustomerEntity findActiveByDocumentNumber(String documentNumber);
+	CustomerEntity findByDocumentNumberAndIsActiveTrue(String documentNumber);
 
-    List<CustomerEntity> findAllActive();
+	List<CustomerEntity> findByIsActiveTrue();
 
-    Optional<CustomerEntity> findActiveById(String customerId);
+	Optional<CustomerEntity> findByIdAndIsActiveTrue(String customerId);
 }

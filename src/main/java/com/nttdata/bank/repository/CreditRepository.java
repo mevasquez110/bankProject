@@ -7,10 +7,10 @@ import com.nttdata.bank.entity.CreditEntity;
 
 public interface CreditRepository extends MongoRepository<CreditEntity, String> {
 
-    boolean existsActiveByCustomerId(String customerId);
+	Boolean existsByCustomerIdAndIsActiveTrue(String customerId);
 
-	Optional<CreditEntity> findActiveById(String creditId);
+	Optional<CreditEntity> findByCreditIdAndIsActiveTrue(String creditId);
 
-	List<CreditEntity> findAllActive();
+	List<CreditEntity> findByIsActiveTrue();
 
 }
