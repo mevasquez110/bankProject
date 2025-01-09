@@ -1,7 +1,6 @@
 package com.nttdata.bank.response;
 
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 

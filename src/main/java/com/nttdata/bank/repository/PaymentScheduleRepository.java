@@ -2,7 +2,6 @@ package com.nttdata.bank.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import com.nttdata.bank.entity.PaymentScheduleEntity;
-
 import java.time.LocalDate;
 import java.util.List;
 

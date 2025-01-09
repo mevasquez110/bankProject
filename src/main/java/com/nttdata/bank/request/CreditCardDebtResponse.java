@@ -8,10 +8,10 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreditCardDebtResponse {
 
-	@NotNull(message = "CreditCardNumber is mandatory")
+	@NotNull(message = "Credit card number is mandatory")
     private String creditCardNumber;
 	
-	@NotNull(message = "TotalDebt is mandatory")
+	@NotNull(message = "Total debt is mandatory")
 	private Double totalDebt;
 	
 	@NotNull(message = "Share is mandatory")

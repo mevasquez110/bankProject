@@ -10,7 +10,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "credits")
 public class CreditEntity {
-
+	
 	@Id
 	private String creditId;
 	private String customerId;

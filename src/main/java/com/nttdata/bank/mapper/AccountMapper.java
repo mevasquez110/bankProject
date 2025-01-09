@@ -7,7 +7,7 @@ import com.nttdata.bank.response.AccountResponse;
 
 public class AccountMapper {
 
-    public static AccountEntity mapperToEntity(AccountRequest accountRequest) {
+	public static AccountEntity mapperToEntity(AccountRequest accountRequest) {
         AccountEntity accountEntity = new AccountEntity();
 
         if (accountRequest != null) {

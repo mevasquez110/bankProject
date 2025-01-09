@@ -1,6 +1,7 @@
 package com.nttdata.bank.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,17 +17,17 @@ import com.nttdata.bank.response.TransactionResponse;
 public interface TransactionAPI {
 
 	@PostMapping("/deposit")
-	ApiResponse<TransactionResponse> makeDeposit(@RequestBody TransactionRequest transaction);
+	ApiResponse<TransactionResponse> makeDeposit(@RequestBody @Valid TransactionRequest transaction);
 
 	@PostMapping("/withdraw")
-	ApiResponse<TransactionResponse> makeWithdrawal(@RequestBody TransactionRequest transaction);
+	ApiResponse<TransactionResponse> makeWithdrawal(@RequestBody @Valid TransactionRequest transaction);
 
 	@PostMapping("/pay-installment")
-	ApiResponse<TransactionResponse> payInstallment(@RequestBody TransactionRequest transaction);
+	ApiResponse<TransactionResponse> payInstallment(@RequestBody @Valid TransactionRequest transaction);
 
 	@GetMapping("/{accountId}")
 	ApiResponse<List<TransactionResponse>> checkTransactions(@PathVariable Integer accountId);
 
 	@PostMapping("/charge")
-	ApiResponse<TransactionResponse> chargeConsumption(@RequestBody TransactionRequest transaction);
+	ApiResponse<TransactionResponse> chargeConsumption(@RequestBody @Valid TransactionRequest transaction);
 }

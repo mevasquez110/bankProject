@@ -10,7 +10,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "payment_schedules")
 public class PaymentScheduleEntity {
-
+	
     @Id
     private String id;
     private LocalDate paymentDate;
