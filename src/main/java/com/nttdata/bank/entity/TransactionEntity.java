@@ -6,6 +6,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+/**
+ * * PaymentScheduleEntity represents the payment schedule document stored in
+ * the MongoDB collection "payment_schedules". * This class includes various
+ * attributes related to the payment schedule, such as payment date, debt
+ * amount, * share payment, credit ID, credit card number, and payment status.
+ * It uses Lombok annotations for getters and setters, * and Jackson for JSON
+ * inclusion.
+ */
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "transactions")

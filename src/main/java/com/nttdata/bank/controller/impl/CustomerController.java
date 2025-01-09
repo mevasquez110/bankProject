@@ -14,6 +14,15 @@ import com.nttdata.bank.service.CustomerService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 
+/**
+ * * CustomerController is a REST controller that implements the CustomersAPI
+ * interface. * This class handles HTTP requests related to customer operations
+ * such as registering customers, * searching customers by document number,
+ * retrieving all customers, updating customer details, * and deleting
+ * customers. It delegates the actual business logic to the appropriate service
+ * layer.
+ */
+
 @RestController
 public class CustomerController implements CustomersAPI {
 
@@ -47,11 +56,9 @@ public class CustomerController implements CustomersAPI {
 	 * Fallback method for createCustomer in case of failure.
 	 *
 	 * @param customerRequest The customer request payload
-	 * @param t               The throwable cause of the failure
 	 * @return ApiResponse containing the fallback response
 	 */
-	public ApiResponse<CustomerResponse> fallbackCreateCustomer(CustomerRequest customerRequest, Throwable t) {
-		logger.error("Fallback method triggered for createCustomer due to: {}", t.getMessage());
+	public ApiResponse<CustomerResponse> fallbackCreateCustomer(CustomerRequest customerRequest) {
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
 		response.setMessage("Service is currently unavailable. Please try again later.");

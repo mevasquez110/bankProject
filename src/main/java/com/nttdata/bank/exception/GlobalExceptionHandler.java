@@ -13,6 +13,13 @@ import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
 
+/**
+ * GlobalExceptionHandler handles exceptions globally across the application.
+ * This class defines methods to handle specific exceptions and provide a
+ * consistent response structure. It uses Spring's @ControllerAdvice to apply
+ * these exception handlers to all controllers.
+ */
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 

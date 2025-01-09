@@ -6,11 +6,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+/**
+ * * CreditEntity represents the credit document stored in the MongoDB
+ * collection "credits". * This class includes various attributes related to the
+ * credit, such as the credit amount, * interest rates, payment details, and
+ * status details. It uses Lombok annotations for getters and setters, * and
+ * Jackson for JSON inclusion.
+ */
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "credits")
 public class CreditEntity {
-	
+
 	@Id
 	private String creditId;
 	private String customerId;
@@ -24,5 +32,5 @@ public class CreditEntity {
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
 	private Boolean isActive;
-	
+
 }

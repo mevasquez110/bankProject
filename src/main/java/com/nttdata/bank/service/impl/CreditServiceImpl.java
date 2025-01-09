@@ -22,6 +22,13 @@ import com.nttdata.bank.response.CreditDebtResponse;
 import com.nttdata.bank.service.CreditService;
 import com.nttdata.bank.util.Utility;
 
+/**
+ * * CreditServiceImpl is the implementation class for the CreditService
+ * interface. * This class provides the actual logic for handling credit-related
+ * operations such as granting a credit, * checking credit debt, updating
+ * reprogrammed debt, finding all credits, and deleting a credit.
+ */
+
 @Service
 public class CreditServiceImpl implements CreditService {
 
@@ -33,12 +40,6 @@ public class CreditServiceImpl implements CreditService {
 	@Autowired
 	private PaymentScheduleRepository paymentScheduleRepository;
 
-	/**
-	 * Grants a new credit.
-	 *
-	 * @param creditRequest The credit request payload
-	 * @return The credit response
-	 */
 	@Override
 	public CreditResponse grantCredit(CreditRequest creditRequest) {
 		logger.debug("Granting credit: {}", creditRequest);
@@ -60,12 +61,6 @@ public class CreditServiceImpl implements CreditService {
 		return response;
 	}
 
-	/**
-	 * Generates the payment schedule for a credit.
-	 *
-	 * @param creditEntity The credit entity
-	 * @return A list of payment schedule entities
-	 */
 	private List<PaymentScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
 		logger.debug("Generating payment schedule for credit: {}", creditEntity.getCreditId());
 		List<PaymentScheduleEntity> schedule = new ArrayList<>();
@@ -93,12 +88,6 @@ public class CreditServiceImpl implements CreditService {
 		return schedule;
 	}
 
-	/**
-	 * Checks the debt of a credit.
-	 *
-	 * @param creditId The credit ID
-	 * @return The credit debt response
-	 */
 	@Override
 	public CreditDebtResponse checkDebt(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
@@ -128,13 +117,6 @@ public class CreditServiceImpl implements CreditService {
 		return response;
 	}
 
-	/**
-	 * Generates a new payment schedule for reprogrammed debt.
-	 *
-	 * @param creditEntity   The credit entity
-	 * @param unpaidSchedule The list of unpaid payment schedules
-	 * @return A list of new payment schedule entities
-	 */
 	private List<PaymentScheduleEntity> generateNewPaymentSchedule(CreditEntity creditEntity,
 			List<PaymentScheduleEntity> unpaidSchedule) {
 		logger.debug("Generating new payment schedule for credit: {}", creditEntity.getCreditId());
@@ -162,16 +144,10 @@ public class CreditServiceImpl implements CreditService {
 		return schedule;
 	}
 
-	/**
-	 * Updates and reprograms the debt of a credit.
-	 *
-	 * @param reprogramDebtRequest The reprogram debt request payload
-	 * @return The updated credit response
-	 */
 	@Override
 	public CreditResponse updateReprogramDebt(ReprogramDebtRequest reprogramDebtRequest) {
 		logger.debug("Reprogramming debt for credit: {}", reprogramDebtRequest.getCreditId());
-		
+
 		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(reprogramDebtRequest.getCreditId())
 				.orElseThrow(() -> {
 					logger.error("Credit not found: {}", reprogramDebtRequest.getCreditId());
@@ -202,7 +178,6 @@ public class CreditServiceImpl implements CreditService {
 		if (newSchedule.size() > unpaidSchedule.size()) {
 			List<PaymentScheduleEntity> additionalPayments = newSchedule.subList(unpaidSchedule.size(),
 					newSchedule.size());
-
 			paymentScheduleRepository.saveAll(additionalPayments);
 		}
 
@@ -212,25 +187,15 @@ public class CreditServiceImpl implements CreditService {
 		return response;
 	}
 
-	/**
-	 * Finds all credits.
-	 *
-	 * @return A list of credit responses
-	 */
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");
-		List<CreditResponse> credits = creditRepository.findByIsActiveTrue().stream().map(CreditMapper::mapperToResponse)
-				.collect(Collectors.toList());
+		List<CreditResponse> credits = creditRepository.findByIsActiveTrue().stream()
+				.map(CreditMapper::mapperToResponse).collect(Collectors.toList());
 		logger.info("All credits retrieved successfully");
 		return credits;
 	}
 
-	/**
-	 * Deletes a credit.
-	 *
-	 * @param creditId The credit ID
-	 */
 	@Override
 	public void deleteCredit(String creditId) {
 		logger.debug("Deleting credit with ID: {}", creditId);

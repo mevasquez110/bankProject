@@ -13,6 +13,14 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+/**
+ * PaymentScheduleJob is a scheduled task that updates payment schedules. This
+ * class runs a scheduled job daily at midnight to check for overdue payments
+ * and updates them with overdue interest. It uses Spring's scheduling
+ * annotations and relies on repositories for accessing and updating payment
+ * schedules and credits.
+ */
+
 @Component
 public class PaymentScheduleJob {
 
@@ -32,9 +40,9 @@ public class PaymentScheduleJob {
 	public void updatePaymentSchedules() {
 		LocalDate today = LocalDate.now();
 		logger.debug("Updating payment schedules for date: {}", today);
-		List<PaymentScheduleEntity> overduePayments = paymentScheduleRepository.findByPaidFalseAndPaymentDateBefore(today);
+		List<PaymentScheduleEntity> list = paymentScheduleRepository.findByPaidFalseAndPaymentDateBefore(today);
 
-		for (PaymentScheduleEntity payment : overduePayments) {
+		for (PaymentScheduleEntity payment : list) {
 			updatePayment(payment, today);
 		}
 	}
@@ -55,7 +63,7 @@ public class PaymentScheduleJob {
 
 			payment.setDebtAmount(payment.getDebtAmount() + overdueInterest);
 			paymentScheduleRepository.save(payment);
-			logger.info("Updated payment schedule with overdue interest for payment ID: {}", payment.getId());
+			logger.info("Updated payment schedule for payment ID: {}", payment.getId());
 		});
 	}
 }

@@ -1,19 +1,53 @@
 package com.nttdata.bank.service;
 
 import java.util.List;
-
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 
+/**
+ * CustomerService provides the service layer for handling customer-related operations.
+ * This interface defines methods for creating a customer, getting customer details by document number,
+ * finding all customers, updating a customer, and deleting a customer.
+ */
+
 public interface CustomerService {
 
-	CustomerResponse createCustomer(CustomerRequest customer);
+    /**
+     * Creates a new customer.
+     *
+     * @param customer The customer request to create a new customer
+     * @return The response containing customer details
+     */
+    CustomerResponse createCustomer(CustomerRequest customer);
 
-	CustomerResponse getCustomerByDocumentNumber(String documentNumber);
+    /**
+     * Gets customer details by document number.
+     *
+     * @param documentNumber The document number to search for
+     * @return The response containing customer details
+     */
+    CustomerResponse getCustomerByDocumentNumber(String documentNumber);
 
-	List<CustomerResponse> findAllCustomers();
+    /**
+     * Finds all customers.
+     *
+     * @return A list of responses containing customer details
+     */
+    List<CustomerResponse> findAllCustomers();
 
-	CustomerResponse updateCustomer(String customerId, CustomerRequest customerRequest);
+    /**
+     * Updates an existing customer.
+     *
+     * @param customerId The ID of the customer to update
+     * @param customerRequest The customer request with updated details
+     * @return The response containing updated customer details
+     */
+    CustomerResponse updateCustomer(String customerId, CustomerRequest customerRequest);
 
-	void deleteCustomer(String customerId);
+    /**
+     * Deletes a customer.
+     *
+     * @param customerId The ID of the customer to delete
+     */
+    void deleteCustomer(String customerId);
 }

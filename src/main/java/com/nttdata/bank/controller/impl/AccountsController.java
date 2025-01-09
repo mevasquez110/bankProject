@@ -15,6 +15,14 @@ import com.nttdata.bank.service.AccountsService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 
+/**
+ * * AccountsController is a REST controller that implements the AccountsAPI
+ * interface. * This class handles HTTP requests related to account operations
+ * such as creating, * retrieving, updating, and deleting accounts, as well as
+ * checking account balance. * It delegates the actual business logic to the
+ * AccountService.
+ */
+
 @RestController
 public class AccountsController implements AccountsAPI {
 
@@ -48,11 +56,9 @@ public class AccountsController implements AccountsAPI {
 	 * Fallback method for createAccount in case of failure.
 	 *
 	 * @param accountRequest The account request payload
-	 * @param t              The throwable cause of the failure
 	 * @return ApiResponse containing the fallback response
 	 */
-	public ApiResponse<AccountResponse> fallbackCreateAccount(AccountRequest accountRequest, Throwable t) {
-		logger.error("Fallback method triggered for createAccount due to: {}", t.getMessage());
+	public ApiResponse<AccountResponse> fallbackCreateAccount(AccountRequest accountRequest) {
 		ApiResponse<AccountResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
 		response.setMessage("Service is currently unavailable. Please try again later.");

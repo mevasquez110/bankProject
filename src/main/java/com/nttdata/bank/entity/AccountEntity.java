@@ -8,6 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nttdata.bank.request.AuthorizedSignatoryRequest;
 import lombok.Data;
 
+/**
+ * * AccountEntity represents the account document stored in the MongoDB
+ * collection "accounts". * This class includes various attributes related to
+ * the bank account, such as account number, * transaction limits, commission,
+ * balance, associated customers, and status details. * It uses Lombok
+ * annotations for getters and setters, and Jackson for JSON inclusion.
+ */
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "accounts")

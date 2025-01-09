@@ -5,6 +5,14 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import lombok.Data;
 
+/**
+ * * CreditRequest is a data transfer object that represents the request payload
+ * for creating or updating a credit. * This class includes attributes such as
+ * customer ID, credit amount, account number, interest rates, * number of
+ * installments, and payment day. It uses validation annotations to enforce
+ * constraints and * Lombok annotations for getters and setters.
+ */
+
 @Data
 public class CreditRequest {
 

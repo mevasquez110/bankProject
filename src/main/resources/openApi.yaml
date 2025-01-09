@@ -415,6 +415,10 @@ components:
         accountType:
           type: string
           description: Account type is mandatory
+        openingAmount:
+          type: number
+          format: double
+          description: Opening amount is mandatory and must be greater than zero
     AuthorizedSignatoryRequest:
       type: object
       properties:
@@ -561,6 +565,9 @@ components:
         createDate:
           type: string
           format: date-time
+        amount:
+          type: number
+          format: double
     ApiResponseAccountResponse:
       type: object
       properties:

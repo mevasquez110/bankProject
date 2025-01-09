@@ -4,20 +4,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.nttdata.bank.client.TransactionClient;
 import com.nttdata.bank.entity.AccountEntity;
 import com.nttdata.bank.entity.CustomerEntity;
 import com.nttdata.bank.mapper.AccountMapper;
 import com.nttdata.bank.repository.AccountRepository;
 import com.nttdata.bank.repository.CustomerRepository;
 import com.nttdata.bank.request.AccountRequest;
+import com.nttdata.bank.request.TransactionRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
+import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.AccountsService;
 import com.nttdata.bank.util.Constants;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+/**
+ * * AccountsServiceImpl is the implementation class for the AccountsService
+ * interface. * This class provides the actual logic for handling
+ * account-related operations such as registering an account, * checking account
+ * balance, finding all accounts, updating an account, and deleting an account.
+ */
 
 @Service
 public class AccountsServiceImpl implements AccountsService {
@@ -29,6 +40,9 @@ public class AccountsServiceImpl implements AccountsService {
 
 	@Autowired
 	private CustomerRepository customerRepository;
+
+	@Autowired
+	private TransactionClient transactionClient;
 
 	/**
 	 * Registers a new account.
@@ -61,7 +75,19 @@ public class AccountsServiceImpl implements AccountsService {
 		accountEntity = accountRepository.save(accountEntity);
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
 		logger.info("Account registered successfully: {}", response);
+		TransactionResponse transactionResponse = makeDeposit(accountRequest, accountEntity);
+		accountEntity.setAmount(transactionResponse.getAmount());
+		accountEntity = accountRepository.save(accountEntity);
 		return response;
+	}
+
+	private TransactionResponse makeDeposit(AccountRequest accountRequest, AccountEntity accountEntity) {
+		TransactionRequest transactionRequest = new TransactionRequest();
+		transactionRequest.setAccountNumber(accountEntity.getAccountNumber());
+		transactionRequest.setAmount(accountRequest.getOpeningAmount());
+		TransactionResponse transactionResponse = transactionClient.makeDeposit(transactionRequest);
+		logger.info("Transaction registered successfully: {}", transactionResponse);
+		return transactionResponse;
 	}
 
 	/**
@@ -74,28 +100,31 @@ public class AccountsServiceImpl implements AccountsService {
 			throw new IllegalArgumentException("CustomerId is mandatory.");
 		}
 
-		if (accountRequest.getAuthorizedSignatory() != null
-				&& Constants.PERSON_TYPE_PERSONAL.equals(getPersonType(accountRequest.getCustomerId().get(0)))) {
-			throw new IllegalArgumentException("AuthorizedSignatory must be null for personal customers.");
-		}
+		Optional.ofNullable(accountRequest.getAuthorizedSignatory()).filter(signatory -> Constants.PERSON_TYPE_PERSONAL
+				.equals(getPersonType(accountRequest.getCustomerId().get(0)))).ifPresent(signatory -> {
+					throw new IllegalArgumentException("AuthorizedSignatory must be null.");
+				});
 
 		for (String customerId : accountRequest.getCustomerId()) {
-			List<AccountEntity> customerAccounts = accountRepository.findByCustomerIdAndIsActiveTrue(customerId);
+			List<AccountEntity> accounts = accountRepository.findByCustomerIdAndIsActiveTrue(customerId);
 			String personType = getPersonType(customerId);
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
 				if (accountRequest.getCustomerId().size() > 1) {
-					throw new IllegalArgumentException("A personal customer can only have one customer ID.");
+					throw new IllegalArgumentException("A personal customer can have only one ID.");
 				}
-				long personalAccountCount = customerAccounts.stream()
+
+				long personalAccountCount = accounts.stream()
 						.filter(account -> Constants.ACCOUNT_TYPE_SAVINGS.equals(account.getAccountType())
 								|| Constants.ACCOUNT_TYPE_CHECKING.equals(account.getAccountType())
 								|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(account.getAccountType()))
 						.count();
+
 				if (personalAccountCount > 0 && (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
 						|| Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())
 						|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType()))) {
-					throw new IllegalArgumentException("A personal customer can only have one account of each type.");
+					throw new IllegalArgumentException("A personal customer can have only one account per type.");
+
 				}
 			} else if (Constants.PERSON_TYPE_BUSINESS.equals(personType)) {
 				if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
