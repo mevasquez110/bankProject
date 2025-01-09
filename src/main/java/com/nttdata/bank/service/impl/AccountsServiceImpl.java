@@ -43,7 +43,7 @@ public class AccountsServiceImpl implements AccountsService {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(1);
 		}
-		
+
 		accountEntity.setAllowWithdrawals(true);
 		accountEntity.setCreateDate(LocalDateTime.now());
 		accountEntity.setIsActive(true);
@@ -62,7 +62,7 @@ public class AccountsServiceImpl implements AccountsService {
 		}
 
 		for (String customerId : accountRequest.getCustomerId()) {
-			List<AccountEntity> customerAccounts = accountRepository.findByCustomerIdAndIsActiveTrue(customerId);
+			List<AccountEntity> customerAccounts = accountRepository.findActiveByCustomerId(customerId);
 			String personType = getPersonType(customerId);
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
@@ -95,7 +95,7 @@ public class AccountsServiceImpl implements AccountsService {
 		String accountNumber;
 		do {
 			accountNumber = generateAccountNumber(accountType);
-		} while (accountRepository.existsByAccountNumberAndIsActiveTrue(accountNumber));
+		} while (accountRepository.existsActiveByAccountNumber(accountNumber));
 		return accountNumber;
 	}
 
@@ -122,7 +122,7 @@ public class AccountsServiceImpl implements AccountsService {
 	}
 
 	private String getPersonType(String customerId) {
-		CustomerEntity customer = customerRepository.findByIdAndIsActiveTrue(customerId).orElse(null);
+		CustomerEntity customer = customerRepository.findActiveById(customerId).orElse(null);
 
 		if (customer != null) {
 			return customer.getPersonType();
@@ -133,7 +133,7 @@ public class AccountsServiceImpl implements AccountsService {
 
 	@Override
 	public BalanceResponse checkBalance(String accountNumber) {
-		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber);
+		AccountEntity accountEntity = accountRepository.findActiveByAccountNumber(accountNumber);
 
 		if (accountEntity == null) {
 			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
@@ -148,15 +148,15 @@ public class AccountsServiceImpl implements AccountsService {
 
 	@Override
 	public List<AccountResponse> findAllAccounts() {
-		return accountRepository.findAllByIsActiveTrue().stream().map(AccountMapper::mapperToResponse)
+		return accountRepository.findAllActive().stream().map(AccountMapper::mapperToResponse)
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public AccountResponse updateAccount(String accountId) {
-		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
+		AccountEntity accountEntity = accountRepository.findActiveById(accountId)
 				.orElseThrow(() -> new RuntimeException("Account not found"));
-		
+
 		accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
 		accountEntity.setUpdateDate(LocalDateTime.now());
 		accountEntity = accountRepository.save(accountEntity);
@@ -165,11 +165,11 @@ public class AccountsServiceImpl implements AccountsService {
 
 	@Override
 	public void deleteAccount(String accountId) {
-		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
+		AccountEntity accountEntity = accountRepository.findActiveById(accountId)
 				.orElseThrow(() -> new RuntimeException("Account not found"));
-		
+
 		accountEntity.setDeleteDate(LocalDateTime.now());
-		accountEntity = accountRepository.save(accountEntity);
 		accountEntity.setIsActive(true);
+		accountEntity = accountRepository.save(accountEntity);
 	}
 }

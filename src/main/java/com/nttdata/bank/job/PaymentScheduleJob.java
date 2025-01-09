@@ -24,7 +24,7 @@ public class PaymentScheduleJob {
 	public void updatePaymentSchedules() {
 		LocalDate today = LocalDate.now();
 		List<PaymentScheduleEntity> overduePayments = paymentScheduleRepository
-				.findByPaymentDateBeforeAndPaidFalse(today);
+				.findUnpaidBeforeDate(today);
 
 		for (PaymentScheduleEntity payment : overduePayments) {
 			updatePayment(payment, today);

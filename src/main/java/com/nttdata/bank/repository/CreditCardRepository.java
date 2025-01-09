@@ -6,5 +6,7 @@ import com.nttdata.bank.entity.CreditCardEntity;
 
 public interface CreditCardRepository extends MongoRepository<CreditCardEntity, String> {
 
-	Optional<CreditCardEntity> findByCustomerId(String customerId);
+    Optional<CreditCardEntity> findActiveByCustomerId(String customerId);
+
+	Optional<CreditCardEntity> findAllActive();
 }

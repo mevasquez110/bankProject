@@ -26,4 +26,5 @@ public class CreditCardRequest {
 	@NotNull(message = "Annual late interest rate is mandatory")
 	@Positive(message = "Annual late interest rate must be greater than zero")
 	private Double annualLateInterestRate;
+	
 }

@@ -17,10 +17,10 @@ public class TransactionEntity {
 	private String creditCardNumber;
 	private String creditId;
 	private Double amount;
-	private LocalDateTime createDate;
 	private String transactionType;
 	private Integer numberOfInstallments;
 	private LocalDateTime transactionDate;
+	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
 	private Boolean isActive;

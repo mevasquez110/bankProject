@@ -19,12 +19,12 @@ public class AccountEntity {
 	private Integer monthlyTransactionLimit;
 	private Double maintenanceCommission;
 	private LocalDateTime withdrawalDepositDate;
-	private LocalDateTime createDate;
 	private Double amount;
 	private List<String> customerId;
 	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 	private String accountType;
 	private Boolean allowWithdrawals;
+	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
 	private Boolean isActive;

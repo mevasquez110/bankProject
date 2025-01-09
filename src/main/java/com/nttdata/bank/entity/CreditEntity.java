@@ -19,8 +19,8 @@ public class CreditEntity {
 	private Double annualInterestRate;
 	private Integer numberOfInstallments;
 	private Integer paymentDay;
-	private LocalDateTime createDate;
 	private Double annualLateInterestRate;
+	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
 	private Boolean isActive;

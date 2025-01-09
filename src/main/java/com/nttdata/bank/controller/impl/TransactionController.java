@@ -10,6 +10,7 @@ import com.nttdata.bank.request.TransactionRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.TransactionService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 @RestController
 public class TransactionController implements TransactionAPI {
@@ -19,6 +20,7 @@ public class TransactionController implements TransactionAPI {
 
 	@Override
 	@Transactional
+	@CircuitBreaker(name = "transactionService", fallbackMethod = "fallbackMakeDeposit")
 	public ApiResponse<TransactionResponse> makeDeposit(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeDeposit(transaction);
@@ -28,8 +30,16 @@ public class TransactionController implements TransactionAPI {
 		return response;
 	}
 
+	public ApiResponse<TransactionResponse> fallbackMakeDeposit(TransactionRequest transaction, Throwable t) {
+		ApiResponse<TransactionResponse> response = new ApiResponse<>();
+		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
+		response.setMessage("Service is currently unavailable. Please try again later.");
+		return response;
+	}
+
 	@Override
 	@Transactional
+	@CircuitBreaker(name = "transactionService", fallbackMethod = "fallbackMakeWithdrawal")
 	public ApiResponse<TransactionResponse> makeWithdrawal(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeWithdrawal(transaction);
@@ -39,8 +49,16 @@ public class TransactionController implements TransactionAPI {
 		return response;
 	}
 
+	public ApiResponse<TransactionResponse> fallbackMakeWithdrawal(TransactionRequest transaction, Throwable t) {
+		ApiResponse<TransactionResponse> response = new ApiResponse<>();
+		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
+		response.setMessage("Service is currently unavailable. Please try again later.");
+		return response;
+	}
+
 	@Override
 	@Transactional
+	@CircuitBreaker(name = "transactionService", fallbackMethod = "fallbackPayInstallment")
 	public ApiResponse<TransactionResponse> payInstallment(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.payInstallment(transaction);
@@ -50,8 +68,16 @@ public class TransactionController implements TransactionAPI {
 		return response;
 	}
 
+	public ApiResponse<TransactionResponse> fallbackPayInstallment(TransactionRequest transaction, Throwable t) {
+		ApiResponse<TransactionResponse> response = new ApiResponse<>();
+		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
+		response.setMessage("Service is currently unavailable. Please try again later.");
+		return response;
+	}
+
 	@Override
 	@Transactional
+	@CircuitBreaker(name = "transactionService")
 	public ApiResponse<List<TransactionResponse>> checkTransactions(Integer accountId) {
 		ApiResponse<List<TransactionResponse>> response = new ApiResponse<>();
 		List<TransactionResponse> transactionResponses = transactionService.checkTransactions(accountId);
@@ -63,12 +89,20 @@ public class TransactionController implements TransactionAPI {
 
 	@Override
 	@Transactional
+	@CircuitBreaker(name = "transactionService", fallbackMethod = "fallbackChargeConsumption")
 	public ApiResponse<TransactionResponse> chargeConsumption(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.chargeConsumption(transaction);
 		response.setStatusCode(HttpStatus.CREATED.value());
 		response.setMessage("Consumption charged successfully");
 		response.setData(transactionResponse);
+		return response;
+	}
+
+	public ApiResponse<TransactionResponse> fallbackChargeConsumption(TransactionRequest transaction, Throwable t) {
+		ApiResponse<TransactionResponse> response = new ApiResponse<>();
+		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
+		response.setMessage("Service is currently unavailable. Please try again later.");
 		return response;
 	}
 }

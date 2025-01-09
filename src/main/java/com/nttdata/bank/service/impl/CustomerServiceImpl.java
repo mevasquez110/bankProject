@@ -20,7 +20,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public CustomerResponse createCustomer(CustomerRequest customerRequest) {
-		if (customerRepository.existsByDocumentNumberAndIsActiveTrue(customerRequest.getDocumentNumber())) {
+		if (customerRepository.existsActiveByDocumentNumber(customerRequest.getDocumentNumber())) {
 			throw new IllegalArgumentException("The document is already registered");
 		}
 
@@ -33,7 +33,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public CustomerResponse getCustomerByDocumentNumber(String documentNumber) {
-		CustomerEntity customerEntity = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber);
+		CustomerEntity customerEntity = customerRepository.findActiveByDocumentNumber(documentNumber);
 
 		if (customerEntity == null) {
 			throw new IllegalArgumentException("Customer not found with document number: " + documentNumber);
@@ -44,13 +44,13 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public List<CustomerResponse> findAllCustomers() {
-		return customerRepository.findAllByIsActiveTrue().stream().map(CustomerMapper::mapperToResponse)
+		return customerRepository.findAllActive().stream().map(CustomerMapper::mapperToResponse)
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public CustomerResponse updateCustomer(String customerId, CustomerRequest customerRequest) {
-		CustomerEntity customerEntity = customerRepository.findByIdAndIsActiveTrue(customerId)
+		CustomerEntity customerEntity = customerRepository.findActiveById(customerId)
 				.orElseThrow(() -> new RuntimeException("Customer not found"));
 		
 		validateUpdateFields(customerRequest, customerEntity);
@@ -85,7 +85,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void deleteCustomer(String customerId) {
-		CustomerEntity customerEntity = customerRepository.findByIdAndIsActiveTrue(customerId)
+		CustomerEntity customerEntity = customerRepository.findActiveById(customerId)
 				.orElseThrow(() -> new RuntimeException("Customer not found"));
 		
 		customerEntity.setIsActive(false);

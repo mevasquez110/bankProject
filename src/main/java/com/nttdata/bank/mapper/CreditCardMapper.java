@@ -3,7 +3,6 @@ package com.nttdata.bank.mapper;
 import com.nttdata.bank.entity.CreditCardEntity;
 import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardResponse;
-import java.time.LocalDate;
 
 public class CreditCardMapper {
 
@@ -16,7 +15,6 @@ public class CreditCardMapper {
             creditCardEntity.setAnnualInterestRate(creditCardRequest.getAnnualInterestRate());
             creditCardEntity.setAnnualLateInterestRate(creditCardRequest.getAnnualLateInterestRate());
             creditCardEntity.setPaymentDay(creditCardRequest.getPaymentDay());
-            creditCardEntity.setCreateDate(LocalDate.now());
         }
 
         return creditCardEntity;

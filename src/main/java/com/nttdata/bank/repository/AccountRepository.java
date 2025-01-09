@@ -7,13 +7,13 @@ import com.nttdata.bank.entity.AccountEntity;
 
 public interface AccountRepository extends MongoRepository<AccountEntity, String> {
 
-	List<AccountEntity> findByCustomerIdAndIsActiveTrue(String customerId);
+	List<AccountEntity> findActiveByCustomerId(String customerId);
 
-	Boolean existsByAccountNumberAndIsActiveTrue(String accountNumber);
+	Boolean existsActiveByAccountNumber(String accountNumber);
 
-	AccountEntity findByAccountNumberAndIsActiveTrue(String accountNumber);
+	AccountEntity findActiveByAccountNumber(String accountNumber);
 
-	List<AccountEntity> findAllByIsActiveTrue();
+	List<AccountEntity> findAllActive();
 
-	Optional<AccountEntity> findByIdAndIsActiveTrue(String accountId);
+	Optional<AccountEntity> findActiveById(String accountId);
 }

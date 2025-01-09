@@ -3,7 +3,6 @@ package com.nttdata.bank.mapper;
 import com.nttdata.bank.entity.TransactionEntity;
 import com.nttdata.bank.request.TransactionRequest;
 import com.nttdata.bank.response.TransactionResponse;
-import java.time.LocalDateTime;
 
 public class TransactionMapper {
 
@@ -15,7 +14,6 @@ public class TransactionMapper {
 			transactionEntity.setCreditCardNumber(transactionRequest.getCreditCardNumber());
 			transactionEntity.setCreditId(transactionRequest.getCreditId());
 			transactionEntity.setAmount(transactionRequest.getAmount());
-			transactionEntity.setCreateDate(LocalDateTime.now());
 		}
 
 		return transactionEntity;

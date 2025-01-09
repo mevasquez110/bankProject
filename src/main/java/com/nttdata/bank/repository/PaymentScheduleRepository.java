@@ -7,12 +7,11 @@ import java.util.List;
 
 public interface PaymentScheduleRepository extends MongoRepository<PaymentScheduleEntity, String> {
 
-	List<PaymentScheduleEntity> findByCreditId(String creditId);
+    List<PaymentScheduleEntity> findByCreditId(String creditId);
 
-	List<PaymentScheduleEntity> findByCreditCardNumberAndPaymentDateBetween(String creditCardNumber,
-			LocalDate startDate, LocalDate endDate);
+    List<PaymentScheduleEntity> findByCardNumberAndDateBetween(String cardNumber, LocalDate startDate, LocalDate endDate);
 
-	List<PaymentScheduleEntity> findByPaymentDateBeforeAndPaidFalse(LocalDate today);
+    List<PaymentScheduleEntity> findUnpaidBeforeDate(LocalDate date);
 
-	List<PaymentScheduleEntity> findByCreditCardNumber(String creditCardId);
+    List<PaymentScheduleEntity> findByCardNumber(String cardNumber);
 }

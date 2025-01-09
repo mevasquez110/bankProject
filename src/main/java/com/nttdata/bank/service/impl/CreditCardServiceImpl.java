@@ -11,8 +11,7 @@ import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
-
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,13 +28,15 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public CreditCardResponse requestCreditCard(CreditCardRequest creditCardRequest) {
 		Optional<CreditCardEntity> existingCard = creditCardRepository
-				.findByCustomerId(creditCardRequest.getCustomerId());
+				.findActiveByCustomerId(creditCardRequest.getCustomerId());
 
 		if (existingCard.isPresent()) {
 			throw new RuntimeException("El cliente ya tiene una tarjeta de crédito");
 		}
 
 		CreditCardEntity creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
+		creditCardEntity.setCreateDate(LocalDateTime.now());
+		creditCardEntity.setIsActive(true);
 		CreditCardEntity savedCard = creditCardRepository.save(creditCardEntity);
 		return CreditCardMapper.mapperToResponse(savedCard);
 	}
@@ -45,9 +46,9 @@ public class CreditCardServiceImpl implements CreditCardService {
 		CreditCardEntity creditCard = creditCardRepository.findById(creditCardId)
 				.orElseThrow(() -> new RuntimeException("Tarjeta de crédito no encontrada"));
 
-		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository.findByCreditCardNumber(creditCardId);
+		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository.findByCardNumber(creditCardId);
 
-		LocalDate today = LocalDate.now();
+		LocalDateTime today = LocalDateTime.now();
 		int currentMonth = today.getMonthValue();
 		int currentYear = today.getYear();
 
@@ -69,22 +70,27 @@ public class CreditCardServiceImpl implements CreditCardService {
 
 	@Override
 	public List<CreditCardResponse> findAllCreditCards() {
-		return creditCardRepository.findAll().stream().map(CreditCardMapper::mapperToResponse)
+		return creditCardRepository.findAllActive().stream().map(CreditCardMapper::mapperToResponse)
 				.collect(Collectors.toList());
 	}
 
 	@Override
-	public CreditCardResponse updateCreditCard(String creditCardId, CreditCardRequest creditCardRequest) {
+	public CreditCardResponse updateCreditCard(String creditCardId) {
 		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId)
 				.orElseThrow(() -> new RuntimeException("Tarjeta de crédito no encontrada"));
-		creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
-		creditCardEntity.setCreditCardId(creditCardId);
+		
+	    creditCardEntity.setAllowConsumption(!creditCardEntity.getAllowConsumption());
+		creditCardEntity.setUpdateDate(LocalDateTime.now());
 		creditCardEntity = creditCardRepository.save(creditCardEntity);
 		return CreditCardMapper.mapperToResponse(creditCardEntity);
 	}
 
 	@Override
 	public void deleteCreditCard(String creditCardId) {
-		creditCardRepository.deleteById(creditCardId);
-	}
+		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId)
+				.orElseThrow(() -> new RuntimeException("Tarjeta de crédito no encontrada"));
+		
+	    creditCardEntity.setIsActive(false);
+		creditCardEntity.setUpdateDate(LocalDateTime.now());
+		creditCardEntity = creditCardRepository.save(creditCardEntity);	}
 }

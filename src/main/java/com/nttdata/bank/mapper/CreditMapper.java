@@ -1,6 +1,5 @@
 package com.nttdata.bank.mapper;
 
-import java.time.LocalDateTime;
 import com.nttdata.bank.entity.CreditEntity;
 import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.CreditResponse;
@@ -18,7 +17,6 @@ public class CreditMapper {
 			creditEntity.setAnnualInterestRate(creditRequest.getAnnualInterestRate());
 			creditEntity.setNumberOfInstallments(creditRequest.getNumberOfInstallments());
 			creditEntity.setPaymentDay(creditRequest.getPaymentDay());
-			creditEntity.setCreateDate(LocalDateTime.now());
 			creditEntity.setAnnualLateInterestRate(creditRequest.getAnnualLateInterestRate());
 		}
 
