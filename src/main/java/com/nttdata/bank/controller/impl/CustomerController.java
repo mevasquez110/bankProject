@@ -8,6 +8,7 @@ import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CustomerResponse;
 import com.nttdata.bank.service.CustomerService;
+import java.util.List;
 
 @RestController
 public class CustomerController implements CustomersAPI {
@@ -16,9 +17,9 @@ public class CustomerController implements CustomersAPI {
 	private CustomerService customerService;
 
 	@Override
-	public ApiResponse<CustomerResponse> registerCustomer(CustomerRequest customerRequest) {
+	public ApiResponse<CustomerResponse> createCustomer(CustomerRequest customerRequest) {
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
-		CustomerResponse customerResponse = customerService.registerCustomer(customerRequest);
+		CustomerResponse customerResponse = customerService.createCustomer(customerRequest);
 		response.setStatusCode(HttpStatus.CREATED.value());
 		response.setMessage("Customer registered successfully");
 		response.setData(customerResponse);
@@ -32,6 +33,32 @@ public class CustomerController implements CustomersAPI {
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Customer retrieved successfully");
 		response.setData(customerResponse);
+		return response;
+	}
+
+	public ApiResponse<List<CustomerResponse>> findAllCustomers() {
+		ApiResponse<List<CustomerResponse>> response = new ApiResponse<>();
+		List<CustomerResponse> customers = customerService.findAllCustomers();
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Customers retrieved successfully");
+		response.setData(customers);
+		return response;
+	}
+
+	public ApiResponse<CustomerResponse> updateCustomer(String customerId, CustomerRequest customerRequest) {
+		ApiResponse<CustomerResponse> response = new ApiResponse<>();
+		CustomerResponse customerResponse = customerService.updateCustomer(customerId, customerRequest);
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Customer updated successfully");
+		response.setData(customerResponse);
+		return response;
+	}
+
+	public ApiResponse<Void> deleteCustomer(String customerId) {
+		ApiResponse<Void> response = new ApiResponse<>();
+		customerService.deleteCustomer(customerId);
+		response.setStatusCode(HttpStatus.NO_CONTENT.value());
+		response.setMessage("Customer deleted successfully");
 		return response;
 	}
 }

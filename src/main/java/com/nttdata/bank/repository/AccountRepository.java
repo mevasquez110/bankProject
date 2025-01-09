@@ -1,14 +1,19 @@
 package com.nttdata.bank.repository;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import com.nttdata.bank.entity.AccountEntity;
 
 public interface AccountRepository extends MongoRepository<AccountEntity, String> {
 
-	List<AccountEntity> findByCustomerId(String customerId);
+	List<AccountEntity> findByCustomerIdAndIsActiveTrue(String customerId);
 
-	boolean existsByAccountNumber(String accountNumber);
+	Boolean existsByAccountNumberAndIsActiveTrue(String accountNumber);
 
-	AccountEntity findByAccountNumber(String accountNumber);
+	AccountEntity findByAccountNumberAndIsActiveTrue(String accountNumber);
+
+	List<AccountEntity> findAllByIsActiveTrue();
+
+	Optional<AccountEntity> findByIdAndIsActiveTrue(String accountId);
 }

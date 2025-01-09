@@ -3,7 +3,6 @@ package com.nttdata.bank.entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
@@ -20,11 +19,11 @@ public class CustomerEntity {
 	private String address;
 	private String phoneNumber;
 	private String documentType;
-	
-	@Indexed(unique = true)
 	private String documentNumber;
-	
 	private String personType;
 	private LocalDateTime createDate;
+	private LocalDateTime updateDate;
+	private LocalDateTime deleteDate;
+	private Boolean isActive;
 
 }

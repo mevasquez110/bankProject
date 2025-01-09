@@ -35,7 +35,6 @@ public class CreditServiceImpl implements CreditService {
 		}
 
 		CreditEntity creditEntity = CreditMapper.mapperToEntity(creditRequest);
-		creditEntity.setStatus("APPROVED");
 		creditEntity = creditRepository.save(creditEntity);
 		List<PaymentScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
 		paymentScheduleRepository.saveAll(schedule);

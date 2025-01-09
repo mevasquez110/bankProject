@@ -21,4 +21,7 @@ public class TransactionEntity {
 	private String transactionType;
 	private Integer numberOfInstallments;
 	private LocalDateTime transactionDate;
+	private LocalDateTime updateDate;
+	private LocalDateTime deleteDate;
+	private Boolean isActive;
 }

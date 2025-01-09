@@ -2,6 +2,7 @@ package com.nttdata.bank.controller.impl;
 
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CreditCardsAPI;
 import com.nttdata.bank.request.CreditCardRequest;
@@ -18,14 +19,22 @@ public class CreditCardsController implements CreditCardsAPI {
 
 	@Override
 	public ApiResponse<CreditCardResponse> requestCreditCard(@Valid CreditCardRequest creditCardRequest) {
-		// TODO Auto-generated method stub
-		return null;
+		ApiResponse<CreditCardResponse> response = new ApiResponse<>();
+		CreditCardResponse creditCardResponse = creditCardsService.requestCreditCard(creditCardRequest);
+		response.setStatusCode(HttpStatus.CREATED.value());
+		response.setMessage("Credit card created successfully");
+		response.setData(creditCardResponse);
+		return response;
 	}
 
 	@Override
 	public ApiResponse<CreditCardDebtResponse> checkDebt(String creditCardId) {
-		// TODO Auto-generated method stub
-		return null;
+		ApiResponse<CreditCardDebtResponse> response = new ApiResponse<>();
+		CreditCardDebtResponse creditCardDebtResponse = creditCardsService.checkDebt(creditCardId);
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Check debt successfully");
+		response.setData(creditCardDebtResponse);
+		return response;
 	}
 
 }

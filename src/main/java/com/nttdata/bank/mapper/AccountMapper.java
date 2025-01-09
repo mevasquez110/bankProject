@@ -1,6 +1,5 @@
 package com.nttdata.bank.mapper;
 
-import java.time.LocalDateTime;
 import com.nttdata.bank.entity.AccountEntity;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.response.AccountResponse;
@@ -13,8 +12,7 @@ public class AccountMapper {
         if (accountRequest != null) {
             accountEntity.setCustomerId(accountRequest.getCustomerId());
             accountEntity.setAuthorizedSignatory(accountRequest.getAuthorizedSignatory());
-            accountEntity.setAccountType(accountRequest.getAccountType());
-            accountEntity.setCreateDate(LocalDateTime.now());
+            accountEntity.setAccountType(accountRequest.getAccountType());           
         }
 
         return accountEntity;

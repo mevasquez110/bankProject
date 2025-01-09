@@ -9,5 +9,6 @@ public class BalanceResponse {
 
 	private String accountNumber;
 	private Double amount;
+	private Boolean allowWithdrawals;
 	
 }

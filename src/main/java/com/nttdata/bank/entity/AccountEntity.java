@@ -24,4 +24,8 @@ public class AccountEntity {
 	private List<String> customerId;
 	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 	private String accountType;
+	private Boolean allowWithdrawals;
+	private LocalDateTime updateDate;
+	private LocalDateTime deleteDate;
+	private Boolean isActive;
 }

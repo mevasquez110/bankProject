@@ -1,6 +1,8 @@
 package com.nttdata.bank.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,5 +20,8 @@ public class CreditCardEntity {
 	private Double annualInterestRate;
 	private Double annualLateInterestRate;
 	private Integer paymentDay;
-	private LocalDate createDate;	
+	private LocalDate createDate;
+	private LocalDateTime updateDate;
+	private LocalDateTime deleteDate;
+	private Boolean isActive;
 }

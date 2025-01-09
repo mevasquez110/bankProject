@@ -9,10 +9,11 @@ import lombok.Data;
 @AccountRequestValidator
 public class AccountRequest {
 
-	private List<String> customerId;
-	
-	private List<AuthorizedSignatoryRequest> authorizedSignatory;
-	
-	@NotBlank(message = "Account type is mandatory")
-	private String accountType;
+    private List<String> customerId;
+    
+    private List<AuthorizedSignatoryRequest> authorizedSignatory;
+    
+    @NotBlank(message = "Account type is mandatory")
+    private String accountType;
+    
 }

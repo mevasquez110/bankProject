@@ -15,6 +15,7 @@ import com.nttdata.bank.util.Constants;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountsServiceImpl implements AccountsService {
@@ -31,7 +32,6 @@ public class AccountsServiceImpl implements AccountsService {
 
 		AccountEntity accountEntity = AccountMapper.mapperToEntity(accountRequest);
 		accountEntity.setAccountNumber(generateUniqueAccountNumber(accountRequest.getAccountType()));
-		accountEntity.setCreateDate(LocalDateTime.now());
 
 		if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
@@ -43,7 +43,10 @@ public class AccountsServiceImpl implements AccountsService {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(1);
 		}
-
+		
+		accountEntity.setAllowWithdrawals(true);
+		accountEntity.setCreateDate(LocalDateTime.now());
+		accountEntity.setIsActive(true);
 		accountEntity = accountRepository.save(accountEntity);
 		return AccountMapper.mapperToResponse(accountEntity);
 	}
@@ -59,7 +62,7 @@ public class AccountsServiceImpl implements AccountsService {
 		}
 
 		for (String customerId : accountRequest.getCustomerId()) {
-			List<AccountEntity> customerAccounts = accountRepository.findByCustomerId(customerId);
+			List<AccountEntity> customerAccounts = accountRepository.findByCustomerIdAndIsActiveTrue(customerId);
 			String personType = getPersonType(customerId);
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
@@ -92,7 +95,7 @@ public class AccountsServiceImpl implements AccountsService {
 		String accountNumber;
 		do {
 			accountNumber = generateAccountNumber(accountType);
-		} while (accountRepository.existsByAccountNumber(accountNumber));
+		} while (accountRepository.existsByAccountNumberAndIsActiveTrue(accountNumber));
 		return accountNumber;
 	}
 
@@ -119,7 +122,7 @@ public class AccountsServiceImpl implements AccountsService {
 	}
 
 	private String getPersonType(String customerId) {
-		CustomerEntity customer = customerRepository.findById(customerId).orElse(null);
+		CustomerEntity customer = customerRepository.findByIdAndIsActiveTrue(customerId).orElse(null);
 
 		if (customer != null) {
 			return customer.getPersonType();
@@ -130,7 +133,7 @@ public class AccountsServiceImpl implements AccountsService {
 
 	@Override
 	public BalanceResponse checkBalance(String accountNumber) {
-		AccountEntity accountEntity = accountRepository.findByAccountNumber(accountNumber);
+		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber);
 
 		if (accountEntity == null) {
 			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
@@ -139,6 +142,34 @@ public class AccountsServiceImpl implements AccountsService {
 		BalanceResponse balanceResponse = new BalanceResponse();
 		balanceResponse.setAccountNumber(accountEntity.getAccountNumber());
 		balanceResponse.setAmount(accountEntity.getAmount());
+		balanceResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
 		return balanceResponse;
+	}
+
+	@Override
+	public List<AccountResponse> findAllAccounts() {
+		return accountRepository.findAllByIsActiveTrue().stream().map(AccountMapper::mapperToResponse)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public AccountResponse updateAccount(String accountId) {
+		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
+				.orElseThrow(() -> new RuntimeException("Account not found"));
+		
+		accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
+		accountEntity.setUpdateDate(LocalDateTime.now());
+		accountEntity = accountRepository.save(accountEntity);
+		return AccountMapper.mapperToResponse(accountEntity);
+	}
+
+	@Override
+	public void deleteAccount(String accountId) {
+		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
+				.orElseThrow(() -> new RuntimeException("Account not found"));
+		
+		accountEntity.setDeleteDate(LocalDateTime.now());
+		accountEntity = accountRepository.save(accountEntity);
+		accountEntity.setIsActive(true);
 	}
 }
