@@ -8,10 +8,10 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionResponse {
 
-    private Integer transactionId;
+    private String transactionId;
 	private String accountNumber;
 	private String creditCardNumber;
-    private Integer creditId;
+    private String creditId;
 	private Double amount;
 	private LocalDateTime createDate;
 	private String transactionType;

@@ -15,8 +15,7 @@ public class TransactionEntity {
 	private String id;
 	private String accountNumber;
 	private String creditCardNumber;
-	private Integer transactionId;
-	private Integer creditId;
+	private String creditId;
 	private Double amount;
 	private LocalDateTime createDate;
 	private String transactionType;
