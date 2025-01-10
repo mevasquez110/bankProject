@@ -2,6 +2,8 @@ package com.nttdata.bank.controller;
 
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import com.nttdata.bank.request.ContactDataRequest;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CustomerResponse;
@@ -49,13 +51,13 @@ public interface CustomersAPI {
 	 * Updates the details of a specified customer based on their ID.
 	 * 
 	 * @param documentNumber - The document number to be updated.
-	 * @param customerRequest - The updated customer details provided in the request
+	 * @param contactDataRequest - The updated customer details provided in the request
 	 *                        body.
 	 * @return ApiResponse containing the updated CustomerResponse.
 	 */
 	@PutMapping("/update/{documentNumber}")
 	ApiResponse<CustomerResponse> updateCustomer(@PathVariable String documentNumber,
-			@RequestBody @Valid CustomerRequest customerRequest);
+			@RequestBody @Valid ContactDataRequest contactDataRequest);
 
 	/**
 	 * Deletes a specified customer based on their ID.

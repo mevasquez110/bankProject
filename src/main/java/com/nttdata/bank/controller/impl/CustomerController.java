@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CustomersAPI;
+import com.nttdata.bank.request.ContactDataRequest;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CustomerResponse;
@@ -110,15 +111,15 @@ public class CustomerController implements CustomersAPI {
 	 * for resilience.
 	 *
 	 * @param documentNumber      The document number to update
-	 * @param customerRequest The customer request payload containing update details
+	 * @param contactDataRequest The customer request payload containing update details
 	 * @return ApiResponse containing the updated customer response
 	 */
 	@Transactional
 	@CircuitBreaker(name = "customerService")
-	public ApiResponse<CustomerResponse> updateCustomer(String documentNumber, CustomerRequest customerRequest) {
+	public ApiResponse<CustomerResponse> updateCustomer(String documentNumber, ContactDataRequest contactDataRequest) {
 		logger.debug("Received request to update customer with document number: {}", documentNumber);
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
-		CustomerResponse customerResponse = customerService.updateCustomer(documentNumber, customerRequest);
+		CustomerResponse customerResponse = customerService.updateCustomer(documentNumber, contactDataRequest);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Customer updated successfully");
 		response.setData(customerResponse);

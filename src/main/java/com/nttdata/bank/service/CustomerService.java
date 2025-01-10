@@ -1,6 +1,8 @@
 package com.nttdata.bank.service;
 
 import java.util.List;
+
+import com.nttdata.bank.request.ContactDataRequest;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 
@@ -39,10 +41,10 @@ public interface CustomerService {
      * Updates an existing customer.
      *
      * @param documentNumber The document number to update
-     * @param customerRequest The customer request with updated details
+     * @param contactDataRequest The customer request with updated details
      * @return The response containing updated customer details
      */
-    CustomerResponse updateCustomer(String documentNumber, CustomerRequest customerRequest);
+    CustomerResponse updateCustomer(String documentNumber, ContactDataRequest contactDataRequest);
 
     /**
      * Deletes a customer.

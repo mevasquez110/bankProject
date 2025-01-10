@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.nttdata.bank.entity.CustomerEntity;
 import com.nttdata.bank.mapper.CustomerMapper;
 import com.nttdata.bank.repository.CustomerRepository;
+import com.nttdata.bank.request.ContactDataRequest;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 import com.nttdata.bank.service.CustomerService;
@@ -63,7 +64,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 		Mono<CustomerEntity> customerEntityMono = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
 				.switchIfEmpty(Mono.error(
-						new IllegalArgumentException("Customer not found with document number: " + documentNumber)));
+						new IllegalArgumentException("Customer not found with document: " + documentNumber)));
 
 		CustomerEntity customerEntity = customerEntityMono.toFuture().join();
 		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
@@ -91,49 +92,21 @@ public class CustomerServiceImpl implements CustomerService {
 	 * Updates a customer.
 	 *
 	 * @param documentNumber  The document number to update
-	 * @param customerRequest The customer request payload containing update details
+	 * @param contactDataRequest The customer request payload containing update details
 	 * @return The updated customer response
 	 */
 	@Override
-	public CustomerResponse updateCustomer(String documentNumber, CustomerRequest customerRequest) {
+	public CustomerResponse updateCustomer(String documentNumber, ContactDataRequest contactDataRequest) {
 		logger.debug("Updating customer with document number: {}", documentNumber);
 		return customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
 				.switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found"))).map(customerEntity -> {
-					validateUpdateFields(customerRequest, customerEntity);
-					customerEntity.setPhoneNumber(customerRequest.getPhoneNumber());
-					customerEntity.setAddress(customerRequest.getAddress());
-					customerEntity.setEmail(customerRequest.getEmail());
+					customerEntity.setPhoneNumber(contactDataRequest.getPhoneNumber());
+					customerEntity.setAddress(contactDataRequest.getAddress());
+					customerEntity.setEmail(contactDataRequest.getEmail());
 					customerEntity.setUpdateDate(LocalDateTime.now());
 					return customerEntity;
 				}).flatMap(customerRepository::save).map(CustomerMapper::mapperToResponse)
 				.doOnSuccess(response -> logger.info("Customer updated successfully: {}", response)).toFuture().join();
-	}
-
-	/**
-	 * Validates the update fields for a customer.
-	 *
-	 * @param customerRequest The customer request payload containing update details
-	 * @param customerEntity  The customer entity
-	 */
-	private void validateUpdateFields(CustomerRequest customerRequest, CustomerEntity customerEntity) {
-		if (!customerEntity.getIsActive()) {
-			throw new IllegalArgumentException("Customer not found");
-		}
-		if (!customerRequest.getFullName().equals(customerEntity.getFullName())) {
-			throw new IllegalArgumentException("Full name is not editable");
-		}
-		if (!customerRequest.getCompanyName().equals(customerEntity.getCompanyName())) {
-			throw new IllegalArgumentException("Company name is not editable");
-		}
-		if (!customerRequest.getDocumentType().equals(customerEntity.getDocumentType())) {
-			throw new IllegalArgumentException("Document type is not editable");
-		}
-		if (!customerRequest.getDocumentNumber().equals(customerEntity.getDocumentNumber())) {
-			throw new IllegalArgumentException("Document number is not editable");
-		}
-		if (!customerRequest.getPersonType().equals(customerEntity.getPersonType())) {
-			throw new IllegalArgumentException("Person type is not editable");
-		}
 	}
 
 	/**
