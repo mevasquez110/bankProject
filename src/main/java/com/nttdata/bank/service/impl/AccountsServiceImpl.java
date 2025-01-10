@@ -17,11 +17,11 @@ import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.AccountsService;
 import com.nttdata.bank.util.Constants;
+import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 /**
  * * AccountsServiceImpl is the implementation class for the AccountsService
@@ -72,12 +72,12 @@ public class AccountsServiceImpl implements AccountsService {
 		accountEntity.setAllowWithdrawals(true);
 		accountEntity.setCreateDate(LocalDateTime.now());
 		accountEntity.setIsActive(true);
-		accountEntity = accountRepository.save(accountEntity);
+		accountEntity = accountRepository.save(accountEntity).block();
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
 		logger.info("Account registered successfully: {}", response);
 		TransactionResponse transactionResponse = makeDeposit(accountRequest, accountEntity);
 		accountEntity.setAmount(transactionResponse.getAmount());
-		accountEntity = accountRepository.save(accountEntity);
+		accountEntity = accountRepository.save(accountEntity).block();
 		return response;
 	}
 
@@ -96,21 +96,23 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @param accountRequest The account request payload
 	 */
 	private void validateAccountRequest(AccountRequest accountRequest) {
-		if (accountRequest.getCustomerId() == null || accountRequest.getCustomerId().isEmpty()) {
-			throw new IllegalArgumentException("CustomerId is mandatory.");
+		if (accountRequest.getDocumentNumber() == null || accountRequest.getDocumentNumber().isEmpty()) {
+			throw new IllegalArgumentException("Document number is mandatory.");
 		}
 
 		Optional.ofNullable(accountRequest.getAuthorizedSignatory()).filter(signatory -> Constants.PERSON_TYPE_PERSONAL
-				.equals(getPersonType(accountRequest.getCustomerId().get(0)))).ifPresent(signatory -> {
+				.equals(getPersonType(accountRequest.getDocumentNumber().get(0)))).ifPresent(signatory -> {
 					throw new IllegalArgumentException("AuthorizedSignatory must be null.");
 				});
 
-		for (String customerId : accountRequest.getCustomerId()) {
-			List<AccountEntity> accounts = accountRepository.findByCustomerIdAndIsActiveTrue(customerId);
-			String personType = getPersonType(customerId);
+		for (String documentNumber : accountRequest.getDocumentNumber()) {
+			List<AccountEntity> accounts = accountRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
+					.collectList().block();
+
+			String personType = getPersonType(documentNumber);
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
-				if (accountRequest.getCustomerId().size() > 1) {
+				if (accountRequest.getDocumentNumber().size() > 1) {
 					throw new IllegalArgumentException("A personal customer can have only one ID.");
 				}
 
@@ -148,7 +150,7 @@ public class AccountsServiceImpl implements AccountsService {
 		String accountNumber;
 		do {
 			accountNumber = generateAccountNumber(accountType);
-		} while (accountRepository.existsByAccountNumberAndIsActiveTrue(accountNumber));
+		} while (accountRepository.existsByAccountNumberAndIsActiveTrue(accountNumber).block());
 		return accountNumber;
 	}
 
@@ -187,7 +189,7 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @return The person type
 	 */
 	private String getPersonType(String customerId) {
-		CustomerEntity customer = customerRepository.findByIdAndIsActiveTrue(customerId).orElse(null);
+		CustomerEntity customer = customerRepository.findByDocumentNumberAndIsActiveTrue(customerId).block();
 
 		if (customer != null) {
 			return customer.getPersonType();
@@ -205,7 +207,7 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public BalanceResponse checkBalance(String accountNumber) {
 		logger.debug("Checking balance for account: {}", accountNumber);
-		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber);
+		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).block();
 
 		if (accountEntity == null) {
 			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
@@ -227,8 +229,10 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public List<AccountResponse> findAllAccounts() {
 		logger.debug("Finding all accounts");
-		List<AccountResponse> accounts = accountRepository.findByIsActiveTrue().stream()
-				.map(AccountMapper::mapperToResponse).collect(Collectors.toList());
+
+		List<AccountResponse> accounts = accountRepository.findByIsActiveTrue().map(AccountMapper::mapperToResponse)
+				.collectList().block();
+
 		logger.info("All accounts retrieved successfully");
 		return accounts;
 	}
@@ -242,12 +246,15 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public AccountResponse updateAccount(String accountId) {
 		logger.debug("Updating account with ID: {}", accountId);
+
 		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
-				.orElseThrow(() -> new RuntimeException("Account not found"));
+				.flatMap(optionalAccount -> optionalAccount.map(Mono::just)
+						.orElseGet(() -> Mono.error(new RuntimeException("Account not found"))))
+				.block();
 
 		accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
 		accountEntity.setUpdateDate(LocalDateTime.now());
-		accountEntity = accountRepository.save(accountEntity);
+		accountEntity = accountRepository.save(accountEntity).block();
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
 		logger.info("Account updated successfully: {}", response);
 		return response;
@@ -261,12 +268,13 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public void deleteAccount(String accountId) {
 		logger.debug("Deleting account with ID: {}", accountId);
+
 		AccountEntity accountEntity = accountRepository.findByIdAndIsActiveTrue(accountId)
-				.orElseThrow(() -> new RuntimeException("Account not found"));
+				.switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).block().get();
 
 		accountEntity.setDeleteDate(LocalDateTime.now());
 		accountEntity.setIsActive(true);
-		accountEntity = accountRepository.save(accountEntity);
+		accountEntity = accountRepository.save(accountEntity).block();
 		logger.info("Account deleted successfully with ID: {}", accountId);
 	}
 }

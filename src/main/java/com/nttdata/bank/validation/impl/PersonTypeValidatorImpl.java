@@ -65,7 +65,10 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 			addViolation(context, "Full name is mandatory for personal person type", "fullName");
 			isValid = false;
 		}
-
+		if (customerRequest.getCompanyName() != null) {
+			addViolation(context, "Company name must be null for personal person type", "companyName");
+			isValid = false;
+		}
 		return isValid;
 	}
 
@@ -85,6 +88,10 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 		}
 		if (customerRequest.getCompanyName() == null || customerRequest.getCompanyName().isEmpty()) {
 			addViolation(context, "Company name is mandatory for empresarial person type", "companyName");
+			isValid = false;
+		}
+		if (customerRequest.getFullName() != null) {
+			addViolation(context, "Full name must be null for empresarial person type", "fullName");
 			isValid = false;
 		}
 		if (customerRequest.getDocumentNumber().length() != 11) {

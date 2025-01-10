@@ -48,21 +48,21 @@ public interface CustomersAPI {
 	/**
 	 * Updates the details of a specified customer based on their ID.
 	 * 
-	 * @param customerId      - The ID of the customer to be updated.
+	 * @param documentNumber - The document number to be updated.
 	 * @param customerRequest - The updated customer details provided in the request
 	 *                        body.
 	 * @return ApiResponse containing the updated CustomerResponse.
 	 */
-	@PutMapping("/update/{customerId}")
-	ApiResponse<CustomerResponse> updateCustomer(@PathVariable String customerId,
+	@PutMapping("/update/{documentNumber}")
+	ApiResponse<CustomerResponse> updateCustomer(@PathVariable String documentNumber,
 			@RequestBody @Valid CustomerRequest customerRequest);
 
 	/**
 	 * Deletes a specified customer based on their ID.
 	 * 
-	 * @param customerId - The ID of the customer to be deleted.
+	 * @param documentNumber - The document number to be deleted.
 	 * @return ApiResponse with no content upon successful deletion.
 	 */
-	@DeleteMapping("/delete/{customerId}")
-	ApiResponse<Void> deleteCustomer(@PathVariable String customerId);
+	@DeleteMapping("/delete/{documentNumber}")
+	ApiResponse<Void> deleteCustomer(@PathVariable String documentNumber);
 }

@@ -24,7 +24,6 @@ import java.util.List;
  */
 @RestController
 public class CreditCardsController implements CreditCardsAPI {
-	// Implementation of the methods defined in CreditCardsAPI
 
 	private static final Logger logger = LoggerFactory.getLogger(CreditCardsController.class);
 

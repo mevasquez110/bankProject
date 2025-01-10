@@ -109,20 +109,20 @@ public class CustomerController implements CustomersAPI {
 	 * Updates a customer. This method is transactional and uses a circuit breaker
 	 * for resilience.
 	 *
-	 * @param customerId      The ID of the customer to update
+	 * @param documentNumber      The document number to update
 	 * @param customerRequest The customer request payload containing update details
 	 * @return ApiResponse containing the updated customer response
 	 */
 	@Transactional
 	@CircuitBreaker(name = "customerService")
-	public ApiResponse<CustomerResponse> updateCustomer(String customerId, CustomerRequest customerRequest) {
-		logger.debug("Received request to update customer with ID: {}", customerId);
+	public ApiResponse<CustomerResponse> updateCustomer(String documentNumber, CustomerRequest customerRequest) {
+		logger.debug("Received request to update customer with document number: {}", documentNumber);
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
-		CustomerResponse customerResponse = customerService.updateCustomer(customerId, customerRequest);
+		CustomerResponse customerResponse = customerService.updateCustomer(documentNumber, customerRequest);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Customer updated successfully");
 		response.setData(customerResponse);
-		logger.info("Customer updated successfully with ID: {}", customerId);
+		logger.info("Customer updated successfully with document number: {}", documentNumber);
 		return response;
 	}
 
@@ -130,18 +130,18 @@ public class CustomerController implements CustomersAPI {
 	 * Deletes a customer. This method is transactional and uses a circuit breaker
 	 * for resilience.
 	 *
-	 * @param customerId The ID of the customer to delete
+	 * @param documentNumber The document number to delete
 	 * @return ApiResponse indicating the result of the delete operation
 	 */
 	@Transactional
 	@CircuitBreaker(name = "customerService")
-	public ApiResponse<Void> deleteCustomer(String customerId) {
-		logger.debug("Received request to delete customer with ID: {}", customerId);
+	public ApiResponse<Void> deleteCustomer(String documentNumber) {
+		logger.debug("Received request to delete customer with document number: {}", documentNumber);
 		ApiResponse<Void> response = new ApiResponse<>();
-		customerService.deleteCustomer(customerId);
+		customerService.deleteCustomer(documentNumber);
 		response.setStatusCode(HttpStatus.NO_CONTENT.value());
 		response.setMessage("Customer deleted successfully");
-		logger.info("Customer deleted successfully with ID: {}", customerId);
+		logger.info("Customer deleted successfully with document number: {}", documentNumber);
 		return response;
 	}
 }

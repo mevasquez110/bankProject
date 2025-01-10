@@ -23,7 +23,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
  */
 @RestController
 public class TransactionController implements TransactionAPI {
-	// Implementation of the methods defined in TransactionAPI
 
 	private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
 
@@ -89,11 +88,9 @@ public class TransactionController implements TransactionAPI {
 	 * Fallback method for makeWithdrawal in case of failure.
 	 *
 	 * @param transaction The transaction request payload
-	 * @param t           The throwable cause of the failure
 	 * @return ApiResponse containing the fallback response
 	 */
-	public ApiResponse<TransactionResponse> fallbackMakeWithdrawal(TransactionRequest transaction, Throwable t) {
-		logger.error("Fallback method triggered for makeWithdrawal due to: {}", t.getMessage());
+	public ApiResponse<TransactionResponse> fallbackMakeWithdrawal(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
 		response.setMessage("Service is currently unavailable. Please try again later.");
@@ -125,11 +122,9 @@ public class TransactionController implements TransactionAPI {
 	 * Fallback method for payInstallment in case of failure.
 	 *
 	 * @param transaction The transaction request payload
-	 * @param t           The throwable cause of the failure
 	 * @return ApiResponse containing the fallback response
 	 */
-	public ApiResponse<TransactionResponse> fallbackPayInstallment(TransactionRequest transaction, Throwable t) {
-		logger.error("Fallback method triggered for payInstallment due to: {}", t.getMessage());
+	public ApiResponse<TransactionResponse> fallbackPayInstallment(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
 		response.setMessage("Service is currently unavailable. Please try again later.");
@@ -182,11 +177,9 @@ public class TransactionController implements TransactionAPI {
 	 * Fallback method for chargeConsumption in case of failure.
 	 *
 	 * @param transaction The transaction request payload
-	 * @param t           The throwable cause of the failure
 	 * @return ApiResponse containing the fallback response
 	 */
-	public ApiResponse<TransactionResponse> fallbackChargeConsumption(TransactionRequest transaction, Throwable t) {
-		logger.error("Fallback method triggered for chargeConsumption due to: {}", t.getMessage());
+	public ApiResponse<TransactionResponse> fallbackChargeConsumption(TransactionRequest transaction) {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
 		response.setMessage("Service is currently unavailable. Please try again later.");

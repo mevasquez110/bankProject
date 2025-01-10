@@ -24,7 +24,7 @@ public class CreditMapper {
 		CreditEntity creditEntity = new CreditEntity();
 
 		if (creditRequest != null) {
-			creditEntity.setCustomerId(creditRequest.getCustomerId());
+			creditEntity.setDocumentNumber(creditRequest.getDocumentNumber());
 			creditEntity.setAmount(creditRequest.getAmount());
 			creditEntity.setAccountNumber(creditRequest.getAccountNumber());
 			creditEntity.setAnnualInterestRate(creditRequest.getAnnualInterestRate());

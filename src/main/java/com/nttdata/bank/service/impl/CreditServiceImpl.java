@@ -21,6 +21,7 @@ import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
 import com.nttdata.bank.service.CreditService;
 import com.nttdata.bank.util.Utility;
+import reactor.core.publisher.Mono;
 
 /**
  * * CreditServiceImpl is the implementation class for the CreditService
@@ -43,17 +44,19 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public CreditResponse grantCredit(CreditRequest creditRequest) {
 		logger.debug("Granting credit: {}", creditRequest);
-		Boolean hasActiveCredit = creditRepository.existsByCustomerIdAndIsActiveTrue(creditRequest.getCustomerId());
+
+		Boolean hasActiveCredit = creditRepository
+				.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block();
 
 		if (hasActiveCredit) {
-			logger.warn("The customer already has an active credit: {}", creditRequest.getCustomerId());
+			logger.warn("The customer already has an active credit: {}", creditRequest.getDocumentNumber());
 			throw new RuntimeException("El cliente ya tiene un crédito activo");
 		}
 
 		CreditEntity creditEntity = CreditMapper.mapperToEntity(creditRequest);
 		creditEntity.setIsActive(true);
 		creditEntity.setCreateDate(LocalDateTime.now());
-		creditEntity = creditRepository.save(creditEntity);
+		creditEntity = creditRepository.save(creditEntity).block();
 		List<PaymentScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
 		paymentScheduleRepository.saveAll(schedule);
 		CreditResponse response = CreditMapper.mapperToResponse(creditEntity);
@@ -91,12 +94,14 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public CreditDebtResponse checkDebt(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
-		creditRepository.findById(creditId).orElseThrow(() -> {
+		creditRepository.findById(creditId).blockOptional().orElseThrow(() -> {
 			logger.error("Credit not found: {}", creditId);
 			return new RuntimeException("Crédito no encontrado");
 		});
 
-		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditId(creditId);
+		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditId(creditId).collectList()
+				.block();
+
 		LocalDate today = LocalDate.now();
 		int currentMonth = today.getMonthValue();
 		int currentYear = today.getYear();
@@ -149,21 +154,19 @@ public class CreditServiceImpl implements CreditService {
 		logger.debug("Reprogramming debt for credit: {}", reprogramDebtRequest.getCreditId());
 
 		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(reprogramDebtRequest.getCreditId())
-				.orElseThrow(() -> {
-					logger.error("Credit not found: {}", reprogramDebtRequest.getCreditId());
-					return new RuntimeException("Crédito no encontrado");
-				});
+				.switchIfEmpty(Mono.error(new RuntimeException("Crédito no encontrado")))
+				.doOnError(error -> logger.error("Credit not found: {}", reprogramDebtRequest.getCreditId())).block();
 
 		creditEntity.setAnnualInterestRate(reprogramDebtRequest.getNewInterestRate());
 		creditEntity.setAnnualLateInterestRate(reprogramDebtRequest.getNewLateInterestRate());
 		creditEntity.setPaymentDay(reprogramDebtRequest.getNewPaymentDay());
 		creditEntity.setNumberOfInstallments(reprogramDebtRequest.getNewNumberOfInstallments());
 		creditEntity.setUpdateDate(LocalDateTime.now());
-		creditEntity = creditRepository.save(creditEntity);
+		creditEntity = creditRepository.save(creditEntity).block();
 
 		List<PaymentScheduleEntity> unpaidSchedule = paymentScheduleRepository
-				.findByCreditId(reprogramDebtRequest.getCreditId()).stream().filter(payment -> !payment.getPaid())
-				.collect(Collectors.toList());
+				.findByCreditId(reprogramDebtRequest.getCreditId()).collectList().block().stream()
+				.filter(payment -> !payment.getPaid()).collect(Collectors.toList());
 
 		List<PaymentScheduleEntity> newSchedule = generateNewPaymentSchedule(creditEntity, unpaidSchedule);
 
@@ -190,8 +193,10 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");
-		List<CreditResponse> credits = creditRepository.findByIsActiveTrue().stream()
-				.map(CreditMapper::mapperToResponse).collect(Collectors.toList());
+
+		List<CreditResponse> credits = creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse)
+				.collectList().block();
+
 		logger.info("All credits retrieved successfully");
 		return credits;
 	}
@@ -199,10 +204,10 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public void deleteCredit(String creditId) {
 		logger.debug("Deleting credit with ID: {}", creditId);
-		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(creditId).orElseThrow(() -> {
-			logger.error("Credit not found: {}", creditId);
-			return new RuntimeException("Crédito no encontrado");
-		});
+
+		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(creditId)
+				.switchIfEmpty(Mono.error(new RuntimeException("Crédito no encontrado")))
+				.doOnError(error -> logger.error("Credit not found: {}", creditId)).block();
 
 		creditEntity.setIsActive(false);
 		creditEntity.setDeleteDate(LocalDateTime.now());

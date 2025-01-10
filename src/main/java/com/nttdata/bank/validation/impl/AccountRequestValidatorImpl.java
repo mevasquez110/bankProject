@@ -42,8 +42,8 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 		boolean isValid = true;
 
 		// Validate customerId
-		if (accountRequest.getCustomerId() == null || accountRequest.getCustomerId().isEmpty()) {
-			addViolation(context, "customerId is mandatory", "customerId");
+		if (accountRequest.getDocumentNumber() == null || accountRequest.getDocumentNumber().isEmpty()) {
+			addViolation(context, "Document number is mandatory", "documentNumber");
 			isValid = false;
 		}
 

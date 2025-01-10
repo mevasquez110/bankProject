@@ -1,30 +1,30 @@
 package com.nttdata.bank.repository;
 
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.CreditCardEntity;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * CreditCardRepository provides the CRUD operations for CreditCardEntity. This
- * interface extends MongoRepository and defines custom query methods to find
- * active credit cards by customer ID and retrieve all active credit cards.
+ * interface extends ReactiveMongoRepository and defines custom query methods to
+ * find active credit cards by customer ID and retrieve all active credit cards.
  */
 
-public interface CreditCardRepository extends MongoRepository<CreditCardEntity, String> {
+public interface CreditCardRepository extends ReactiveMongoRepository<CreditCardEntity, String> {
 
 	/**
-	 * Finds an active credit card by customer ID.
+	 * Finds an active credit card by document number.
 	 *
-	 * @param customerId The customer ID to search for
-	 * @return An Optional containing the active CreditCardEntity object
+	 * @param documentNumber The document number to search for.
+	 * @return A Mono emitting the active CreditCardEntity object.
 	 */
-	Optional<CreditCardEntity> findByCustomerIdAndIsActiveTrue(String customerId);
+	Mono<CreditCardEntity> findByDocumentNumberAndIsActiveTrue(String documentNumber);
 
 	/**
 	 * Finds all active credit cards.
 	 *
-	 * @return A list of active CreditCardEntity objects
+	 * @return A Flux emitting active CreditCardEntity objects.
 	 */
-	List<CreditCardEntity> findByIsActiveTrue();
+	Flux<CreditCardEntity> findByIsActiveTrue();
 }

@@ -46,7 +46,7 @@ public class TransactionServiceImpl implements TransactionService {
 		logger.debug("Making deposit transaction: {}", transaction);
 		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transaction);
 		transactionEntity.setTransactionType("DEPOSIT");
-		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
+		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity).block();
 		TransactionResponse response = TransactionMapper.mapperToResponse(savedTransaction);
 		logger.info("Deposit made successfully: {}", response);
 		return response;
@@ -57,7 +57,7 @@ public class TransactionServiceImpl implements TransactionService {
 		logger.debug("Making withdrawal transaction: {}", transaction);
 		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transaction);
 		transactionEntity.setTransactionType("WITHDRAWAL");
-		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
+		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity).block();
 		TransactionResponse response = TransactionMapper.mapperToResponse(savedTransaction);
 		logger.info("Withdrawal made successfully: {}", response);
 		return response;
@@ -68,7 +68,7 @@ public class TransactionServiceImpl implements TransactionService {
 		logger.debug("Paying installment transaction: {}", transaction);
 		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transaction);
 		transactionEntity.setTransactionType("CREDIT_PAYMENT");
-		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
+		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity).block();
 		TransactionResponse response = TransactionMapper.mapperToResponse(savedTransaction);
 		logger.info("Installment paid successfully: {}", response);
 		return response;
@@ -77,12 +77,16 @@ public class TransactionServiceImpl implements TransactionService {
 	@Override
 	public List<TransactionResponse> checkTransactions(Integer accountId) {
 		logger.debug("Checking transactions for account ID: {}", accountId);
+
 		List<TransactionEntity> transactions = transactionRepository
-				.findByAccountNumberAndIsActiveTrue(accountId.toString());
+				.findByAccountNumberAndIsActiveTrue(accountId.toString()).collectList().block();
+
 		List<TransactionResponse> transactionResponses = new ArrayList<>();
+		
 		for (TransactionEntity transaction : transactions) {
 			transactionResponses.add(TransactionMapper.mapperToResponse(transaction));
 		}
+		
 		logger.info("Transactions checked successfully for account ID: {}", accountId);
 		return transactionResponses;
 	}
@@ -92,7 +96,7 @@ public class TransactionServiceImpl implements TransactionService {
 		logger.debug("Charging consumption transaction: {}", transactionRequest);
 		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionRequest);
 		transactionEntity.setTransactionType("CREDIT_CARD_PAYMENT");
-		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
+		TransactionEntity savedTransaction = transactionRepository.save(transactionEntity).block();
 		generatePaymentScheduleForConsumption(transactionEntity);
 		TransactionResponse response = TransactionMapper.mapperToResponse(savedTransaction);
 		logger.info("Consumption charged successfully: {}", response);
@@ -102,7 +106,7 @@ public class TransactionServiceImpl implements TransactionService {
 	private void generatePaymentScheduleForConsumption(TransactionEntity transaction) {
 		logger.debug("Generating payment schedule for consumption transaction: {}", transaction.getId());
 		CreditCardEntity creditCardEntity = creditCardRepository.findById(transaction.getCreditCardNumber())
-				.orElseThrow(() -> {
+				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", transaction.getCreditCardNumber());
 					return new RuntimeException("Tarjeta de crédito no encontrada");
 				});

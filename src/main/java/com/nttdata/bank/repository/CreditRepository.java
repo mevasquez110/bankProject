@@ -1,39 +1,38 @@
 package com.nttdata.bank.repository;
 
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.CreditEntity;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * CreditRepository provides the CRUD operations for CreditEntity. This
- * interface extends MongoRepository and defines custom query methods to check
- * for active credits by customer ID, find active credits by credit ID, and
- * retrieve all active credits.
+ * interface extends ReactiveMongoRepository and defines custom query methods to
+ * check for active credits by customer ID, find active credits by credit ID,
+ * and retrieve all active credits.
  */
-
-public interface CreditRepository extends MongoRepository<CreditEntity, String> {
+public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, String> {
 
 	/**
 	 * Checks if an active credit exists by customer ID.
 	 *
-	 * @param customerId The customer ID to check for
-	 * @return True if an active credit exists, false otherwise
+	 * @param documentNumber The document number to check for.
+	 * @return A Mono emitting true if an active credit exists, false otherwise.
 	 */
-	Boolean existsByCustomerIdAndIsActiveTrue(String customerId);
+	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
 
 	/**
 	 * Finds an active credit by credit ID.
 	 *
-	 * @param creditId The credit ID to search for
-	 * @return An Optional containing the active CreditEntity object
+	 * @param creditId The credit ID to search for.
+	 * @return A Mono emitting the active CreditEntity object.
 	 */
-	Optional<CreditEntity> findByCreditIdAndIsActiveTrue(String creditId);
+	Mono<CreditEntity> findByCreditIdAndIsActiveTrue(String creditId);
 
 	/**
 	 * Finds all active credits.
 	 *
-	 * @return A list of active CreditEntity objects
+	 * @return A Flux emitting active CreditEntity objects.
 	 */
-	List<CreditEntity> findByIsActiveTrue();
+	Flux<CreditEntity> findByIsActiveTrue();
 }

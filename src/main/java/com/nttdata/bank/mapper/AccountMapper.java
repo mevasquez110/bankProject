@@ -23,7 +23,7 @@ public class AccountMapper {
 		AccountEntity accountEntity = new AccountEntity();
 
 		if (accountRequest != null) {
-			accountEntity.setCustomerId(accountRequest.getCustomerId());
+			accountEntity.setDocumentNumber(accountRequest.getDocumentNumber());
 			accountEntity.setAuthorizedSignatory(accountRequest.getAuthorizedSignatory());
 			accountEntity.setAccountType(accountRequest.getAccountType());
 		}

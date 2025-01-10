@@ -21,7 +21,7 @@ public class CreditCardEntity {
 
 	@Id
 	private String creditCardId;
-	private String customerId;
+	private String documentNumber;
 	private Double availableCredit;
 	private Double annualInterestRate;
 	private Double annualLateInterestRate;

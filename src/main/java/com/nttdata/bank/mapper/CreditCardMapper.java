@@ -23,7 +23,7 @@ public class CreditCardMapper {
 		CreditCardEntity creditCardEntity = new CreditCardEntity();
 
 		if (creditCardRequest != null) {
-			creditCardEntity.setCustomerId(creditCardRequest.getCustomerId());
+			creditCardEntity.setDocumentNumber(creditCardRequest.getDocumentNumber());
 			creditCardEntity.setAvailableCredit(creditCardRequest.getAvailableCredit());
 			creditCardEntity.setAnnualInterestRate(creditCardRequest.getAnnualInterestRate());
 			creditCardEntity.setAnnualLateInterestRate(creditCardRequest.getAnnualLateInterestRate());

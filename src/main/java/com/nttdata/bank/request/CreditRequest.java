@@ -16,8 +16,8 @@ import lombok.Data;
 @Data
 public class CreditRequest {
 
-	@NotBlank(message = "Customer id is mandatory")
-	private String customerId;
+	@NotBlank(message = "Document number is mandatory")
+	private String documentNumber;
 
 	@NotNull(message = "Amount is mandatory")
 	@Positive(message = "Amount must be greater than zero")

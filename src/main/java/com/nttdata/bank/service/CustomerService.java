@@ -15,10 +15,10 @@ public interface CustomerService {
     /**
      * Creates a new customer.
      *
-     * @param customer The customer request to create a new customer
+     * @param customerRequest The customer request to create a new customer
      * @return The response containing customer details
      */
-    CustomerResponse createCustomer(CustomerRequest customer);
+    CustomerResponse createCustomer(CustomerRequest customerRequest);
 
     /**
      * Gets customer details by document number.
@@ -38,16 +38,16 @@ public interface CustomerService {
     /**
      * Updates an existing customer.
      *
-     * @param customerId The ID of the customer to update
+     * @param documentNumber The document number to update
      * @param customerRequest The customer request with updated details
      * @return The response containing updated customer details
      */
-    CustomerResponse updateCustomer(String customerId, CustomerRequest customerRequest);
+    CustomerResponse updateCustomer(String documentNumber, CustomerRequest customerRequest);
 
     /**
      * Deletes a customer.
      *
-     * @param customerId The ID of the customer to delete
+     * @param documentNumber The document number to delete
      */
-    void deleteCustomer(String customerId);
+    void deleteCustomer(String documentNumber);
 }

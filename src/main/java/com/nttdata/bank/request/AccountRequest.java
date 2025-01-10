@@ -18,7 +18,7 @@ import lombok.Data;
 @AccountRequestValidator
 public class AccountRequest {
 
-	private List<String> customerId;
+	private List<String> documentNumber;
 
 	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 

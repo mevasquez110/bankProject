@@ -10,9 +10,9 @@ import com.nttdata.bank.repository.CustomerRepository;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 import com.nttdata.bank.service.CustomerService;
+import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -31,7 +31,11 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public CustomerResponse createCustomer(CustomerRequest customerRequest) {
 		logger.debug("Creating customer: {}", customerRequest);
-		if (customerRepository.existsByDocumentNumberAndIsActiveTrue(customerRequest.getDocumentNumber())) {
+
+		Boolean exists = customerRepository.existsByDocumentNumberAndIsActiveTrue(customerRequest.getDocumentNumber())
+				.toFuture().join();
+
+		if (exists) {
 			logger.warn("The document is already registered: {}", customerRequest.getDocumentNumber());
 			throw new IllegalArgumentException("The document is already registered");
 		}
@@ -39,8 +43,10 @@ public class CustomerServiceImpl implements CustomerService {
 		CustomerEntity customerEntity = CustomerMapper.mapperToEntity(customerRequest);
 		customerEntity.setIsActive(true);
 		customerEntity.setCreateDate(LocalDateTime.now());
-		customerEntity = customerRepository.save(customerEntity);
-		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
+
+		CustomerEntity savedEntity = customerRepository.save(customerEntity).toFuture().join();
+
+		CustomerResponse response = CustomerMapper.mapperToResponse(savedEntity);
 		logger.info("Customer created successfully: {}", response);
 		return response;
 	}
@@ -54,13 +60,12 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public CustomerResponse getCustomerByDocumentNumber(String documentNumber) {
 		logger.debug("Retrieving customer by document number: {}", documentNumber);
-		CustomerEntity customerEntity = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber);
 
-		if (customerEntity == null) {
-			logger.error("Customer not found with document number: {}", documentNumber);
-			throw new IllegalArgumentException("Customer not found with document number: " + documentNumber);
-		}
+		Mono<CustomerEntity> customerEntityMono = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
+				.switchIfEmpty(Mono.error(
+						new IllegalArgumentException("Customer not found with document number: " + documentNumber)));
 
+		CustomerEntity customerEntity = customerEntityMono.toFuture().join();
 		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
 		logger.info("Customer retrieved successfully by document number: {}", documentNumber);
 		return response;
@@ -74,8 +79,10 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public List<CustomerResponse> findAllCustomers() {
 		logger.debug("Finding all customers");
-		List<CustomerResponse> customers = customerRepository.findByIsActiveTrue().stream()
-				.map(CustomerMapper::mapperToResponse).collect(Collectors.toList());
+
+		List<CustomerResponse> customers = customerRepository.findByIsActiveTrue().map(CustomerMapper::mapperToResponse)
+				.collectList().toFuture().join();
+
 		logger.info("All customers retrieved successfully");
 		return customers;
 	}
@@ -83,27 +90,23 @@ public class CustomerServiceImpl implements CustomerService {
 	/**
 	 * Updates a customer.
 	 *
-	 * @param customerId      The ID of the customer to update
+	 * @param documentNumber  The document number to update
 	 * @param customerRequest The customer request payload containing update details
 	 * @return The updated customer response
 	 */
 	@Override
-	public CustomerResponse updateCustomer(String customerId, CustomerRequest customerRequest) {
-		logger.debug("Updating customer with ID: {}", customerId);
-		CustomerEntity customerEntity = customerRepository.findByIdAndIsActiveTrue(customerId).orElseThrow(() -> {
-			logger.error("Customer not found with ID: {}", customerId);
-			return new RuntimeException("Customer not found");
-		});
-
-		validateUpdateFields(customerRequest, customerEntity);
-		customerEntity.setPhoneNumber(customerRequest.getPhoneNumber());
-		customerEntity.setAddress(customerRequest.getAddress());
-		customerEntity.setEmail(customerRequest.getEmail());
-		customerEntity.setUpdateDate(LocalDateTime.now());
-		customerEntity = customerRepository.save(customerEntity);
-		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
-		logger.info("Customer updated successfully: {}", response);
-		return response;
+	public CustomerResponse updateCustomer(String documentNumber, CustomerRequest customerRequest) {
+		logger.debug("Updating customer with document number: {}", documentNumber);
+		return customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
+				.switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found"))).map(customerEntity -> {
+					validateUpdateFields(customerRequest, customerEntity);
+					customerEntity.setPhoneNumber(customerRequest.getPhoneNumber());
+					customerEntity.setAddress(customerRequest.getAddress());
+					customerEntity.setEmail(customerRequest.getEmail());
+					customerEntity.setUpdateDate(LocalDateTime.now());
+					return customerEntity;
+				}).flatMap(customerRepository::save).map(CustomerMapper::mapperToResponse)
+				.doOnSuccess(response -> logger.info("Customer updated successfully: {}", response)).toFuture().join();
 	}
 
 	/**
@@ -136,19 +139,18 @@ public class CustomerServiceImpl implements CustomerService {
 	/**
 	 * Deletes a customer.
 	 *
-	 * @param customerId The ID of the customer to delete
+	 * @param documentNumber The document number to delete
 	 */
 	@Override
-	public void deleteCustomer(String customerId) {
-		logger.debug("Deleting customer with ID: {}", customerId);
-		CustomerEntity customerEntity = customerRepository.findByIdAndIsActiveTrue(customerId).orElseThrow(() -> {
-			logger.error("Customer not found with ID: {}", customerId);
-			return new RuntimeException("Customer not found");
-		});
-
-		customerEntity.setIsActive(false);
-		customerEntity.setDeleteDate(LocalDateTime.now());
-		customerEntity = customerRepository.save(customerEntity);
-		logger.info("Customer deleted successfully with ID: {}", customerId);
+	public void deleteCustomer(String documentNumber) {
+		logger.debug("Deleting customer with document number: {}", documentNumber);
+		customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
+				.switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found"))).map(customerEntity -> {
+					customerEntity.setIsActive(false);
+					customerEntity.setDeleteDate(LocalDateTime.now());
+					return customerEntity;
+				}).flatMap(customerRepository::save).doOnSuccess(customerEntity -> logger
+						.info("Customer deleted successfully with document number: {}", documentNumber))
+				.toFuture().join();
 	}
 }

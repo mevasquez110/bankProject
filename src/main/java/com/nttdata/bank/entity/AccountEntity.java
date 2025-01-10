@@ -28,7 +28,7 @@ public class AccountEntity {
 	private Double maintenanceCommission;
 	private LocalDateTime withdrawalDepositDate;
 	private Double amount;
-	private List<String> customerId;
+	private List<String> documentNumber;
 	private List<AuthorizedSignatoryRequest> authorizedSignatory;
 	private String accountType;
 	private Boolean allowWithdrawals;

@@ -21,7 +21,7 @@ public class CreditEntity {
 
 	@Id
 	private String creditId;
-	private String customerId;
+	private String documentNumber;
 	private Double amount;
 	private String accountNumber;
 	private Double annualInterestRate;

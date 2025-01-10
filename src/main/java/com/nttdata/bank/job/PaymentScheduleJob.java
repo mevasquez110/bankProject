@@ -40,8 +40,10 @@ public class PaymentScheduleJob {
 	public void updatePaymentSchedules() {
 		LocalDate today = LocalDate.now();
 		logger.debug("Updating payment schedules for date: {}", today);
-		List<PaymentScheduleEntity> list = paymentScheduleRepository.findByPaidFalseAndPaymentDateBefore(today);
-
+		
+		List<PaymentScheduleEntity> list = paymentScheduleRepository.findByPaidFalseAndPaymentDateBefore(today)
+				.collectList().block();
+		
 		for (PaymentScheduleEntity payment : list) {
 			updatePayment(payment, today);
 		}
@@ -55,15 +57,19 @@ public class PaymentScheduleJob {
 	 */
 	private void updatePayment(PaymentScheduleEntity payment, LocalDate today) {
 		logger.debug("Updating payment schedule for payment ID: {}", payment.getId());
-		creditRepository.findById(payment.getCreditId()).ifPresent(credit -> {
-			Double dailyInterestRate = Utility.getDailyInterestRate(credit.getAnnualLateInterestRate());
 
-			Double overdueInterest = payment.getDebtAmount() * dailyInterestRate
-					* ChronoUnit.DAYS.between(payment.getPaymentDate(), today);
+		creditRepository.findById(payment.getCreditId()).doOnSuccess(credit -> {
+			if (credit != null) {
+				Double dailyInterestRate = Utility.getDailyInterestRate(credit.getAnnualLateInterestRate());
 
-			payment.setDebtAmount(payment.getDebtAmount() + overdueInterest);
-			paymentScheduleRepository.save(payment);
-			logger.info("Updated payment schedule for payment ID: {}", payment.getId());
-		});
+				Double overdueInterest = payment.getDebtAmount() * dailyInterestRate
+						* ChronoUnit.DAYS.between(payment.getPaymentDate(), today);
+
+				payment.setDebtAmount(payment.getDebtAmount() + overdueInterest);
+				paymentScheduleRepository.save(payment);
+				logger.info("Updated payment schedule for payment ID: {}", payment.getId());
+			}
+		}).subscribe();
+
 	}
 }

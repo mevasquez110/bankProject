@@ -13,10 +13,9 @@ import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
+import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * * CreditCardServiceImpl is the implementation class for the CreditCardService
@@ -46,18 +45,21 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public CreditCardResponse requestCreditCard(CreditCardRequest creditCardRequest) {
 		logger.debug("Requesting credit card: {}", creditCardRequest);
-		Optional<CreditCardEntity> existingCard = creditCardRepository
-				.findByCustomerIdAndIsActiveTrue(creditCardRequest.getCustomerId());
 
-		if (existingCard.isPresent()) {
-			logger.warn("The customer already has a credit card: {}", creditCardRequest.getCustomerId());
-			throw new RuntimeException("El cliente ya tiene una tarjeta de crédito");
-		}
+		creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber())
+				.flatMap(existingCard -> {
+					if (existingCard != null) {
+						logger.warn("The customer already has a credit card: {}",
+								creditCardRequest.getDocumentNumber());
+						return Mono.error(new RuntimeException("El cliente ya tiene una tarjeta de crédito"));
+					}
+					return Mono.empty();
+				}).subscribe();
 
 		CreditCardEntity creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
 		creditCardEntity.setCreateDate(LocalDateTime.now());
 		creditCardEntity.setIsActive(true);
-		CreditCardEntity savedCard = creditCardRepository.save(creditCardEntity);
+		CreditCardEntity savedCard = creditCardRepository.save(creditCardEntity).block();
 		CreditCardResponse response = CreditCardMapper.mapperToResponse(savedCard);
 		logger.info("Credit card created successfully: {}", response);
 		return response;
@@ -72,12 +74,14 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public CreditCardDebtResponse checkDebt(String creditCardId) {
 		logger.debug("Checking debt for credit card: {}", creditCardId);
-		CreditCardEntity creditCard = creditCardRepository.findById(creditCardId).orElseThrow(() -> {
+
+		CreditCardEntity creditCard = creditCardRepository.findById(creditCardId).blockOptional().orElseThrow(() -> {
 			logger.error("Credit card not found: {}", creditCardId);
 			return new RuntimeException("Tarjeta de crédito no encontrada");
 		});
 
-		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository.findByCreditCardNumber(creditCardId);
+		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository.findByCreditCardNumber(creditCardId)
+				.collectList().block();
 
 		LocalDateTime today = LocalDateTime.now();
 		int currentMonth = today.getMonthValue();
@@ -108,8 +112,10 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public List<CreditCardResponse> findAllCreditCards() {
 		logger.debug("Finding all credit cards");
-		List<CreditCardResponse> creditCards = creditCardRepository.findByIsActiveTrue().stream()
-				.map(CreditCardMapper::mapperToResponse).collect(Collectors.toList());
+
+		List<CreditCardResponse> creditCards = creditCardRepository.findByIsActiveTrue()
+				.map(CreditCardMapper::mapperToResponse).collectList().block();
+
 		logger.info("All credit cards retrieved successfully");
 		return creditCards;
 	}
@@ -123,14 +129,15 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public CreditCardResponse updateCreditCard(String creditCardId) {
 		logger.debug("Updating credit card with ID: {}", creditCardId);
-		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).orElseThrow(() -> {
-			logger.error("Credit card not found: {}", creditCardId);
-			return new RuntimeException("Tarjeta de crédito no encontrada");
-		});
+		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).blockOptional()
+				.orElseThrow(() -> {
+					logger.error("Credit card not found: {}", creditCardId);
+					return new RuntimeException("Tarjeta de crédito no encontrada");
+				});
 
 		creditCardEntity.setAllowConsumption(!creditCardEntity.getAllowConsumption());
 		creditCardEntity.setUpdateDate(LocalDateTime.now());
-		creditCardEntity = creditCardRepository.save(creditCardEntity);
+		creditCardEntity = creditCardRepository.save(creditCardEntity).block();
 		CreditCardResponse response = CreditCardMapper.mapperToResponse(creditCardEntity);
 		logger.info("Credit card updated successfully: {}", response);
 		return response;
@@ -144,14 +151,15 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public void deleteCreditCard(String creditCardId) {
 		logger.debug("Deleting credit card with ID: {}", creditCardId);
-		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).orElseThrow(() -> {
-			logger.error("Credit card not found: {}", creditCardId);
-			return new RuntimeException("Tarjeta de crédito no encontrada");
-		});
+		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).blockOptional()
+				.orElseThrow(() -> {
+					logger.error("Credit card not found: {}", creditCardId);
+					return new RuntimeException("Tarjeta de crédito no encontrada");
+				});
 
 		creditCardEntity.setIsActive(false);
 		creditCardEntity.setUpdateDate(LocalDateTime.now());
-		creditCardEntity = creditCardRepository.save(creditCardEntity);
+		creditCardEntity = creditCardRepository.save(creditCardEntity).block();
 		logger.info("Credit card deleted successfully with ID: {}", creditCardId);
 	}
 }
