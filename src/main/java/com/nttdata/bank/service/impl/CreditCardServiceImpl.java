@@ -13,7 +13,7 @@ import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
-import reactor.core.publisher.Mono;
+import com.nttdata.bank.util.Constants;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,19 +46,19 @@ public class CreditCardServiceImpl implements CreditCardService {
 	public CreditCardResponse requestCreditCard(CreditCardRequest creditCardRequest) {
 		logger.debug("Requesting credit card: {}", creditCardRequest);
 
-		creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber())
-				.flatMap(existingCard -> {
-					if (existingCard != null) {
-						logger.warn("The customer already has a credit card: {}",
-								creditCardRequest.getDocumentNumber());
-						return Mono.error(new RuntimeException("El cliente ya tiene una tarjeta de crédito"));
-					}
-					return Mono.empty();
-				}).subscribe();
+		boolean existingCard = creditCardRepository
+				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block();
+
+		if (existingCard) {
+			logger.warn("The customer already has a credit card: {}", creditCardRequest.getDocumentNumber());
+			throw new RuntimeException("The customer already has a credit card");
+		}
 
 		CreditCardEntity creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
+		creditCardEntity.setCreditCardNumber(generateUniqueCreditCardNumber(creditCardRequest.getDocumentNumber()));
 		creditCardEntity.setCreateDate(LocalDateTime.now());
 		creditCardEntity.setIsActive(true);
+		creditCardEntity.setAllowConsumption(true);
 		CreditCardEntity savedCard = creditCardRepository.save(creditCardEntity).block();
 		CreditCardResponse response = CreditCardMapper.mapperToResponse(savedCard);
 		logger.info("Credit card created successfully: {}", response);
@@ -68,20 +68,21 @@ public class CreditCardServiceImpl implements CreditCardService {
 	/**
 	 * Checks the debt of a credit card.
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 * @return The credit card debt response
 	 */
 	@Override
-	public CreditCardDebtResponse checkDebt(String creditCardId) {
-		logger.debug("Checking debt for credit card: {}", creditCardId);
+	public CreditCardDebtResponse checkDebt(String creditCardNumber) {
+		logger.debug("Checking debt for credit card: {}", creditCardNumber);
 
-		CreditCardEntity creditCard = creditCardRepository.findById(creditCardId).blockOptional().orElseThrow(() -> {
-			logger.error("Credit card not found: {}", creditCardId);
-			return new RuntimeException("Tarjeta de crédito no encontrada");
-		});
+		CreditCardEntity creditCard = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+				.blockOptional().orElseThrow(() -> {
+					logger.error("Credit card not found: {}", creditCardNumber);
+					return new RuntimeException("Tarjeta de crédito no encontrada");
+				});
 
-		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository.findByCreditCardNumber(creditCardId)
-				.collectList().block();
+		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository
+				.findByCreditCardNumber(creditCardNumber).collectList().block();
 
 		LocalDateTime today = LocalDateTime.now();
 		int currentMonth = today.getMonthValue();
@@ -100,7 +101,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		response.setTotalDebt(totalDebt);
 		response.setShare(currentMonthShare);
 		response.setAvailableCredit(creditCard.getAvailableCredit());
-		logger.info("Debt checked successfully for credit card: {}", creditCardId);
+		logger.info("Debt checked successfully for credit card: {}", creditCardNumber);
 		return response;
 	}
 
@@ -123,15 +124,16 @@ public class CreditCardServiceImpl implements CreditCardService {
 	/**
 	 * Updates a credit card.
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 * @return The updated credit card response
 	 */
 	@Override
-	public CreditCardResponse updateCreditCard(String creditCardId) {
-		logger.debug("Updating credit card with ID: {}", creditCardId);
-		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).blockOptional()
-				.orElseThrow(() -> {
-					logger.error("Credit card not found: {}", creditCardId);
+	public CreditCardResponse updateCreditCard(String creditCardNumber) {
+		logger.debug("Updating credit card with ID: {}", creditCardNumber);
+
+		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+				.blockOptional().orElseThrow(() -> {
+					logger.error("Credit card not found: {}", creditCardNumber);
 					return new RuntimeException("Tarjeta de crédito no encontrada");
 				});
 
@@ -146,20 +148,46 @@ public class CreditCardServiceImpl implements CreditCardService {
 	/**
 	 * Deletes a credit card.
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 */
 	@Override
-	public void deleteCreditCard(String creditCardId) {
-		logger.debug("Deleting credit card with ID: {}", creditCardId);
-		CreditCardEntity creditCardEntity = creditCardRepository.findById(creditCardId).blockOptional()
-				.orElseThrow(() -> {
-					logger.error("Credit card not found: {}", creditCardId);
+	public void deleteCreditCard(String creditCardNumber) {
+		logger.debug("Deleting credit card with ID: {}", creditCardNumber);
+
+		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+				.blockOptional().orElseThrow(() -> {
+					logger.error("Credit card not found: {}", creditCardNumber);
 					return new RuntimeException("Tarjeta de crédito no encontrada");
 				});
 
 		creditCardEntity.setIsActive(false);
 		creditCardEntity.setUpdateDate(LocalDateTime.now());
 		creditCardEntity = creditCardRepository.save(creditCardEntity).block();
-		logger.info("Credit card deleted successfully with ID: {}", creditCardId);
+		logger.info("Credit card deleted successfully with ID: {}", creditCardNumber);
 	}
+	/**
+	 * Generates a unique document number.
+	 *
+	 * @param documentNumber The document Number
+	 * @return The generated unique account number
+	 */
+	private String generateUniqueCreditCardNumber(String documentNumber) {
+		String creditCardNumber;
+		boolean exists;
+		do {
+			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber + generateRandomNumber();
+			exists = creditCardRepository.existsByCreditCardNumberAndIsActiveTrue(creditCardNumber).toFuture().join();
+		} while (exists);
+		return creditCardNumber;
+	}
+
+	/**
+	 * Generates a random number to append to the credit card number.
+	 * @return A random number as a string.
+	 */
+	private String generateRandomNumber() {
+	    int randomNumber = (int) (Math.random() * 10000); 
+	    return String.format("%04d", randomNumber); 
+	}
+
 }

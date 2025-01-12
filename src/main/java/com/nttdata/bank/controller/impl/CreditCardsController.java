@@ -49,18 +49,18 @@ public class CreditCardsController implements CreditCardsAPI {
 	/**
 	 * Checks the debt of a credit card. 
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 * @return ApiResponse containing the credit card debt response
 	 */
 	@Override
-	public ApiResponse<CreditCardDebtResponse> checkDebt(String creditCardId) {
-		logger.debug("Received request to check debt for credit card: {}", creditCardId);
+	public ApiResponse<CreditCardDebtResponse> checkDebt(String creditCardNumber) {
+		logger.debug("Received request to check debt for credit card: {}", creditCardNumber);
 		ApiResponse<CreditCardDebtResponse> response = new ApiResponse<>();
-		CreditCardDebtResponse creditCardDebtResponse = creditCardsService.checkDebt(creditCardId);
+		CreditCardDebtResponse creditCardDebtResponse = creditCardsService.checkDebt(creditCardNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Check debt successfully");
 		response.setData(creditCardDebtResponse);
-		logger.info("Debt checked successfully for credit card: {}", creditCardId);
+		logger.info("Debt checked successfully for credit card: {}", creditCardNumber);
 		return response;
 	}
 
@@ -84,35 +84,35 @@ public class CreditCardsController implements CreditCardsAPI {
 	/**
 	 * Updates a credit card.
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 * @return ApiResponse containing the updated credit card response
 	 */
 	@Override
-	public ApiResponse<CreditCardResponse> updateCreditCard(String creditCardId) {
-		logger.debug("Received request to update credit card with ID: {}", creditCardId);
+	public ApiResponse<CreditCardResponse> updateCreditCard(String creditCardNumber) {
+		logger.debug("Received request to update credit card number: {}", creditCardNumber);
 		ApiResponse<CreditCardResponse> response = new ApiResponse<>();
-		CreditCardResponse creditCardResponse = creditCardsService.updateCreditCard(creditCardId);
+		CreditCardResponse creditCardResponse = creditCardsService.updateCreditCard(creditCardNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Credit card updated successfully");
 		response.setData(creditCardResponse);
-		logger.info("Credit card updated successfully with ID: {}", creditCardId);
+		logger.info("Credit card updated successfully with credit card number: {}", creditCardNumber);
 		return response;
 	}
 
 	/**
 	 * Deletes a credit card.
 	 *
-	 * @param creditCardId The credit card ID
+	 * @param creditCardNumber The credit card number
 	 * @return ApiResponse indicating the result of the delete operation
 	 */
 	@Override
-	public ApiResponse<Void> deleteCreditCard(String creditCardId) {
-		logger.debug("Received request to delete credit card with ID: {}", creditCardId);
+	public ApiResponse<Void> deleteCreditCard(String creditCardNumber) {
+		logger.debug("Received request to delete credit card number: {}", creditCardNumber);
 		ApiResponse<Void> response = new ApiResponse<>();
-		creditCardsService.deleteCreditCard(creditCardId);
+		creditCardsService.deleteCreditCard(creditCardNumber);
 		response.setStatusCode(HttpStatus.NO_CONTENT.value());
 		response.setMessage("Credit card deleted successfully");
-		logger.info("Credit card deleted successfully with ID: {}", creditCardId);
+		logger.info("Credit card deleted successfully with credit card number: {}", creditCardNumber);
 		return response;
 	}
 }

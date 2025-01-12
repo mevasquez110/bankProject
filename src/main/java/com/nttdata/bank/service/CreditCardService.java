@@ -25,10 +25,10 @@ public interface CreditCardService {
 	/**
 	 * Checks the debt of a credit card.
 	 *
-	 * @param creditCardId The ID of the credit card to check the debt for
+	 * @param creditCardNumber The credit card number to check the debt for
 	 * @return The response containing credit card debt details
 	 */
-	CreditCardDebtResponse checkDebt(String creditCardId);
+	CreditCardDebtResponse checkDebt(String creditCardNumber);
 
 	/**
 	 * Finds all credit cards.
@@ -40,15 +40,15 @@ public interface CreditCardService {
 	/**
 	 * Updates an existing credit card.
 	 *
-	 * @param creditCardId The ID of the credit card to update
+	 * @param creditCardNumber The credit card number to update
 	 * @return The response containing updated credit card details
 	 */
-	CreditCardResponse updateCreditCard(String creditCardId);
+	CreditCardResponse updateCreditCard(String creditCardNumber);
 
 	/**
 	 * Deletes a credit card.
 	 *
-	 * @param creditCardId The ID of the credit card to delete
+	 * @param creditCardNumber The credit card number to delete
 	 */
-	void deleteCreditCard(String creditCardId);
+	void deleteCreditCard(String creditCardNumber);
 }

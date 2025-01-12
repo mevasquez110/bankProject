@@ -31,4 +31,6 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_CODE_FIXED_TERM = "3";
 	public static final String ACCOUNT_TYPE_CODE_VIP = "4";
 	public static final String ACCOUNT_TYPE_CODE_PYME = "5";
+	
+	public static final String CREDIT_TYPE = "6";
 }

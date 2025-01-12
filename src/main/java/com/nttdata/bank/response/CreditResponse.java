@@ -1,6 +1,5 @@
 package com.nttdata.bank.response;
 
-import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
@@ -22,7 +21,6 @@ public class CreditResponse {
 	private Integer numberOfInstallments;
 	private Double installmentAmount;
 	private Integer paymentDay;
-	private LocalDateTime createDate;
 	private Double annualLateInterestRate;
 
 }

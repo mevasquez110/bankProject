@@ -22,12 +22,20 @@ public interface CreditCardRepository extends ReactiveMongoRepository<CreditCard
 	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
 
 	/**
-	 * Finds an active credit card by document number.
+	 * Finds an active credit card by credit card number.
 	 *
-	 * @param documentNumber The document number to search for.
+	 * @param creditCardNumber The credit card number to search for.
 	 * @return A Mono emitting the active CreditCardEntity object.
 	 */
-	Mono<CreditCardEntity> findByDocumentNumberAndIsActiveTrue(String documentNumber);
+	Mono<CreditCardEntity> findByCreditCardNumberAndIsActiveTrue(String creditCardNumber);
+	
+	/**
+	 * Checks if an active credit exists by credit card number.
+	 *
+	 * @param creditCardNumber The credit card number to check for.
+	 * @return A Mono emitting true if an active credit card exists, false otherwise.
+	 */
+	Mono<Boolean> existsByCreditCardNumberAndIsActiveTrue(String creditCardNumber);
 
 	/**
 	 * Finds all active credit cards.

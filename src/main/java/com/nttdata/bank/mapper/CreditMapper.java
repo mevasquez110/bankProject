@@ -53,7 +53,6 @@ public class CreditMapper {
 			creditResponse.setInstallmentAmount(Utility.calculateInstallmentAmount(creditEntity.getAmount(),
 					creditEntity.getAnnualInterestRate(), creditEntity.getNumberOfInstallments()));
 			creditResponse.setPaymentDay(creditEntity.getPaymentDay());
-			creditResponse.setCreateDate(creditEntity.getCreateDate());
 			creditResponse.setAnnualInterestRate(creditEntity.getAnnualLateInterestRate());
 		}
 

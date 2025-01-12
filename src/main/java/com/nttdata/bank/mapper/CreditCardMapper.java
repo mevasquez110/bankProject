@@ -47,8 +47,8 @@ public class CreditCardMapper {
 			creditCardResponse.setAnnualInterestRate(creditCardEntity.getAnnualInterestRate());
 			creditCardResponse.setAnnualLateInterestRate(creditCardEntity.getAnnualLateInterestRate());
 			creditCardResponse.setPaymentDay(creditCardEntity.getPaymentDay());
-			creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardId());
-			creditCardResponse.setCreateDate(creditCardEntity.getCreateDate());
+			creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
+			creditCardResponse.setAllowConsumption(creditCardEntity.getAllowConsumption());
 		}
 
 		return creditCardResponse;

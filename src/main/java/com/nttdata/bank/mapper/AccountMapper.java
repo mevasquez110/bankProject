@@ -45,7 +45,6 @@ public class AccountMapper {
 			accountResponse.setMonthlyTransactionLimit(accountEntity.getMonthlyTransactionLimit());
 			accountResponse.setMaintenanceCommission(accountEntity.getMaintenanceCommission());
 			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
-			accountResponse.setCreateDate(accountEntity.getCreateDate());
 			accountResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
 			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
 		}

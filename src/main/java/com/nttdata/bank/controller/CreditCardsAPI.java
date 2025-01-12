@@ -33,12 +33,12 @@ public interface CreditCardsAPI {
 	/**
 	 * Checks the debt for the specified credit card.
 	 * 
-	 * @param creditCardId - The ID of the credit card for which the debt is to be
+	 * @param creditCardNumber - The credit card number for which the debt is to be
 	 *                     checked.
 	 * @return ApiResponse containing the CreditCardDebtResponse.
 	 */
-	@GetMapping("/{creditCardId}")
-	ApiResponse<CreditCardDebtResponse> checkDebt(@PathVariable String creditCardId);
+	@GetMapping("/debt")
+	ApiResponse<CreditCardDebtResponse> checkDebt(@RequestParam String creditCardNumber);
 
 	/**
 	 * Retrieves a list of all credit cards.
@@ -51,18 +51,18 @@ public interface CreditCardsAPI {
 	/**
 	 * Updates the specified credit card based on the credit card ID.
 	 * 
-	 * @param creditCardId - The ID of the credit card to be updated.
+	 * @param creditCardNumber - The credit card number to be updated.
 	 * @return ApiResponse containing the updated CreditCardResponse.
 	 */
-	@PutMapping("/update/{creditCardId}")
-	ApiResponse<CreditCardResponse> updateCreditCard(@PathVariable String creditCardId);
+	@PutMapping("/update/{creditCardNumber}")
+	ApiResponse<CreditCardResponse> updateCreditCard(@PathVariable String creditCardNumber);
 
 	/**
 	 * Deletes the specified credit card based on the credit card ID.
 	 * 
-	 * @param creditCardId - The ID of the credit card to be deleted.
+	 * @param creditCardNumber - The credit card number to be deleted.
 	 * @return ApiResponse with no content upon successful deletion.
 	 */
-	@DeleteMapping("/delete/{creditCardId}")
-	ApiResponse<Void> deleteCreditCard(@PathVariable String creditCardId);
+	@DeleteMapping("/delete/{creditCardNumber}")
+	ApiResponse<Void> deleteCreditCard(@PathVariable String creditCardNumber);
 }
