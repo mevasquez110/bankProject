@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, String> {
 
 	/**
-	 * Checks if an active credit exists by customer ID.
+	 * Checks if an active credit exists by document number.
 	 *
 	 * @param documentNumber The document number to check for.
 	 * @return A Mono emitting true if an active credit exists, false otherwise.

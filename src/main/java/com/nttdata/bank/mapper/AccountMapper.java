@@ -23,8 +23,8 @@ public class AccountMapper {
 		AccountEntity accountEntity = new AccountEntity();
 
 		if (accountRequest != null) {
-			accountEntity.setDocumentNumber(accountRequest.getDocumentNumber());
-			accountEntity.setAuthorizedSignatory(accountRequest.getAuthorizedSignatory());
+			accountEntity.setHolderDoc(accountRequest.getHolderDoc());
+			accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
 			accountEntity.setAccountType(accountRequest.getAccountType());
 		}
 
@@ -46,6 +46,8 @@ public class AccountMapper {
 			accountResponse.setMaintenanceCommission(accountEntity.getMaintenanceCommission());
 			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
 			accountResponse.setCreateDate(accountEntity.getCreateDate());
+			accountResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
+			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
 		}
 
 		return accountResponse;

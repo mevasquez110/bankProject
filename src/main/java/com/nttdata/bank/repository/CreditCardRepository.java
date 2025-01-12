@@ -14,6 +14,14 @@ import reactor.core.publisher.Mono;
 public interface CreditCardRepository extends ReactiveMongoRepository<CreditCardEntity, String> {
 
 	/**
+	 * Checks if an active credit exists by document number.
+	 *
+	 * @param documentNumber The document number to check for.
+	 * @return A Mono emitting true if an active credit card exists, false otherwise.
+	 */
+	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
+
+	/**
 	 * Finds an active credit card by document number.
 	 *
 	 * @param documentNumber The document number to search for.

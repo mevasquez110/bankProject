@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.nttdata.bank.request.AuthorizedSignatoryRequest;
 import lombok.Data;
 
 /**
@@ -28,12 +27,14 @@ public class AccountEntity {
 	private Double maintenanceCommission;
 	private LocalDateTime withdrawalDepositDate;
 	private Double amount;
-	private List<String> documentNumber;
-	private List<AuthorizedSignatoryRequest> authorizedSignatory;
+	private Double commissionPending;
+	private List<String> holderDoc;
+	private List<String> authorizedSignatoryDoc;
 	private String accountType;
 	private Boolean allowWithdrawals;
 	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
+	private Boolean isBlocked;
 	private Boolean isActive;
 }

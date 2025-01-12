@@ -22,5 +22,8 @@ public class AccountResponse {
 	private LocalDateTime withdrawalDepositDate;
 	private LocalDateTime createDate;
 	private Double amount;
+	private Boolean isBlocked;
+	private Boolean allowWithdrawals;
+
 
 }

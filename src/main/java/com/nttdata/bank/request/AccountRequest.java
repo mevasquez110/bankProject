@@ -18,9 +18,9 @@ import lombok.Data;
 @AccountRequestValidator
 public class AccountRequest {
 
-	private List<String> documentNumber;
-
-	private List<AuthorizedSignatoryRequest> authorizedSignatory;
+	private List<String> holderDoc;
+	
+	private List<String> authorizedSignatoryDoc;
 
 	@NotBlank(message = "Account type is mandatory")
 	private String accountType;

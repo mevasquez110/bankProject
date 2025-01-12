@@ -19,7 +19,8 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 
 	// List of valid account types
 	private static final List<String> VALID_ACCOUNT_TYPES = Arrays.asList(Constants.ACCOUNT_TYPE_SAVINGS,
-			Constants.ACCOUNT_TYPE_CHECKING, Constants.ACCOUNT_TYPE_FIXED_TERM);
+			Constants.ACCOUNT_TYPE_CHECKING, Constants.ACCOUNT_TYPE_FIXED_TERM, Constants.ACCOUNT_TYPE_VIP,
+			Constants.ACCOUNT_TYPE_PYME);
 
 	@Override
 	public void initialize(AccountRequestValidator constraintAnnotation) {
@@ -42,8 +43,8 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 		boolean isValid = true;
 
 		// Validate customerId
-		if (accountRequest.getDocumentNumber() == null || accountRequest.getDocumentNumber().isEmpty()) {
-			addViolation(context, "Document number is mandatory", "documentNumber");
+		if (accountRequest.getHolderDoc() == null || accountRequest.getHolderDoc().isEmpty()) {
+			addViolation(context, "Holder is mandatory", "holderDoc");
 			isValid = false;
 		}
 
@@ -52,7 +53,8 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 			addViolation(context, "accountType is mandatory", "accountType");
 			isValid = false;
 		} else if (!VALID_ACCOUNT_TYPES.contains(accountRequest.getAccountType())) {
-			addViolation(context, "accountType must be one of 'Ahorro', 'Cuenta corriente', 'Plazo fijo'",
+			addViolation(context,
+					"accountType must be one of 'Ahorro', 'Cuenta corriente', 'Plazo fijo', 'VIP', 'PYME'",
 					"accountType");
 			isValid = false;
 		}

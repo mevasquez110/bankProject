@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CustomersAPI;
 import com.nttdata.bank.request.ContactDataRequest;
@@ -12,7 +11,6 @@ import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CustomerResponse;
 import com.nttdata.bank.service.CustomerService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 
 /**
@@ -33,15 +31,12 @@ public class CustomerController implements CustomersAPI {
 	private CustomerService customerService;
 
 	/**
-	 * Creates a new customer. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Creates a new customer.
 	 *
 	 * @param customerRequest The customer request payload
 	 * @return ApiResponse containing the customer response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "customerService", fallbackMethod = "fallbackCreateCustomer")
 	public ApiResponse<CustomerResponse> createCustomer(CustomerRequest customerRequest) {
 		logger.debug("Received request to create customer: {}", customerRequest);
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
@@ -54,28 +49,12 @@ public class CustomerController implements CustomersAPI {
 	}
 
 	/**
-	 * Fallback method for createCustomer in case of failure.
-	 *
-	 * @param customerRequest The customer request payload
-	 * @return ApiResponse containing the fallback response
-	 */
-	public ApiResponse<CustomerResponse> fallbackCreateCustomer(CustomerRequest customerRequest) {
-		ApiResponse<CustomerResponse> response = new ApiResponse<>();
-		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
-		response.setMessage("Service is currently unavailable. Please try again later.");
-		return response;
-	}
-
-	/**
-	 * Retrieves a customer by their document number. This method is transactional
-	 * and uses a circuit breaker for resilience.
+	 * Retrieves a customer by their document number. 
 	 *
 	 * @param documentNumber The document number of the customer
 	 * @return ApiResponse containing the customer response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "customerService")
 	public ApiResponse<CustomerResponse> getCustomerByDocumentNumber(String documentNumber) {
 		logger.debug("Received request to retrieve customer by document number: {}", documentNumber);
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
@@ -88,13 +67,11 @@ public class CustomerController implements CustomersAPI {
 	}
 
 	/**
-	 * Retrieves all customers. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Retrieves all customers. 
 	 *
 	 * @return ApiResponse containing the list of customer responses
 	 */
-	@Transactional
-	@CircuitBreaker(name = "customerService")
+	@Override
 	public ApiResponse<List<CustomerResponse>> findAllCustomers() {
 		logger.debug("Received request to retrieve all customers");
 		ApiResponse<List<CustomerResponse>> response = new ApiResponse<>();
@@ -107,15 +84,13 @@ public class CustomerController implements CustomersAPI {
 	}
 
 	/**
-	 * Updates a customer. This method is transactional and uses a circuit breaker
-	 * for resilience.
+	 * Updates a customer. 
 	 *
 	 * @param documentNumber      The document number to update
 	 * @param contactDataRequest The customer request payload containing update details
 	 * @return ApiResponse containing the updated customer response
 	 */
-	@Transactional
-	@CircuitBreaker(name = "customerService")
+	@Override
 	public ApiResponse<CustomerResponse> updateCustomer(String documentNumber, ContactDataRequest contactDataRequest) {
 		logger.debug("Received request to update customer with document number: {}", documentNumber);
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
@@ -128,14 +103,12 @@ public class CustomerController implements CustomersAPI {
 	}
 
 	/**
-	 * Deletes a customer. This method is transactional and uses a circuit breaker
-	 * for resilience.
+	 * Deletes a customer. 
 	 *
 	 * @param documentNumber The document number to delete
 	 * @return ApiResponse indicating the result of the delete operation
 	 */
-	@Transactional
-	@CircuitBreaker(name = "customerService")
+	@Override
 	public ApiResponse<Void> deleteCustomer(String documentNumber) {
 		logger.debug("Received request to delete customer with document number: {}", documentNumber);
 		ApiResponse<Void> response = new ApiResponse<>();

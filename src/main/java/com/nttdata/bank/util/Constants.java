@@ -12,7 +12,9 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_SAVINGS = "Ahorro";
 	public static final String ACCOUNT_TYPE_CHECKING = "Cuenta corriente";
 	public static final String ACCOUNT_TYPE_FIXED_TERM = "Plazo fijo";
-
+	public static final String ACCOUNT_TYPE_VIP = "VIP";
+	public static final String ACCOUNT_TYPE_PYME = "PYME";
+	
 	// Constants for different types of documents
 	public static final String DOCUMENT_TYPE_DNI = "DNI";
 	public static final String DOCUMENT_TYPE_CE = "CE";
@@ -27,4 +29,6 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_CODE_SAVINGS = "1";
 	public static final String ACCOUNT_TYPE_CODE_CHECKING = "2";
 	public static final String ACCOUNT_TYPE_CODE_FIXED_TERM = "3";
+	public static final String ACCOUNT_TYPE_CODE_VIP = "4";
+	public static final String ACCOUNT_TYPE_CODE_PYME = "5";
 }

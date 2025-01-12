@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CreditCardsAPI;
 import com.nttdata.bank.request.CreditCardRequest;
@@ -12,7 +11,6 @@ import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 
 /**
@@ -31,15 +29,12 @@ public class CreditCardsController implements CreditCardsAPI {
 	CreditCardService creditCardsService;
 
 	/**
-	 * Requests a new credit card. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Requests a new credit card. 
 	 *
 	 * @param creditCardRequest The credit card request payload
 	 * @return ApiResponse containing the credit card response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditCardsService", fallbackMethod = "fallbackRequestCreditCard")
 	public ApiResponse<CreditCardResponse> requestCreditCard(CreditCardRequest creditCardRequest) {
 		logger.debug("Received request to create credit card: {}", creditCardRequest);
 		ApiResponse<CreditCardResponse> response = new ApiResponse<>();
@@ -52,28 +47,12 @@ public class CreditCardsController implements CreditCardsAPI {
 	}
 
 	/**
-	 * Fallback method for requestCreditCard in case of failure.
-	 *
-	 * @param creditCardRequest The credit card request payload
-	 * @return ApiResponse containing the fallback response
-	 */
-	public ApiResponse<CreditCardResponse> fallbackRequestCreditCard(CreditCardRequest creditCardRequest) {
-		ApiResponse<CreditCardResponse> response = new ApiResponse<>();
-		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
-		response.setMessage("Service is currently unavailable. Please try again later.");
-		return response;
-	}
-
-	/**
-	 * Checks the debt of a credit card. This method is transactional and uses a
-	 * circuit breaker for resilience.
+	 * Checks the debt of a credit card. 
 	 *
 	 * @param creditCardId The credit card ID
 	 * @return ApiResponse containing the credit card debt response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditCardsService")
 	public ApiResponse<CreditCardDebtResponse> checkDebt(String creditCardId) {
 		logger.debug("Received request to check debt for credit card: {}", creditCardId);
 		ApiResponse<CreditCardDebtResponse> response = new ApiResponse<>();
@@ -86,13 +65,11 @@ public class CreditCardsController implements CreditCardsAPI {
 	}
 
 	/**
-	 * Finds all credit cards. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Finds all credit cards. 
 	 *
 	 * @return ApiResponse containing the list of credit card responses
 	 */
-	@Transactional
-	@CircuitBreaker(name = "creditCardsService")
+	@Override
 	public ApiResponse<List<CreditCardResponse>> findAllCreditCards() {
 		logger.debug("Received request to find all credit cards");
 		ApiResponse<List<CreditCardResponse>> response = new ApiResponse<>();
@@ -105,14 +82,12 @@ public class CreditCardsController implements CreditCardsAPI {
 	}
 
 	/**
-	 * Updates a credit card. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Updates a credit card.
 	 *
 	 * @param creditCardId The credit card ID
 	 * @return ApiResponse containing the updated credit card response
 	 */
-	@Transactional
-	@CircuitBreaker(name = "creditCardsService")
+	@Override
 	public ApiResponse<CreditCardResponse> updateCreditCard(String creditCardId) {
 		logger.debug("Received request to update credit card with ID: {}", creditCardId);
 		ApiResponse<CreditCardResponse> response = new ApiResponse<>();
@@ -125,14 +100,12 @@ public class CreditCardsController implements CreditCardsAPI {
 	}
 
 	/**
-	 * Deletes a credit card. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Deletes a credit card.
 	 *
 	 * @param creditCardId The credit card ID
 	 * @return ApiResponse indicating the result of the delete operation
 	 */
-	@Transactional
-	@CircuitBreaker(name = "creditCardsService")
+	@Override
 	public ApiResponse<Void> deleteCreditCard(String creditCardId) {
 		logger.debug("Received request to delete credit card with ID: {}", creditCardId);
 		ApiResponse<Void> response = new ApiResponse<>();

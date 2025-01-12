@@ -40,15 +40,15 @@ public interface AccountsService {
 	/**
 	 * Updates an existing account.
 	 *
-	 * @param accountId The ID of the account to update
+	 * @param accountNumber The account number to update
 	 * @return The response containing updated account details
 	 */
-	AccountResponse updateAccount(String accountId);
+	AccountResponse updateAccountAllowWithdrawals(String accountNumber);
 
 	/**
 	 * Deletes an account.
 	 *
-	 * @param accountId The ID of the account to delete
+	 * @param accountNumber The account number to delete
 	 */
-	void deleteAccount(String accountId);
+	void deleteAccount(String accountNumber);
 }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CreditAPI;
 import com.nttdata.bank.request.CreditRequest;
@@ -13,7 +12,6 @@ import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
 import com.nttdata.bank.service.CreditService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 
 /**
@@ -33,15 +31,12 @@ public class CreditController implements CreditAPI {
 	CreditService creditService;
 
 	/**
-	 * Grants a new credit. This method is transactional and uses a circuit breaker
-	 * for resilience.
+	 * Grants a new credit. 
 	 *
 	 * @param creditRequest The credit request payload
 	 * @return ApiResponse containing the credit response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditService", fallbackMethod = "fallbackGrantCredit")
 	public ApiResponse<CreditResponse> grantCredit(CreditRequest creditRequest) {
 		logger.debug("Received request to grant credit: {}", creditRequest);
 		ApiResponse<CreditResponse> response = new ApiResponse<>();
@@ -54,28 +49,12 @@ public class CreditController implements CreditAPI {
 	}
 
 	/**
-	 * Fallback method for grantCredit in case of failure.
-	 *
-	 * @param creditRequest The credit request payload
-	 * @return ApiResponse containing the fallback response
-	 */
-	public ApiResponse<CreditResponse> fallbackGrantCredit(CreditRequest creditRequest) {
-		ApiResponse<CreditResponse> response = new ApiResponse<>();
-		response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE.value());
-		response.setMessage("Service is currently unavailable. Please try again later.");
-		return response;
-	}
-
-	/**
-	 * Checks the debt of a credit. This method is transactional and uses a circuit
-	 * breaker for resilience.
+	 * Checks the debt of a credit.
 	 *
 	 * @param creditId The credit ID
 	 * @return ApiResponse containing the credit debt response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditService")
 	public ApiResponse<CreditDebtResponse> checkDebt(String creditId) {
 		logger.debug("Received request to check debt for credit: {}", creditId);
 		ApiResponse<CreditDebtResponse> response = new ApiResponse<>();
@@ -88,15 +67,12 @@ public class CreditController implements CreditAPI {
 	}
 
 	/**
-	 * Reprograms the debt of a credit. This method is transactional and uses a
-	 * circuit breaker for resilience.
+	 * Reprograms the debt of a credit.
 	 *
 	 * @param reprogramDebtRequest The reprogram debt request payload
 	 * @return ApiResponse containing the reprogrammed credit response
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditService")
 	public ApiResponse<CreditResponse> updateReprogramDebt(ReprogramDebtRequest reprogramDebtRequest) {
 		logger.debug("Received request to reprogram debt: {}", reprogramDebtRequest);
 		ApiResponse<CreditResponse> response = new ApiResponse<>();
@@ -109,14 +85,11 @@ public class CreditController implements CreditAPI {
 	}
 
 	/**
-	 * Finds all credits. This method is transactional and uses a circuit breaker
-	 * for resilience.
+	 * Finds all credits. 
 	 *
 	 * @return ApiResponse containing the list of credit responses
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditService")
 	public ApiResponse<List<CreditResponse>> findAllCredits() {
 		logger.debug("Received request to find all credits");
 		ApiResponse<List<CreditResponse>> response = new ApiResponse<>();
@@ -129,15 +102,12 @@ public class CreditController implements CreditAPI {
 	}
 
 	/**
-	 * Deletes a credit. This method is transactional and uses a circuit breaker for
-	 * resilience.
+	 * Deletes a credit. .
 	 *
 	 * @param creditId The credit ID
 	 * @return ApiResponse indicating the result of the delete operation
 	 */
 	@Override
-	@Transactional
-	@CircuitBreaker(name = "creditService")
 	public ApiResponse<Void> deleteCredit(String creditId) {
 		logger.debug("Received request to delete credit with ID: {}", creditId);
 		ApiResponse<Void> response = new ApiResponse<>();

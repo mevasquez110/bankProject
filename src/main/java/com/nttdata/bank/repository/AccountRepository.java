@@ -1,6 +1,5 @@
 package com.nttdata.bank.repository;
 
-import java.util.Optional;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.AccountEntity;
 import reactor.core.publisher.Flux;
@@ -14,12 +13,13 @@ import reactor.core.publisher.Mono;
 public interface AccountRepository extends ReactiveMongoRepository<AccountEntity, String> {
 
 	/**
-	 * Finds active accounts by document number.
+	 * Finds an active account that contains the given document number in the list
+	 * of holder documents.
 	 *
-	 * @param documentNumber The document number to search for.
-	 * @return A Flux emitting active AccountEntity objects.
+	 * @param holderDoc The document number to search for.
+	 * @return A Flux emitting the found AccountEntity object.
 	 */
-	Flux<AccountEntity> findByDocumentNumberAndIsActiveTrue(String documentNumber);
+	Flux<AccountEntity> findByHolderDocContaining(String holderDoc);
 
 	/**
 	 * Checks if an account exists by its account number.
@@ -45,11 +45,4 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
 	 */
 	Flux<AccountEntity> findByIsActiveTrue();
 
-	/**
-	 * Finds an active account by its ID.
-	 *
-	 * @param accountId The account ID to search for.
-	 * @return A Mono emitting the active AccountEntity object.
-	 */
-	Mono<Optional<AccountEntity>> findByIdAndIsActiveTrue(String accountId);
 }

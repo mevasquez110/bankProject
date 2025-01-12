@@ -44,17 +44,17 @@ public interface AccountsAPI {
 
     /**
      * Updates the specified account based on the account ID.
-     * @param accountId - The ID of the account to be updated.
+     * @param accountNumber - The account number to be updated.
      * @return ApiResponse containing the updated AccountResponse.
      */
-    @PutMapping("/update/{accountId}")
-    ApiResponse<AccountResponse> updateAccount(@PathVariable String accountId);
+    @PutMapping("/update/{accountNumber}")
+    ApiResponse<AccountResponse> updateAccountAllowWithdrawals(@PathVariable String accountNumber);
 
     /**
      * Deletes the specified account based on the account ID.
-     * @param accountId - The ID of the account to be deleted.
+     * @param accountNumber - The account number to be deleted.
      * @return ApiResponse with no content upon successful deletion.
      */
-    @DeleteMapping("/delete/{accountId}")
-    ApiResponse<Void> deleteAccount(@PathVariable String accountId);
+    @DeleteMapping("/delete/{accountNumber}")
+    ApiResponse<Void> deleteAccount(@PathVariable String accountNumber);
 }
