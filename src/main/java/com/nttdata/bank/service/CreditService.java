@@ -2,7 +2,6 @@ package com.nttdata.bank.service;
 
 import java.util.List;
 import com.nttdata.bank.request.CreditRequest;
-import com.nttdata.bank.request.ReprogramDebtRequest;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
 
@@ -32,24 +31,10 @@ public interface CreditService {
 	CreditDebtResponse checkDebt(String creditId);
 
 	/**
-	 * Updates the reprogrammed debt of a credit.
-	 *
-	 * @param reprogramDebtRequest The reprogram debt request to update the credit
-	 * @return The response containing updated credit details
-	 */
-	CreditResponse updateReprogramDebt(ReprogramDebtRequest reprogramDebtRequest);
-
-	/**
 	 * Finds all credits.
 	 *
 	 * @return A list of responses containing credit details
 	 */
 	List<CreditResponse> findAllCredits();
 
-	/**
-	 * Deletes a credit.
-	 *
-	 * @param creditId The ID of the credit to delete
-	 */
-	void deleteCredit(String creditId);
 }

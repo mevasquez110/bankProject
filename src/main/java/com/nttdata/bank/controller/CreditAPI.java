@@ -1,9 +1,13 @@
 package com.nttdata.bank.controller;
 
 import javax.validation.Valid;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.CreditRequest;
-import com.nttdata.bank.request.ReprogramDebtRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
@@ -35,19 +39,8 @@ public interface CreditAPI {
 	 * @param creditId - The ID of the credit for which the debt is to be checked.
 	 * @return ApiResponse containing the CreditDebtResponse.
 	 */
-	@GetMapping("/debt/{creditId}")
-	ApiResponse<CreditDebtResponse> checkDebt(@PathVariable String creditId);
-
-	/**
-	 * Updates the reprogrammed debt based on the provided ReprogramDebtRequest
-	 * object.
-	 * 
-	 * @param reprogramDebtRequest - The reprogrammed debt details provided in the
-	 *                             request body.
-	 * @return ApiResponse containing the updated CreditResponse.
-	 */
-	@PutMapping("/reprogram")
-	ApiResponse<CreditResponse> updateReprogramDebt(@RequestBody @Valid ReprogramDebtRequest reprogramDebtRequest);
+	@GetMapping("/debt")
+	ApiResponse<CreditDebtResponse> checkDebt(@RequestParam String creditId);
 
 	/**
 	 * Retrieves a list of all credits.
@@ -57,12 +50,4 @@ public interface CreditAPI {
 	@GetMapping("/all")
 	ApiResponse<List<CreditResponse>> findAllCredits();
 
-	/**
-	 * Deletes the specified credit based on the credit ID.
-	 * 
-	 * @param creditId - The ID of the credit to be deleted.
-	 * @return ApiResponse with no content upon successful deletion.
-	 */
-	@DeleteMapping("/{creditId}")
-	ApiResponse<Void> deleteCredit(@PathVariable String creditId);
 }

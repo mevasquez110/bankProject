@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CreditAPI;
 import com.nttdata.bank.request.CreditRequest;
-import com.nttdata.bank.request.ReprogramDebtRequest;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
@@ -31,7 +30,7 @@ public class CreditController implements CreditAPI {
 	CreditService creditService;
 
 	/**
-	 * Grants a new credit. 
+	 * Grants a new credit.
 	 *
 	 * @param creditRequest The credit request payload
 	 * @return ApiResponse containing the credit response
@@ -67,25 +66,7 @@ public class CreditController implements CreditAPI {
 	}
 
 	/**
-	 * Reprograms the debt of a credit.
-	 *
-	 * @param reprogramDebtRequest The reprogram debt request payload
-	 * @return ApiResponse containing the reprogrammed credit response
-	 */
-	@Override
-	public ApiResponse<CreditResponse> updateReprogramDebt(ReprogramDebtRequest reprogramDebtRequest) {
-		logger.debug("Received request to reprogram debt: {}", reprogramDebtRequest);
-		ApiResponse<CreditResponse> response = new ApiResponse<>();
-		CreditResponse creditResponse = creditService.updateReprogramDebt(reprogramDebtRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Credit reprogrammed successfully");
-		response.setData(creditResponse);
-		logger.info("Debt reprogrammed successfully: {}", creditResponse);
-		return response;
-	}
-
-	/**
-	 * Finds all credits. 
+	 * Finds all credits.
 	 *
 	 * @return ApiResponse containing the list of credit responses
 	 */
@@ -101,20 +82,4 @@ public class CreditController implements CreditAPI {
 		return response;
 	}
 
-	/**
-	 * Deletes a credit. .
-	 *
-	 * @param creditId The credit ID
-	 * @return ApiResponse indicating the result of the delete operation
-	 */
-	@Override
-	public ApiResponse<Void> deleteCredit(String creditId) {
-		logger.debug("Received request to delete credit with ID: {}", creditId);
-		ApiResponse<Void> response = new ApiResponse<>();
-		creditService.deleteCredit(creditId);
-		response.setStatusCode(HttpStatus.NO_CONTENT.value());
-		response.setMessage("Credit deleted successfully");
-		logger.info("Credit deleted successfully with ID: {}", creditId);
-		return response;
-	}
 }

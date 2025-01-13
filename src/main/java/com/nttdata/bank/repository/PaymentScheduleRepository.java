@@ -3,6 +3,8 @@ package com.nttdata.bank.repository;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.PaymentScheduleEntity;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.time.LocalDate;
 
 /**
@@ -21,18 +23,7 @@ public interface PaymentScheduleRepository extends ReactiveMongoRepository<Payme
 	 * @param creditId The credit ID to search for.
 	 * @return A Flux emitting PaymentScheduleEntity objects.
 	 */
-	Flux<PaymentScheduleEntity> findByCreditId(String creditId);
-
-	/**
-	 * Finds payment schedules by credit card number and date range.
-	 *
-	 * @param creditCardNumber The credit card number to search for.
-	 * @param startDate        The start date of the range.
-	 * @param endDate          The end date of the range.
-	 * @return A Flux emitting PaymentScheduleEntity objects.
-	 */
-	Flux<PaymentScheduleEntity> findByCreditCardNumberAndPaymentDateBetween(String creditCardNumber,
-			LocalDate startDate, LocalDate endDate);
+	Flux<PaymentScheduleEntity> findByCreditIdAndPaidFalse(String creditId);
 
 	/**
 	 * Finds unpaid payment schedules before a specific date.
@@ -48,5 +39,24 @@ public interface PaymentScheduleRepository extends ReactiveMongoRepository<Payme
 	 * @param creditCardNumber The credit card number to search for.
 	 * @return A Flux emitting PaymentScheduleEntity objects.
 	 */
-	Flux<PaymentScheduleEntity> findByCreditCardNumber(String creditCardNumber);
+	Flux<PaymentScheduleEntity> findByCreditCardNumberAndPaidFalse(String creditCardNumber);
+	
+	/**
+	 * Checks if a credit ID has any overdue debt. 
+	 * 
+	 * @param creditId The credit ID to check. 
+     * @param date The current date for comparison. 
+     * @return A Mono emitting true if there is any overdue debt, false otherwise.
+	 */
+	Mono<Boolean> existsByCreditIdAndPaidFalseAndPaymentDateBefore(String creditId, LocalDate date);
+	
+	/**
+	 * Checks if a credit card number has any overdue debt. 
+	 * 
+	 * @param creditCardNumber The credit card number to check. 
+     * @param date The current date for comparison. 
+     * @return A Mono emitting true if there is any overdue debt, false otherwise.
+	 */
+	Mono<Boolean> existsByCreditCardNumberAndPaidFalseAndPaymentDateBefore(String creditCardNumber, LocalDate date);
+
 }

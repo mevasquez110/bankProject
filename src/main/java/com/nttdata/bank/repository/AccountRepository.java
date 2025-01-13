@@ -19,7 +19,7 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
 	 * @param holderDoc The document number to search for.
 	 * @return A Flux emitting the found AccountEntity object.
 	 */
-	Flux<AccountEntity> findByHolderDocContaining(String holderDoc);
+	Flux<AccountEntity> findByHolderDocContainingAndIsActiveTrue(String holderDoc);
 
 	/**
 	 * Checks if an account exists by its account number.

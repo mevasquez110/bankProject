@@ -4,8 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,15 +12,14 @@ import org.springframework.stereotype.Service;
 import com.nttdata.bank.entity.CreditEntity;
 import com.nttdata.bank.entity.PaymentScheduleEntity;
 import com.nttdata.bank.mapper.CreditMapper;
+import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.PaymentScheduleRepository;
 import com.nttdata.bank.request.CreditRequest;
-import com.nttdata.bank.request.ReprogramDebtRequest;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
 import com.nttdata.bank.service.CreditService;
 import com.nttdata.bank.util.Utility;
-import reactor.core.publisher.Mono;
 
 /**
  * * CreditServiceImpl is the implementation class for the CreditService
@@ -37,6 +35,9 @@ public class CreditServiceImpl implements CreditService {
 
 	@Autowired
 	private CreditRepository creditRepository;
+	
+	@Autowired
+	private CreditCardRepository creditCardRepository;
 
 	@Autowired
 	private PaymentScheduleRepository paymentScheduleRepository;
@@ -44,15 +45,7 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public CreditResponse grantCredit(CreditRequest creditRequest) {
 		logger.debug("Granting credit: {}", creditRequest);
-
-		Boolean hasActiveCredit = creditRepository
-				.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block();
-
-		if (hasActiveCredit) {
-			logger.warn("The customer already has an active credit: {}", creditRequest.getDocumentNumber());
-			throw new RuntimeException("El cliente ya tiene un crédito activo");
-		}
-
+		validateCredit(creditRequest);
 		CreditEntity creditEntity = CreditMapper.mapperToEntity(creditRequest);
 		creditEntity.setIsActive(true);
 		creditEntity.setCreateDate(LocalDateTime.now());
@@ -62,6 +55,37 @@ public class CreditServiceImpl implements CreditService {
 		CreditResponse response = CreditMapper.mapperToResponse(creditEntity);
 		logger.info("Credit granted successfully: {}", response);
 		return response;
+	}
+
+	/**
+	 * Validates the credit request details provided by the customer. This method
+	 * checks if the customer has any active credit that would prevent them from
+	 * being approved for new credit.
+	 *
+	 * @param creditRequest the credit request containing the document number and
+	 *                      other relevant details
+	 * @throws RuntimeException if the customer already has an active credit
+	 */
+	private void validateCredit(CreditRequest creditRequest) {
+		Boolean existingCredit = creditRepository
+				.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block();
+
+		if (existingCredit) {
+			throw new RuntimeException("The customer already has an active credit");
+		}
+
+		Optional.ofNullable(creditCardRepository.findByDocumentNumberAndIsActiveTrue(
+				creditRequest.getDocumentNumber())
+				.toFuture().join()).ifPresent(card -> {
+					Optional<Boolean> hasActiveDebt = Optional.ofNullable(
+							paymentScheduleRepository.existsByCreditCardNumberAndPaidFalseAndPaymentDateBefore(
+									card.getCreditCardNumber(), LocalDate.now()).block());
+					hasActiveDebt.ifPresent(debt -> {
+						if (debt) {
+							throw new RuntimeException("The client has active debt");
+						}
+					});
+				});
 	}
 
 	private List<PaymentScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
@@ -99,8 +123,8 @@ public class CreditServiceImpl implements CreditService {
 			return new RuntimeException("Crédito no encontrado");
 		});
 
-		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditId(creditId).collectList()
-				.block();
+		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditIdAndPaidFalse(creditId)
+				.collectList().block();
 
 		LocalDate today = LocalDate.now();
 		int currentMonth = today.getMonthValue();
@@ -122,74 +146,6 @@ public class CreditServiceImpl implements CreditService {
 		return response;
 	}
 
-	private List<PaymentScheduleEntity> generateNewPaymentSchedule(CreditEntity creditEntity,
-			List<PaymentScheduleEntity> unpaidSchedule) {
-		logger.debug("Generating new payment schedule for credit: {}", creditEntity.getCreditId());
-		List<PaymentScheduleEntity> schedule = new ArrayList<>();
-		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
-		Double monthlyInterestRate = Utility.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
-		Double remainingPrincipal = unpaidSchedule.stream().mapToDouble(PaymentScheduleEntity::getDebtAmount).sum();
-
-		Double fixedInstallment = Utility.calculateInstallmentAmount(remainingPrincipal, monthlyInterestRate,
-				creditEntity.getNumberOfInstallments());
-
-		for (int i = 0; i < creditEntity.getNumberOfInstallments(); i++) {
-			PaymentScheduleEntity payment = new PaymentScheduleEntity();
-			payment.setPaymentDate(firstPaymentDate.plusMonths(i));
-			Double interestPayment = remainingPrincipal * monthlyInterestRate;
-			payment.setDebtAmount(remainingPrincipal - (fixedInstallment - interestPayment));
-			payment.setSharePayment(fixedInstallment);
-			payment.setCreditId(creditEntity.getCreditId());
-			payment.setPaid(false);
-			remainingPrincipal -= fixedInstallment - interestPayment;
-			schedule.add(payment);
-		}
-
-		logger.info("New payment schedule generated for credit: {}", creditEntity.getCreditId());
-		return schedule;
-	}
-
-	@Override
-	public CreditResponse updateReprogramDebt(ReprogramDebtRequest reprogramDebtRequest) {
-		logger.debug("Reprogramming debt for credit: {}", reprogramDebtRequest.getCreditId());
-
-		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(reprogramDebtRequest.getCreditId())
-				.switchIfEmpty(Mono.error(new RuntimeException("Crédito no encontrado")))
-				.doOnError(error -> logger.error("Credit not found: {}", reprogramDebtRequest.getCreditId())).block();
-
-		creditEntity.setAnnualInterestRate(reprogramDebtRequest.getNewInterestRate());
-		creditEntity.setAnnualLateInterestRate(reprogramDebtRequest.getNewLateInterestRate());
-		creditEntity.setPaymentDay(reprogramDebtRequest.getNewPaymentDay());
-		creditEntity.setNumberOfInstallments(reprogramDebtRequest.getNewNumberOfInstallments());
-		creditEntity.setUpdateDate(LocalDateTime.now());
-		creditEntity = creditRepository.save(creditEntity).block();
-
-		List<PaymentScheduleEntity> unpaidSchedule = paymentScheduleRepository
-				.findByCreditId(reprogramDebtRequest.getCreditId()).collectList().block().stream()
-				.filter(payment -> !payment.getPaid()).collect(Collectors.toList());
-
-		List<PaymentScheduleEntity> newSchedule = generateNewPaymentSchedule(creditEntity, unpaidSchedule);
-
-		IntStream.range(0, unpaidSchedule.size()).forEach(i -> {
-			PaymentScheduleEntity oldPayment = unpaidSchedule.get(i);
-			PaymentScheduleEntity newPayment = newSchedule.get(i);
-			oldPayment.setPaymentDate(newPayment.getPaymentDate());
-			oldPayment.setDebtAmount(newPayment.getDebtAmount());
-			oldPayment.setSharePayment(newPayment.getSharePayment());
-		});
-
-		if (newSchedule.size() > unpaidSchedule.size()) {
-			List<PaymentScheduleEntity> additionalPayments = newSchedule.subList(unpaidSchedule.size(),
-					newSchedule.size());
-			paymentScheduleRepository.saveAll(additionalPayments);
-		}
-
-		paymentScheduleRepository.saveAll(unpaidSchedule);
-		CreditResponse response = CreditMapper.mapperToResponse(creditEntity);
-		logger.info("Debt reprogrammed successfully for credit: {}", response);
-		return response;
-	}
-
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");
@@ -201,17 +157,4 @@ public class CreditServiceImpl implements CreditService {
 		return credits;
 	}
 
-	@Override
-	public void deleteCredit(String creditId) {
-		logger.debug("Deleting credit with ID: {}", creditId);
-
-		CreditEntity creditEntity = creditRepository.findByCreditIdAndIsActiveTrue(creditId)
-				.switchIfEmpty(Mono.error(new RuntimeException("Crédito no encontrado")))
-				.doOnError(error -> logger.error("Credit not found: {}", creditId)).block();
-
-		creditEntity.setIsActive(false);
-		creditEntity.setDeleteDate(LocalDateTime.now());
-		creditRepository.save(creditEntity);
-		logger.info("Credit deleted successfully with ID: {}", creditId);
-	}
 }

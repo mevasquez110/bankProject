@@ -23,6 +23,14 @@ public interface CustomerRepository extends ReactiveMongoRepository<CustomerEnti
      * @return A Mono that emits true if an active customer exists, false otherwise.
      */
     Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
+    
+    /**
+     * Checks if an active customer exists by phone number.
+     *
+     * @param phoneNumber The phone number to check for.
+     * @return A Mono that emits true if an active customer exists, false otherwise.
+     */
+    Mono<Boolean> existsByPhoneNumberAndIsActiveTrue(String phoneNumber);
 
     /**
      * Finds an active customer by document number.

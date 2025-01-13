@@ -216,7 +216,7 @@ public class AccountsServiceImpl implements AccountsService {
 		for (String documentNumber : accountRequest.getHolderDoc()) {
 			validationPymeAndVIP(accountRequest, documentNumber);
 
-			List<AccountEntity> accounts = accountRepository.findByHolderDocContaining(documentNumber).collectList()
+			List<AccountEntity> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber).collectList()
 					.toFuture().join();
 
 			String personType = getPersonType(documentNumber);

@@ -8,14 +8,18 @@ import com.nttdata.bank.entity.CreditCardEntity;
 import com.nttdata.bank.entity.PaymentScheduleEntity;
 import com.nttdata.bank.mapper.CreditCardMapper;
 import com.nttdata.bank.repository.CreditCardRepository;
+import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.PaymentScheduleRepository;
 import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
 import com.nttdata.bank.util.Constants;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * * CreditCardServiceImpl is the implementation class for the CreditCardService
@@ -31,6 +35,9 @@ public class CreditCardServiceImpl implements CreditCardService {
 	private static final Logger logger = LoggerFactory.getLogger(CreditCardServiceImpl.class);
 
 	@Autowired
+	private CreditRepository creditRepository;
+	
+	@Autowired
 	private CreditCardRepository creditCardRepository;
 
 	@Autowired
@@ -45,15 +52,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public CreditCardResponse requestCreditCard(CreditCardRequest creditCardRequest) {
 		logger.debug("Requesting credit card: {}", creditCardRequest);
-
-		boolean existingCard = creditCardRepository
-				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block();
-
-		if (existingCard) {
-			logger.warn("The customer already has a credit card: {}", creditCardRequest.getDocumentNumber());
-			throw new RuntimeException("The customer already has a credit card");
-		}
-
+		validateCreditCard(creditCardRequest);
 		CreditCardEntity creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
 		creditCardEntity.setCreditCardNumber(generateUniqueCreditCardNumber(creditCardRequest.getDocumentNumber()));
 		creditCardEntity.setCreateDate(LocalDateTime.now());
@@ -63,6 +62,38 @@ public class CreditCardServiceImpl implements CreditCardService {
 		CreditCardResponse response = CreditCardMapper.mapperToResponse(savedCard);
 		logger.info("Credit card created successfully: {}", response);
 		return response;
+	}
+
+	/**
+	 * Validates the credit card details provided in the request. This method checks
+	 * if the customer has an active credit card and any active debt associated with
+	 * it.
+	 *
+	 * @param creditCardRequest the credit card request containing the document
+	 *                          number and other details
+	 * @throws RuntimeException if the customer already has an active credit card or
+	 *                          active debt
+	 */
+	private void validateCreditCard(CreditCardRequest creditCardRequest) {
+		Boolean existingCreditCard = creditCardRepository
+				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block();
+
+		if (existingCreditCard) {
+			throw new RuntimeException("The customer already has a credit card");
+		}
+		
+		Optional.ofNullable(creditRepository.findByDocumentNumberAndIsActiveTrue(
+				creditCardRequest.getDocumentNumber())
+				.toFuture().join()).ifPresent(card -> {
+					Optional<Boolean> hasActiveDebt = Optional.ofNullable(
+							paymentScheduleRepository.existsByCreditIdAndPaidFalseAndPaymentDateBefore(
+									card.getCreditId(), LocalDate.now()).block());
+					hasActiveDebt.ifPresent(debt -> {
+						if (debt) {
+							throw new RuntimeException("The client has active debt");
+						}
+					});
+				});
 	}
 
 	/**
@@ -78,11 +109,11 @@ public class CreditCardServiceImpl implements CreditCardService {
 		CreditCardEntity creditCard = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
-					return new RuntimeException("Tarjeta de crédito no encontrada");
+					return new RuntimeException("Credit card not found");
 				});
 
 		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository
-				.findByCreditCardNumber(creditCardNumber).collectList().block();
+				.findByCreditCardNumberAndPaidFalse(creditCardNumber).collectList().block();
 
 		LocalDateTime today = LocalDateTime.now();
 		int currentMonth = today.getMonthValue();
@@ -165,6 +196,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		creditCardEntity = creditCardRepository.save(creditCardEntity).block();
 		logger.info("Credit card deleted successfully with ID: {}", creditCardNumber);
 	}
+
 	/**
 	 * Generates a unique document number.
 	 *
@@ -183,11 +215,12 @@ public class CreditCardServiceImpl implements CreditCardService {
 
 	/**
 	 * Generates a random number to append to the credit card number.
+	 * 
 	 * @return A random number as a string.
 	 */
 	private String generateRandomNumber() {
-	    int randomNumber = (int) (Math.random() * 10000); 
-	    return String.format("%04d", randomNumber); 
+		int randomNumber = (int) (Math.random() * 10000);
+		return String.format("%04d", randomNumber);
 	}
 
 }

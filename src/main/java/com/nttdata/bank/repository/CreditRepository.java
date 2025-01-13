@@ -14,20 +14,20 @@ import reactor.core.publisher.Mono;
 public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, String> {
 
 	/**
+	 * Finds an active credit by document number.
+	 *
+	 * @param documentNumber The document number to search for.
+	 * @return A Mono emitting the active CreditEntity object.
+	 */
+	Mono<CreditEntity> findByDocumentNumberAndIsActiveTrue(String documentNumber);
+
+	/**
 	 * Checks if an active credit exists by document number.
 	 *
 	 * @param documentNumber The document number to check for.
 	 * @return A Mono emitting true if an active credit exists, false otherwise.
 	 */
 	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
-
-	/**
-	 * Finds an active credit by credit ID.
-	 *
-	 * @param creditId The credit ID to search for.
-	 * @return A Mono emitting the active CreditEntity object.
-	 */
-	Mono<CreditEntity> findByCreditIdAndIsActiveTrue(String creditId);
 
 	/**
 	 * Finds all active credits.

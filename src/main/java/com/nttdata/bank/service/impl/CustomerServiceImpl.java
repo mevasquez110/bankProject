@@ -32,24 +32,35 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public CustomerResponse createCustomer(CustomerRequest customerRequest) {
 		logger.debug("Creating customer: {}", customerRequest);
-
-		Boolean exists = customerRepository.existsByDocumentNumberAndIsActiveTrue(customerRequest.getDocumentNumber())
-				.toFuture().join();
-
-		if (exists) {
-			logger.warn("The document is already registered: {}", customerRequest.getDocumentNumber());
-			throw new IllegalArgumentException("The document is already registered");
-		}
-
+		existsPhoneNumber(customerRequest.getPhoneNumber());
+		existsDocumentNumber(customerRequest.getDocumentNumber());
 		CustomerEntity customerEntity = CustomerMapper.mapperToEntity(customerRequest);
 		customerEntity.setIsActive(true);
 		customerEntity.setCreateDate(LocalDateTime.now());
-
 		CustomerEntity savedEntity = customerRepository.save(customerEntity).toFuture().join();
-
 		CustomerResponse response = CustomerMapper.mapperToResponse(savedEntity);
 		logger.info("Customer created successfully: {}", response);
 		return response;
+	}
+
+	private void existsDocumentNumber(String documentNumber) {
+		Boolean existsDocumentNumber = customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber)
+				.toFuture().join();
+
+		if (existsDocumentNumber) {
+			logger.warn("The document is already registered: {}", documentNumber);
+			throw new IllegalArgumentException("The document is already registered");
+		}
+	}
+
+	private void existsPhoneNumber(String phoneNumber) {
+		Boolean existsPhoneNumber = customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber)
+				.toFuture().join();
+
+		if (existsPhoneNumber) {
+			logger.warn("The phone is already registered: {}", phoneNumber);
+			throw new IllegalArgumentException("The phone number is already registered");
+		}
 	}
 
 	/**
@@ -98,6 +109,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public CustomerResponse updateCustomer(String documentNumber, ContactDataRequest contactDataRequest) {
 		logger.debug("Updating customer with document number: {}", documentNumber);
+		existsPhoneNumber(contactDataRequest.getPhoneNumber());
 		return customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
 				.switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found"))).map(customerEntity -> {
 					customerEntity.setPhoneNumber(contactDataRequest.getPhoneNumber());
