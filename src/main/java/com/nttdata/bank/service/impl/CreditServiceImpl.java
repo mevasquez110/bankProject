@@ -35,13 +35,24 @@ public class CreditServiceImpl implements CreditService {
 
 	@Autowired
 	private CreditRepository creditRepository;
-	
+
 	@Autowired
 	private CreditCardRepository creditCardRepository;
 
 	@Autowired
 	private PaymentScheduleRepository paymentScheduleRepository;
 
+	/**
+	 * Grants credit based on the provided credit request. This method handles the
+	 * validation of the credit request, maps the request to a credit entity,
+	 * activates and timestamps the entity, saves it to the repository, generates a
+	 * payment schedule, and maps the entity to a response.
+	 *
+	 * @param creditRequest the credit request containing the details for granting
+	 *                      credit
+	 * @return CreditResponse containing the details of the granted credit
+	 * @throws RuntimeException if validation of the credit request fails
+	 */
 	@Override
 	public CreditResponse grantCredit(CreditRequest creditRequest) {
 		logger.debug("Granting credit: {}", creditRequest);
@@ -74,8 +85,7 @@ public class CreditServiceImpl implements CreditService {
 			throw new RuntimeException("The customer already has an active credit");
 		}
 
-		Optional.ofNullable(creditCardRepository.findByDocumentNumberAndIsActiveTrue(
-				creditRequest.getDocumentNumber())
+		Optional.ofNullable(creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber())
 				.toFuture().join()).ifPresent(card -> {
 					Optional<Boolean> hasActiveDebt = Optional.ofNullable(
 							paymentScheduleRepository.existsByCreditCardNumberAndPaidFalseAndPaymentDateBefore(
@@ -88,6 +98,19 @@ public class CreditServiceImpl implements CreditService {
 				});
 	}
 
+	/**
+	 * Generates a payment schedule for the given credit entity. This method
+	 * initializes the payment schedule list, calculates the first payment date,
+	 * computes the monthly interest rate, calculates the fixed installment amount,
+	 * iterates over the number of installments to create each payment schedule
+	 * entry, updates the debt amount and adjusts the remaining principal, adds each
+	 * payment schedule entry to the list, and logs the successful generation of the
+	 * payment schedule.
+	 *
+	 * @param creditEntity the credit entity for which the payment schedule is to be
+	 *                     generated
+	 * @return List of PaymentScheduleEntity representing the payment schedule
+	 */
 	private List<PaymentScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
 		logger.debug("Generating payment schedule for credit: {}", creditEntity.getCreditId());
 		List<PaymentScheduleEntity> schedule = new ArrayList<>();
@@ -115,6 +138,17 @@ public class CreditServiceImpl implements CreditService {
 		return schedule;
 	}
 
+	/**
+	 * Checks the debt for a given credit ID. This method finds the credit entity by
+	 * ID, retrieves the unpaid payment schedule entries, calculates the total debt
+	 * and the share for the current month, and returns the debt details in a
+	 * response.
+	 *
+	 * @param creditId the credit ID for which to check the debt
+	 * @return CreditDebtResponse containing the total debt and the share for the
+	 *         current month
+	 * @throws RuntimeException if the credit is not found
+	 */
 	@Override
 	public CreditDebtResponse checkDebtCredit(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
@@ -146,6 +180,13 @@ public class CreditServiceImpl implements CreditService {
 		return response;
 	}
 
+	/**
+	 * Retrieves all active credits. This method finds all credits that are active,
+	 * maps them to credit response objects, and returns the list of credit
+	 * responses.
+	 *
+	 * @return List of CreditResponse containing details of all active credits
+	 */
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");

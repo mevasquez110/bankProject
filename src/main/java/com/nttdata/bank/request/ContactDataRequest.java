@@ -6,6 +6,13 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * ContactDataRequest is a data transfer object that represents the request
+ * payload for updating contact information. This class includes attributes such
+ * as email, address, and phone number. It uses validation annotations to
+ * enforce constraints and Lombok annotations for getters and setters.
+ */
+
 @Data
 public class ContactDataRequest {
 

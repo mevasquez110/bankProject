@@ -24,7 +24,7 @@ public class CustomerServiceImpl implements CustomerService {
 	private CustomerRepository customerRepository;
 
 	/**
-	 * Creates a new customer. 
+	 * Creates a new customer.
 	 *
 	 * @param customerRequest The customer request payload
 	 * @return The customer response
@@ -43,6 +43,14 @@ public class CustomerServiceImpl implements CustomerService {
 		return response;
 	}
 
+	/**
+	 * Checks if the document number is already registered. This method queries the
+	 * customer repository to verify if the document number exists and is active. If
+	 * it is found, a warning is logged, and an IllegalArgumentException is thrown.
+	 *
+	 * @param documentNumber the document number to check for existence
+	 * @throws IllegalArgumentException if the document number is already registered
+	 */
 	private void existsDocumentNumber(String documentNumber) {
 		Boolean existsDocumentNumber = customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber)
 				.toFuture().join();
@@ -53,9 +61,17 @@ public class CustomerServiceImpl implements CustomerService {
 		}
 	}
 
+	/**
+	 * Checks if the phone number is already registered. This method queries the
+	 * customer repository to verify if the phone number exists and is active. If it
+	 * is found, a warning is logged, and an IllegalArgumentException is thrown.
+	 *
+	 * @param phoneNumber the phone number to check for existence
+	 * @throws IllegalArgumentException if the phone number is already registered
+	 */
 	private void existsPhoneNumber(String phoneNumber) {
-		Boolean existsPhoneNumber = customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber)
-				.toFuture().join();
+		Boolean existsPhoneNumber = customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture()
+				.join();
 
 		if (existsPhoneNumber) {
 			logger.warn("The phone is already registered: {}", phoneNumber);
@@ -64,7 +80,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	/**
-	 * Retrieves a customer by their document number. 
+	 * Retrieves a customer by their document number.
 	 *
 	 * @param documentNumber The document number of the customer
 	 * @return The customer response
@@ -74,8 +90,8 @@ public class CustomerServiceImpl implements CustomerService {
 		logger.debug("Retrieving customer by document number: {}", documentNumber);
 
 		Mono<CustomerEntity> customerEntityMono = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
-				.switchIfEmpty(Mono.error(
-						new IllegalArgumentException("Customer not found with document: " + documentNumber)));
+				.switchIfEmpty(Mono
+						.error(new IllegalArgumentException("Customer not found with document: " + documentNumber)));
 
 		CustomerEntity customerEntity = customerEntityMono.toFuture().join();
 		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
@@ -100,10 +116,11 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	/**
-	 * Updates a customer. 
+	 * Updates a customer.
 	 *
-	 * @param documentNumber  The document number to update
-	 * @param contactDataRequest The customer request payload containing update details
+	 * @param documentNumber     The document number to update
+	 * @param contactDataRequest The customer request payload containing update
+	 *                           details
 	 * @return The updated customer response
 	 */
 	@Override
@@ -122,7 +139,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	/**
-	 * Deletes a customer. 
+	 * Deletes a customer.
 	 *
 	 * @param documentNumber The document number to delete
 	 */

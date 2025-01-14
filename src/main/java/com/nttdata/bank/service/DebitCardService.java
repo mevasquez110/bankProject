@@ -6,17 +6,59 @@ import com.nttdata.bank.request.DebitCardRequest;
 import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 
+/**
+ * DebitCardService is the interface that provides methods for handling 
+ * debit card-related operations. This includes creating debit cards, 
+ * finding all debit cards, checking balances, associating accounts, 
+ * marking primary accounts, and deleting debit cards.
+ */
 public interface DebitCardService {
 
-	DebitCardResponse createDebitCard(DebitCardRequest debitCardRequest);
+    /**
+     * Creates a new debit card based on the provided request.
+     *
+     * @param debitCardRequest the debit card request containing the details for creating the debit card
+     * @return DebitCardResponse containing the details of the created debit card
+     */
+    DebitCardResponse createDebitCard(DebitCardRequest debitCardRequest);
 
-	List<DebitCardResponse> findAllDebitCard();
+    /**
+     * Retrieves all debit cards.
+     *
+     * @return List of DebitCardResponse containing details of all debit cards
+     */
+    List<DebitCardResponse> findAllDebitCard();
 
-	BalanceResponse checkBalance(String debitCardNumber);
+    /**
+     * Checks the balance of a debit card based on the provided debit card number.
+     *
+     * @param debitCardNumber the debit card number for which to check the balance
+     * @return BalanceResponse containing the balance details
+     */
+    BalanceResponse checkBalance(String debitCardNumber);
 
-	DebitCardResponse associateAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
+    /**
+     * Associates an account with a debit card based on the provided request.
+     *
+     * @param debitCardNumber the debit card number
+     * @param associateAccountRequest the request containing details for associating the account
+     * @return DebitCardResponse containing the updated debit card details
+     */
+    DebitCardResponse associateAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
 
-	DebitCardResponse markAsPrimaryAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
+    /**
+     * Marks an associated account as the primary account for a debit card.
+     *
+     * @param debitCardNumber the debit card number
+     * @param associateAccountRequest the request containing details for marking the primary account
+     * @return DebitCardResponse containing the updated debit card details
+     */
+    DebitCardResponse markAsPrimaryAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
 
-	void deleteDebitCard(String debitCardNumber);
+    /**
+     * Deletes a debit card based on the provided debit card number.
+     *
+     * @param debitCardNumber the debit card number to delete
+     */
+    void deleteDebitCard(String debitCardNumber);
 }

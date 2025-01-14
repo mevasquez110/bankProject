@@ -2,14 +2,17 @@ package com.nttdata.bank.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
-
 import com.nttdata.bank.validation.impl.YankiValidatorImpl;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * YankiValidator is a custom validation annotation for validating Yanki
+ * requests. It uses the YankiValidatorImpl class to perform the actual
+ * validation.
+ */
 @Constraint(validatedBy = YankiValidatorImpl.class)
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)

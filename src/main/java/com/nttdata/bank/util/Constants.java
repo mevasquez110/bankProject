@@ -33,8 +33,6 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_CODE_VIP = "4";
 	public static final String ACCOUNT_TYPE_CODE_PYME = "5";
 	public static final String ACCOUNT_TYPE_CODE_YANKI = "6";
-	
 	public static final String CREDIT_TYPE = "7";
-	
 	public static final String CURRENCY_SOL = "Soles";
 }

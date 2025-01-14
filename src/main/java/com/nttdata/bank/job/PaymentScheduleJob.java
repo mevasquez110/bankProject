@@ -72,4 +72,12 @@ public class PaymentScheduleJob {
 		}).subscribe();
 
 	}
+	
+	//cierre de mes de tarjeta de credito, debe generar el cronograma del mes, a travez del detalle
+	
+	
+	//se ejecuta cada 6 meses, Si la cuenta no tiene entrada de dinero durante 6 meses, se bloqueará la cuenta, si es que tiene saldo, pero si no tiene, se eliminara
+	
+	
+	//mensualmente se debe revisar la cuenta vip si cumple con el monto minimo diario durante el mes, si no, se cobra comision
 }

@@ -5,10 +5,18 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import lombok.Data;
 
+/**
+ * WithdrawalRequest is a data transfer object that represents the request
+ * payload for making a withdrawal from a credit card. This class includes
+ * attributes such as credit card number and amount. It uses validation
+ * annotations to enforce constraints and Lombok annotations for getters and
+ * setters.
+ */
+
 @Data
 public class WithdrawalRequest {
 
-	@NotBlank(message = "credit Card number is mandatory")
+	@NotBlank(message = "Credit card number is mandatory")
 	private String creditCardNumber;
 
 	@NotNull(message = "Amount is mandatory")
