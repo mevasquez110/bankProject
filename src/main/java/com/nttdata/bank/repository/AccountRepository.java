@@ -38,11 +38,4 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
 	 */
 	Mono<AccountEntity> findByAccountNumberAndIsActiveTrue(String accountNumber);
 
-	/**
-	 * Finds all active accounts.
-	 *
-	 * @return A Flux emitting active AccountEntity objects.
-	 */
-	Flux<AccountEntity> findByIsActiveTrue();
-
 }

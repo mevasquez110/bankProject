@@ -68,13 +68,14 @@ public class AccountsController implements AccountsAPI {
 	/**
 	 * Finds all accounts.
 	 *
+	 * @param documentNumber The document number
 	 * @return ApiResponse containing the list of account responses
 	 */
 	@Override
-	public ApiResponse<List<AccountResponse>> findAllAccounts() {
+	public ApiResponse<List<AccountResponse>> findAllAccounts(String documentNumber) {
 		logger.debug("Received request to find all accounts");
 		ApiResponse<List<AccountResponse>> response = new ApiResponse<>();
-		List<AccountResponse> accounts = accountService.findAllAccounts();
+		List<AccountResponse> accounts = accountService.findAllAccounts(documentNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Accounts retrieved successfully");
 		response.setData(accounts);
@@ -83,7 +84,7 @@ public class AccountsController implements AccountsAPI {
 	}
 
 	/**
-	 * Updates an account. 
+	 * Updates an account.
 	 *
 	 * @param accountNumber The account number
 	 * @return ApiResponse containing the updated account response

@@ -28,7 +28,7 @@ public interface CreditService {
 	 * @param creditId The ID of the credit to check the debt for
 	 * @return The response containing credit debt details
 	 */
-	CreditDebtResponse checkDebt(String creditId);
+	CreditDebtResponse checkDebtCredit(String creditId);
 
 	/**
 	 * Finds all credits.

@@ -2,6 +2,8 @@ package com.nttdata.bank.repository;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.YankiEntity;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * * YankiRepository is an interface that extends ReactiveMongoRepository for
@@ -12,4 +14,9 @@ import com.nttdata.bank.entity.YankiEntity;
  */
 public interface YankiRepository extends ReactiveMongoRepository<YankiEntity, String> {
 
+	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
+
+	Mono<YankiEntity> findByPhoneNumberAndIsActiveTrue(String phoneNumber);
+
+	Flux<YankiEntity> findAllByIsActiveTrue();
 }

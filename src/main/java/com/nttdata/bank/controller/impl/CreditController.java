@@ -54,10 +54,10 @@ public class CreditController implements CreditAPI {
 	 * @return ApiResponse containing the credit debt response
 	 */
 	@Override
-	public ApiResponse<CreditDebtResponse> checkDebt(String creditId) {
+	public ApiResponse<CreditDebtResponse> checkDebtCredit(String creditId) {
 		logger.debug("Received request to check debt for credit: {}", creditId);
 		ApiResponse<CreditDebtResponse> response = new ApiResponse<>();
-		CreditDebtResponse creditDebtResponse = creditService.checkDebt(creditId);
+		CreditDebtResponse creditDebtResponse = creditService.checkDebtCredit(creditId);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Debt retrieved successfully");
 		response.setData(creditDebtResponse);

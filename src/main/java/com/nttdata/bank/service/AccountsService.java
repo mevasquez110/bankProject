@@ -32,10 +32,11 @@ public interface AccountsService {
 
 	/**
 	 * Finds all accounts.
-	 *
+	 * 
+	 * @param documentNumber The document number to update
 	 * @return A list of responses containing account details
 	 */
-	List<AccountResponse> findAllAccounts();
+	List<AccountResponse> findAllAccounts(String documentNumber);
 
 	/**
 	 * Updates an existing account.

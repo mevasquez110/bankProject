@@ -116,7 +116,7 @@ public class CreditServiceImpl implements CreditService {
 	}
 
 	@Override
-	public CreditDebtResponse checkDebt(String creditId) {
+	public CreditDebtResponse checkDebtCredit(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
 		creditRepository.findById(creditId).blockOptional().orElseThrow(() -> {
 			logger.error("Credit not found: {}", creditId);

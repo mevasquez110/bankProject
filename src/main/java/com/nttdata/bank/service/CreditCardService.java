@@ -28,7 +28,7 @@ public interface CreditCardService {
 	 * @param creditCardNumber The credit card number to check the debt for
 	 * @return The response containing credit card debt details
 	 */
-	CreditCardDebtResponse checkDebt(String creditCardNumber);
+	CreditCardDebtResponse checkDebtCreditCard(String creditCardNumber);
 
 	/**
 	 * Finds all credit cards.

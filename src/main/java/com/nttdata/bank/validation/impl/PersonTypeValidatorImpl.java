@@ -60,7 +60,7 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 				&& customerRequest.getDocumentNumber().length() > 20) {
 			addViolation(context, "Document number must have up to 20 digits for CE", "documentNumber");
 			isValid = false;
-		}
+		}		
 		if (customerRequest.getFullName() == null || customerRequest.getFullName().isEmpty()) {
 			addViolation(context, "Full name is mandatory for personal person type", "fullName");
 			isValid = false;

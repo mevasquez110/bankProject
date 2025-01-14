@@ -26,6 +26,7 @@ public class AccountMapper {
 			accountEntity.setHolderDoc(accountRequest.getHolderDoc());
 			accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
 			accountEntity.setAccountType(accountRequest.getAccountType());
+			accountEntity.setCurrency(accountRequest.getCurrency());
 		}
 
 		return accountEntity;
@@ -47,6 +48,7 @@ public class AccountMapper {
 			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
 			accountResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
 			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
+			accountResponse.setCurrency(accountEntity.getCurrency());
 		}
 
 		return accountResponse;

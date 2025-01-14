@@ -7,26 +7,22 @@ import javax.validation.constraints.NotNull;
 import com.nttdata.bank.validation.AccountRequestValidator;
 import lombok.Data;
 
-/**
- * * AccountRequest is a data transfer object that represents the request
- * payload for creating or updating an account. * This class includes attributes
- * such as customer IDs, authorized signatories, and account type. * It uses
- * custom validation and Lombok annotations for getters and setters.
- */
-
 @Data
 @AccountRequestValidator
 public class AccountRequest {
 
 	private List<String> holderDoc;
-	
+
 	private List<String> authorizedSignatoryDoc;
 
 	@NotBlank(message = "Account type is mandatory")
 	private String accountType;
-	
+
 	@NotNull(message = "Opening amount is mandatory")
 	@Min(value = 0, message = "Opening amount must be zero or greater")
 	private Double openingAmount;
+
+	@NotBlank(message = "Currency is mandatory")
+	private String currency;
 
 }

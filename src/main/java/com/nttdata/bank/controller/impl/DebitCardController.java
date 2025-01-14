@@ -24,13 +24,19 @@ public class DebitCardController implements DebitCardAPI {
 	}
 
 	@Override
-	public ApiResponse<DebitCardResponse> update(String documentNumber) {
+	public ApiResponse<DebitCardResponse> associateAccount(String documentNumber) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ApiResponse<Void> deleteAccount(String phoneNumber) {
+	public ApiResponse<DebitCardResponse> markAsPrimaryAccount(String documentNumber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ApiResponse<Void> deleteDebitCard(String phoneNumber) {
 		// TODO Auto-generated method stub
 		return null;
 	}

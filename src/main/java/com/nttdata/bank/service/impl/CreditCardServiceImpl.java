@@ -103,7 +103,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 	 * @return The credit card debt response
 	 */
 	@Override
-	public CreditCardDebtResponse checkDebt(String creditCardNumber) {
+	public CreditCardDebtResponse checkDebtCreditCard(String creditCardNumber) {
 		logger.debug("Checking debt for credit card: {}", creditCardNumber);
 
 		CreditCardEntity creditCard = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)

@@ -1,6 +1,7 @@
 package com.nttdata.bank.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -15,6 +16,8 @@ public class DebitCardEntity {
 	private String debitCardId;
 	private String debitCardNumber;
 	private String documentNumber;
+	private List<String> associatedAccounts;
+	private String primaryAccount;
 	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;

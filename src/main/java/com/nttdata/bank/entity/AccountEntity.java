@@ -26,6 +26,7 @@ public class AccountEntity {
 	private Integer monthlyTransactionLimit;
 	private Double maintenanceCommission;
 	private LocalDateTime withdrawalDepositDate;
+	private String currency;
 	private Double amount;
 	private Double commissionPending;
 	private List<String> holderDoc;

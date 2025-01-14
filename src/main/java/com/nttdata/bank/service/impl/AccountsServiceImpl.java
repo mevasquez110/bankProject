@@ -73,10 +73,10 @@ public class AccountsServiceImpl implements AccountsService {
 		accountEntity.setIsActive(true);
 		accountEntity = accountRepository.save(accountEntity).block();
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
-		logger.info("Account registered successfully: {}", response);
 		TransactionResponse transactionResponse = makeFirstDeposit(accountRequest, accountEntity);
 		accountEntity.setAmount(transactionResponse.getAmount());
 		accountEntity = accountRepository.save(accountEntity).block();
+		logger.info("Account registered successfully: {}", response);
 		return response;
 	}
 
@@ -89,9 +89,9 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public BalanceResponse checkBalance(String accountNumber) {
 		logger.debug("Checking balance for account: {}", accountNumber);
-		
-		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
-				.toFuture().join();
+
+		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).toFuture()
+				.join();
 
 		if (accountEntity == null) {
 			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
@@ -107,15 +107,16 @@ public class AccountsServiceImpl implements AccountsService {
 
 	/**
 	 * Finds all accounts.
-	 *
+	 * 
+	 * @param documentNumber The document number
 	 * @return A list of account responses
 	 */
 	@Override
-	public List<AccountResponse> findAllAccounts() {
+	public List<AccountResponse> findAllAccounts(String documentNumber) {
 		logger.debug("Finding all accounts");
 
-		List<AccountResponse> accounts = accountRepository.findByIsActiveTrue().map(AccountMapper::mapperToResponse)
-				.collectList().toFuture().join();
+		List<AccountResponse> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+				.map(AccountMapper::mapperToResponse).collectList().toFuture().join();
 
 		logger.info("All accounts retrieved successfully");
 		return accounts;
@@ -129,25 +130,19 @@ public class AccountsServiceImpl implements AccountsService {
 	 */
 	@Override
 	public AccountResponse updateAccountAllowWithdrawals(String accountNumber) {
-	    logger.debug("Updating account with account number: {}", accountNumber);
+		logger.debug("Updating account with account number: {}", accountNumber);
 
-	    return accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
-	            .flatMap(accountEntity -> {
-	                accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
-	                accountEntity.setUpdateDate(LocalDateTime.now());
+		return accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
+			accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
+			accountEntity.setUpdateDate(LocalDateTime.now());
 
-	                return accountRepository.save(accountEntity)
-	                        .map(savedEntity -> {
-	                            AccountResponse response = AccountMapper.mapperToResponse(savedEntity);
-	                            logger.info("Account updated successfully: {}", response);
-	                            return response;
-	                        });
-	            })
-	            .switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
-	            .toFuture()
-	            .join();
+			return accountRepository.save(accountEntity).map(savedEntity -> {
+				AccountResponse response = AccountMapper.mapperToResponse(savedEntity);
+				logger.info("Account updated successfully: {}", response);
+				return response;
+			});
+		}).switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).toFuture().join();
 	}
-
 
 	/**
 	 * Deletes an account.
@@ -157,7 +152,7 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public void deleteAccount(String accountNumber) {
 		logger.debug("Deleting account with account number: {}", accountNumber);
-
+		// no se puede eliminar cuenta si tiene yanki asociado
 		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
 			accountEntity.setDeleteDate(LocalDateTime.now());
 			accountEntity.setIsActive(false);
@@ -170,7 +165,6 @@ public class AccountsServiceImpl implements AccountsService {
 						error -> logger.error("Error deleting account with account number: {}", accountNumber, error))
 				.toFuture().join();
 	}
-
 
 	/**
 	 * Registers the first deposit transaction for a newly created account.
@@ -206,9 +200,8 @@ public class AccountsServiceImpl implements AccountsService {
 		}
 
 		Optional.ofNullable(accountRequest.getAuthorizedSignatoryDoc())
-				.filter(signatory -> Constants.PERSON_TYPE_PERSONAL.equals(accountRequest.getHolderDoc()
-						.stream().findFirst()
-						.orElseThrow(() -> new IllegalArgumentException("Holder document list is empty."))))
+				.filter(signatory -> Constants.PERSON_TYPE_PERSONAL.equals(accountRequest.getHolderDoc().stream()
+						.findFirst().orElseThrow(() -> new IllegalArgumentException("Holder document list is empty."))))
 				.ifPresent(signatory -> {
 					throw new IllegalArgumentException("AuthorizedSignatory must be null for personal accounts.");
 				});
@@ -216,15 +209,15 @@ public class AccountsServiceImpl implements AccountsService {
 		for (String documentNumber : accountRequest.getHolderDoc()) {
 			validationPymeAndVIP(accountRequest, documentNumber);
 
-			List<AccountEntity> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber).collectList()
-					.toFuture().join();
+			List<AccountEntity> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+					.collectList().toFuture().join();
 
 			String personType = getPersonType(documentNumber);
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
 				typePersonalValidation(accountRequest, accounts);
 			} else if (Constants.PERSON_TYPE_BUSINESS.equals(personType)) {
-				typeBusinessValidation(accountRequest);
+				typeBusinessValidation(accountRequest, documentNumber);
 			} else {
 				throw new IllegalArgumentException("Invalid person type.");
 			}
@@ -236,17 +229,29 @@ public class AccountsServiceImpl implements AccountsService {
 	 * criteria.
 	 *
 	 * @param accountRequest the account request containing account details
+	 * @param documentNumber the document number
 	 * @throws IllegalArgumentException if any validation rule is violated
 	 */
-	private void typeBusinessValidation(AccountRequest accountRequest) {
-		if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
-				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
-			throw new IllegalArgumentException("Business customers cannot have savings or fixed-term accounts.");
-		}
+	private void typeBusinessValidation(AccountRequest accountRequest, String documentNumber) {
+		Optional<CustomerEntity> optionalCustomerEntity = Optional
+				.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join());
 
-		if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
-			throw new IllegalArgumentException("A business customer cannot have a VIP account.");
-		}
+		optionalCustomerEntity.ifPresentOrElse(customerEntity -> {
+			if (!Constants.DOCUMENT_TYPE_RUC.equals(customerEntity.getDocumentType())) {
+				throw new IllegalArgumentException("The holder is not registered as a business customer.");
+			}
+
+			if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
+					|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
+				throw new IllegalArgumentException("Business customers cannot have savings or fixed-term accounts.");
+			}
+
+			if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
+				throw new IllegalArgumentException("A business customer cannot have a VIP account.");
+			}
+		}, () -> {
+			throw new IllegalArgumentException("The holder is not registered.");
+		});
 	}
 
 	/**
@@ -272,6 +277,7 @@ public class AccountsServiceImpl implements AccountsService {
 
 		if (personalAccountCount > 0 && (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
 				|| Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())
+				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())
 				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType()))) {
 			throw new IllegalArgumentException("A personal customer can have only one account per type.");
 		}
@@ -291,25 +297,25 @@ public class AccountsServiceImpl implements AccountsService {
 	 *                               given document number
 	 */
 	private void validationPymeAndVIP(AccountRequest accountRequest, String documentNumber) {
-	    if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
-	            || Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
+		if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
+				|| Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
 
-	        Mono<Boolean> hasCreditCardMono = creditCardRepository
-	                .existsByDocumentNumberAndIsActiveTrue(documentNumber);
+			Mono<Boolean> hasCreditCardMono = creditCardRepository
+					.existsByDocumentNumberAndIsActiveTrue(documentNumber);
 
-	        Mono<Boolean> hasCreditMono = creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber);
+			Mono<Boolean> hasCreditMono = creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber);
 
-	        Mono<Boolean> hasCreditProductMono = Mono.zip(hasCreditCardMono, hasCreditMono)
-	                .map(tuple -> tuple.getT1() || tuple.getT2());
+			Mono<Boolean> hasCreditProductMono = Mono.zip(hasCreditCardMono, hasCreditMono)
+					.map(tuple -> tuple.getT1() || tuple.getT2());
 
-	        hasCreditProductMono.blockOptional().ifPresentOrElse(hasCreditProduct -> {
-	            if (!hasCreditProduct) {
-	                throw new IllegalStateException("No credit product exists for the given document number.");
-	            }
-	        }, () -> {
-	            throw new IllegalStateException("Failed to validate credit product.");
-	        });
-	    }
+			hasCreditProductMono.blockOptional().ifPresentOrElse(hasCreditProduct -> {
+				if (!hasCreditProduct) {
+					throw new IllegalStateException("No credit product exists for the given document number.");
+				}
+			}, () -> {
+				throw new IllegalStateException("Failed to validate credit product.");
+			});
+		}
 	}
 
 	/**
@@ -353,6 +359,9 @@ public class AccountsServiceImpl implements AccountsService {
 		case Constants.ACCOUNT_TYPE_PYME:
 			accountNumber.append(Constants.ACCOUNT_TYPE_CODE_PYME);
 			break;
+		case Constants.ACCOUNT_TYPE_YANKI:
+			accountNumber.append(Constants.ACCOUNT_TYPE_CODE_YANKI);
+			break;
 		default:
 			throw new IllegalArgumentException("Invalid account type");
 		}
@@ -368,15 +377,15 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @param customerId The customer ID
 	 * @return The person type
 	 */
-	private String getPersonType(String customerId) {
-		CustomerEntity customer = customerRepository.findByDocumentNumberAndIsActiveTrue(customerId)
-				.toFuture().join();
+	private String getPersonType(String documentNumber) {
+		CustomerEntity customer = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture()
+				.join();
 
 		if (customer != null) {
 			return customer.getPersonType();
 		}
 
-		throw new IllegalArgumentException("Customer not found with ID: " + customerId);
+		throw new IllegalArgumentException("Customer not found with document number: " + documentNumber);
 	}
 
 	/**
@@ -402,6 +411,9 @@ public class AccountsServiceImpl implements AccountsService {
 			accountEntity.setMaintenanceCommission(15.0);
 			accountEntity.setMonthlyTransactionLimit(null);
 		} else if (Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
+			accountEntity.setMaintenanceCommission(0.0);
+			accountEntity.setMonthlyTransactionLimit(null);
+		} else if (Constants.ACCOUNT_TYPE_YANKI.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(null);
 		}

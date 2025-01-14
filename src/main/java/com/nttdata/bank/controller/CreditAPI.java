@@ -40,7 +40,7 @@ public interface CreditAPI {
 	 * @return ApiResponse containing the CreditDebtResponse.
 	 */
 	@GetMapping("/debt")
-	ApiResponse<CreditDebtResponse> checkDebt(@RequestParam String creditId);
+	ApiResponse<CreditDebtResponse> checkDebtCredit(@RequestParam String creditId);
 
 	/**
 	 * Retrieves a list of all credits.

@@ -3,13 +3,11 @@ package com.nttdata.bank.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import com.nttdata.bank.validation.PersonTypeValidator;
+import com.nttdata.bank.validation.YankiValidator;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@PersonTypeValidator
-@EqualsAndHashCode(callSuper = false)
+@YankiValidator
 public class YankiRequest {
 
 	private String name;

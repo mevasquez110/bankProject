@@ -21,8 +21,10 @@ public class YankiEntity {
 
 	@Id
 	private String id;
+	private String name;
 	private String documentNumber;
 	private String phoneNumber;
+	private String accountNumber;
 	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;

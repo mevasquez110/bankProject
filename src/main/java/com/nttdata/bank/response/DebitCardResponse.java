@@ -1,15 +1,17 @@
 package com.nttdata.bank.response;
 
-import com.nttdata.bank.validation.PersonTypeValidator;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@PersonTypeValidator
-@EqualsAndHashCode(callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+
 public class DebitCardResponse {
 
 	private String debitCardNumber;
+	private List<String> associatedAccounts;
+	private String primaryAccount;
 	private Boolean isBlocked;
 	private Boolean isActive;
 }

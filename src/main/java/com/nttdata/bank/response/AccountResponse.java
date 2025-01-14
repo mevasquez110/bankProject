@@ -21,6 +21,7 @@ public class AccountResponse {
 	private Double maintenanceCommission;
 	private LocalDateTime withdrawalDepositDate;
 	private Double amount;
+	private String currency;
 	private Boolean isBlocked;
 	private Boolean allowWithdrawals;
 

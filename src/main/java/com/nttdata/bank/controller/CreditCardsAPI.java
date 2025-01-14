@@ -38,7 +38,7 @@ public interface CreditCardsAPI {
 	 * @return ApiResponse containing the CreditCardDebtResponse.
 	 */
 	@GetMapping("/debt")
-	ApiResponse<CreditCardDebtResponse> checkDebt(@RequestParam String creditCardNumber);
+	ApiResponse<CreditCardDebtResponse> checkDebtCreditCard(@RequestParam String creditCardNumber);
 
 	/**
 	 * Retrieves a list of all credit cards.

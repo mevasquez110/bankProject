@@ -1,12 +1,10 @@
 package com.nttdata.bank.response;
 
-import com.nttdata.bank.validation.PersonTypeValidator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@PersonTypeValidator
-@EqualsAndHashCode(callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class YankiResponse {
 
 	private String name;

@@ -53,10 +53,10 @@ public class CreditCardsController implements CreditCardsAPI {
 	 * @return ApiResponse containing the credit card debt response
 	 */
 	@Override
-	public ApiResponse<CreditCardDebtResponse> checkDebt(String creditCardNumber) {
+	public ApiResponse<CreditCardDebtResponse> checkDebtCreditCard(String creditCardNumber) {
 		logger.debug("Received request to check debt for credit card: {}", creditCardNumber);
 		ApiResponse<CreditCardDebtResponse> response = new ApiResponse<>();
-		CreditCardDebtResponse creditCardDebtResponse = creditCardsService.checkDebt(creditCardNumber);
+		CreditCardDebtResponse creditCardDebtResponse = creditCardsService.checkDebtCreditCard(creditCardNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Check debt successfully");
 		response.setData(creditCardDebtResponse);

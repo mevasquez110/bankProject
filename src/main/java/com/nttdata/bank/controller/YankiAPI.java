@@ -1,6 +1,7 @@
 package com.nttdata.bank.controller;
 
 import java.util.List;
+
 import javax.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,12 +24,12 @@ public interface YankiAPI {
 	ApiResponse<YankiResponse> createYanki(@RequestBody @Valid YankiRequest yankiRequest);
 
 	@GetMapping("/all")
-	ApiResponse<List<YankiResponse>> findAllDebitCardResponses();
+	ApiResponse<List<YankiResponse>> findAllYanki();
 
 	@PutMapping("/update/{phoneNumber}")
-	ApiResponse<YankiResponse> update(@PathVariable String phoneNumber,
+	ApiResponse<YankiResponse> updateYanki(@PathVariable String phoneNumber,
 			@RequestBody @Valid YankiUpdateRequest yankiUpdateRequest);
 
 	@DeleteMapping("/delete/{phoneNumber}")
-	ApiResponse<Void> deleteDebitCardResponse(@PathVariable String phoneNumber);
+	ApiResponse<Void> deleteYanki(@PathVariable String phoneNumber);
 }

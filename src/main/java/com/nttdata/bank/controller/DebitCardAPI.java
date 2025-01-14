@@ -23,10 +23,13 @@ public interface DebitCardAPI {
 
 	@GetMapping("/all")
 	ApiResponse<List<DebitCardResponse>> findAllDebitCard();
+	
+	@PutMapping("/associate-account/{documentNumber}")
+	ApiResponse<DebitCardResponse> associateAccount(@PathVariable String documentNumber);
 
-	@PutMapping("/update/{documentNumber}")
-	ApiResponse<DebitCardResponse> update(@PathVariable String documentNumber);
+	@PutMapping("/mark-primary-account/{documentNumber}")
+	ApiResponse<DebitCardResponse> markAsPrimaryAccount(@PathVariable String documentNumber);
 
-	@DeleteMapping("/delete/{accountNumber}")
-	ApiResponse<Void> deleteAccount(@PathVariable String phoneNumber);
+	@DeleteMapping("/delete/{phoneNumber}")
+	ApiResponse<Void> deleteDebitCard(@PathVariable String phoneNumber);
 }
