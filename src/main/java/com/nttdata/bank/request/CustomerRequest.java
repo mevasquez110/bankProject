@@ -1,10 +1,9 @@
 package com.nttdata.bank.request;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import javax.validation.constraints.NotBlank;
 import com.nttdata.bank.validation.PersonTypeValidator;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * * CustomerRequest is a data transfer object that represents the request

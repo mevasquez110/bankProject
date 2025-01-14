@@ -1,7 +1,9 @@
 package com.nttdata.bank.service;
 
 import java.util.List;
+import com.nttdata.bank.request.AssociateAccountRequest;
 import com.nttdata.bank.request.DebitCardRequest;
+import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 
 public interface DebitCardService {
@@ -10,9 +12,11 @@ public interface DebitCardService {
 
 	List<DebitCardResponse> findAllDebitCard();
 
-	DebitCardResponse associateAccount(String documentNumber);
+	BalanceResponse checkBalance(String debitCardNumber);
 
-	DebitCardResponse markAsPrimaryAccount(String documentNumber);
+	DebitCardResponse associateAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
 
-	void deleteDebitCard(String phoneNumber);
+	DebitCardResponse markAsPrimaryAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
+
+	void deleteDebitCard(String debitCardNumber);
 }

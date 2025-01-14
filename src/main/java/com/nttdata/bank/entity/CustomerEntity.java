@@ -1,10 +1,9 @@
 package com.nttdata.bank.entity;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
+import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * * CustomerEntity represents the customer document stored in the MongoDB
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
  */
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "customers")
 public class CustomerEntity {
 

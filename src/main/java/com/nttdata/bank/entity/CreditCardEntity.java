@@ -3,7 +3,6 @@ package com.nttdata.bank.entity;
 import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -15,7 +14,6 @@ import lombok.Data;
  */
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "credit_cards")
 public class CreditCardEntity {
 

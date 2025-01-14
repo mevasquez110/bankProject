@@ -1,5 +1,6 @@
 package com.nttdata.bank.controller.impl;
 
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
-import java.util.List;
 
 /**
  * CreditCardsController is a REST controller that implements the CreditCardsAPI
@@ -20,6 +20,7 @@ import java.util.List;
  * cards. It delegates the actual business logic to the appropriate service
  * layer.
  */
+
 @RestController
 public class CreditCardsController implements CreditCardsAPI {
 

@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.nttdata.bank.request.AssociateAccountRequest;
 import com.nttdata.bank.request.DebitCardRequest;
 import com.nttdata.bank.response.ApiResponse;
+import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 
 @RestController
@@ -23,13 +25,18 @@ public interface DebitCardAPI {
 
 	@GetMapping("/all")
 	ApiResponse<List<DebitCardResponse>> findAllDebitCard();
-	
-	@PutMapping("/associate-account/{documentNumber}")
-	ApiResponse<DebitCardResponse> associateAccount(@PathVariable String documentNumber);
 
-	@PutMapping("/mark-primary-account/{documentNumber}")
-	ApiResponse<DebitCardResponse> markAsPrimaryAccount(@PathVariable String documentNumber);
+	@GetMapping("/balance/{debitCardNumber}")
+	ApiResponse<BalanceResponse> checkBalance(@PathVariable String debitCardNumber);
 
-	@DeleteMapping("/delete/{phoneNumber}")
-	ApiResponse<Void> deleteDebitCard(@PathVariable String phoneNumber);
+	@PutMapping("/associate-account/{debitCardNumber}")
+	ApiResponse<DebitCardResponse> associateAccount(@PathVariable String debitCardNumber,
+			@RequestBody @Valid AssociateAccountRequest associateAccountRequest);
+
+	@PutMapping("/mark-primary-account/{debitCardNumber}")
+	ApiResponse<DebitCardResponse> markAsPrimaryAccount(@PathVariable String debitCardNumber,
+			@RequestBody @Valid AssociateAccountRequest associateAccountRequest);
+
+	@DeleteMapping("/delete/{debitCardNumber}")
+	ApiResponse<Void> deleteDebitCard(@PathVariable String debitCardNumber);
 }

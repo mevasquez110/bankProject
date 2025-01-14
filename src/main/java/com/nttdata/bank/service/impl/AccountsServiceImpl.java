@@ -12,7 +12,6 @@ import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.CustomerRepository;
 import com.nttdata.bank.request.AccountRequest;
-import com.nttdata.bank.request.TransactionRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.TransactionResponse;
@@ -180,10 +179,10 @@ public class AccountsServiceImpl implements AccountsService {
 	 *         registered transaction.
 	 */
 	private TransactionResponse makeFirstDeposit(AccountRequest accountRequest, AccountEntity accountEntity) {
-		TransactionRequest transactionRequest = new TransactionRequest();
+        /*TransactionRequest transactionRequest = new TransactionRequest();
 		transactionRequest.setAccountNumber(accountEntity.getAccountNumber());
-		transactionRequest.setAmount(accountRequest.getOpeningAmount());
-		TransactionResponse transactionResponse = transactionService.makeDeposit(transactionRequest);
+		transactionRequest.setAmount(accountRequest.getOpeningAmount());*/
+		TransactionResponse transactionResponse = transactionService.makeDeposit(null);//TODO
 		logger.info("Transaction registered successfully: {}", transactionResponse);
 		return transactionResponse;
 	}

@@ -1,5 +1,8 @@
 package com.nttdata.bank.job;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +12,6 @@ import com.nttdata.bank.entity.PaymentScheduleEntity;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.PaymentScheduleRepository;
 import com.nttdata.bank.util.Utility;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 /**
  * PaymentScheduleJob is a scheduled task that updates payment schedules. This

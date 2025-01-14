@@ -8,4 +8,5 @@ public class DebitCardRequest {
 
 	@NotBlank(message = "Document number is mandatory")
 	private String documentNumber;
+
 }

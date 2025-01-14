@@ -1,12 +1,19 @@
 package com.nttdata.bank.controller;
 
+import java.util.List;
 import javax.validation.Valid;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.BalanceResponse;
-import java.util.List;
 
 /**
  * AccountsAPI defines the RESTful endpoints for account-related operations.
@@ -42,7 +49,7 @@ public interface AccountsAPI {
 	 * Retrieves a list of all accounts by customer.
 	 * 
 	 * @param documentNumber - The document number for which the balance is to be
-	 *                      checked.
+	 *                       checked.
 	 * @return ApiResponse containing a list of AccountResponse objects.
 	 */
 	@GetMapping("/all/{documentNumber}")

@@ -1,5 +1,6 @@
 package com.nttdata.bank.controller.impl;
 
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.controller.CreditAPI;
 import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.ApiResponse;
-import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
+import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.service.CreditService;
-import java.util.List;
 
 /**
  * * CreditController is a REST controller that implements the CreditAPI

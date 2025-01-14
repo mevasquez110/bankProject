@@ -1,5 +1,6 @@
 package com.nttdata.bank.controller.impl;
 
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.service.AccountsService;
-import java.util.List;
 
 /**
  * * AccountsController is a REST controller that implements the AccountsAPI
