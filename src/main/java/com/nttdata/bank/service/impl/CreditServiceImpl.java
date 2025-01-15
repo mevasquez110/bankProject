@@ -3,18 +3,21 @@ package com.nttdata.bank.service.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.nttdata.bank.entity.CreditCardScheduleEntity;
 import com.nttdata.bank.entity.CreditEntity;
-import com.nttdata.bank.entity.PaymentScheduleEntity;
+import com.nttdata.bank.entity.CreditScheduleEntity;
 import com.nttdata.bank.mapper.CreditMapper;
 import com.nttdata.bank.repository.CreditCardRepository;
+import com.nttdata.bank.repository.CreditCardScheduleRepository;
 import com.nttdata.bank.repository.CreditRepository;
-import com.nttdata.bank.repository.PaymentScheduleRepository;
+import com.nttdata.bank.repository.CreditScheduleRepository;
 import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
@@ -40,7 +43,10 @@ public class CreditServiceImpl implements CreditService {
 	private CreditCardRepository creditCardRepository;
 
 	@Autowired
-	private PaymentScheduleRepository paymentScheduleRepository;
+	private CreditScheduleRepository creditScheduleRepository;
+
+	@Autowired
+	private CreditCardScheduleRepository creditCardScheduleRepository;
 
 	/**
 	 * Grants credit based on the provided credit request. This method handles the
@@ -61,8 +67,8 @@ public class CreditServiceImpl implements CreditService {
 		creditEntity.setIsActive(true);
 		creditEntity.setCreateDate(LocalDateTime.now());
 		creditEntity = creditRepository.save(creditEntity).block();
-		List<PaymentScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
-		paymentScheduleRepository.saveAll(schedule);
+		List<CreditScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
+		creditScheduleRepository.saveAll(schedule);
 		CreditResponse response = CreditMapper.mapperToResponse(creditEntity);
 		logger.info("Credit granted successfully: {}", response);
 		return response;
@@ -85,16 +91,17 @@ public class CreditServiceImpl implements CreditService {
 			throw new RuntimeException("The customer already has an active credit");
 		}
 
-		Optional.ofNullable(creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber())
-				.toFuture().join()).ifPresent(card -> {
-					Optional<Boolean> hasActiveDebt = Optional.ofNullable(
-							paymentScheduleRepository.existsByCreditCardNumberAndPaidFalseAndPaymentDateBefore(
-									card.getCreditCardNumber(), LocalDate.now()).block());
-					hasActiveDebt.ifPresent(debt -> {
-						if (debt) {
-							throw new RuntimeException("The client has active debt");
-						}
-					});
+		Optional.ofNullable(
+				creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
+				.ifPresent(creditCardEntity -> {
+					List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+							.findByCreditCardAndPaidFalseAndPaymentDateLessThanEqual(
+									creditCardEntity.getCreditCardNumber(), LocalDate.now())
+							.collectList().block();
+
+					if (paymentSchedule.isEmpty()) {
+						throw new RuntimeException("The client has active debt");
+					}
 				});
 	}
 
@@ -111,27 +118,27 @@ public class CreditServiceImpl implements CreditService {
 	 *                     generated
 	 * @return List of PaymentScheduleEntity representing the payment schedule
 	 */
-	private List<PaymentScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
+	private List<CreditScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
 		logger.debug("Generating payment schedule for credit: {}", creditEntity.getCreditId());
-		List<PaymentScheduleEntity> schedule = new ArrayList<>();
+		List<CreditScheduleEntity> schedule = new ArrayList<>();
 		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
 		Double monthlyInterestRate = Utility.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
-
-		Double fixedInstallment = Utility.calculateInstallmentAmount(creditEntity.getAmount(), monthlyInterestRate,
-				creditEntity.getNumberOfInstallments());
-
-		Double remainingPrincipal = creditEntity.getAmount();
+		Double totalDebt = creditEntity.getAmount();
+		Double principalAmount = totalDebt / creditEntity.getNumberOfInstallments();
 
 		for (int i = 1; i <= creditEntity.getNumberOfInstallments(); i++) {
-			PaymentScheduleEntity payment = new PaymentScheduleEntity();
+			Double interestPayment = totalDebt * monthlyInterestRate;
+			Double currentDebt = principalAmount + interestPayment;
+			CreditScheduleEntity payment = new CreditScheduleEntity();
 			payment.setPaymentDate(firstPaymentDate.plusMonths(i - 1));
-			Double interestPayment = remainingPrincipal * monthlyInterestRate;
-			payment.setDebtAmount(remainingPrincipal - (fixedInstallment - interestPayment));
-			payment.setSharePayment(fixedInstallment);
+			payment.setInterestAmount(interestPayment);
+			payment.setPrincipalAmount(principalAmount);
+			payment.setCurrentDebt(currentDebt);
+			payment.setTotalDebt(totalDebt);
 			payment.setCreditId(creditEntity.getCreditId());
 			payment.setPaid(false);
-			remainingPrincipal -= fixedInstallment - interestPayment;
 			schedule.add(payment);
+			totalDebt -= principalAmount;
 		}
 
 		logger.info("Payment schedule generated for credit: {}", creditEntity.getCreditId());
@@ -152,32 +159,33 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public CreditDebtResponse checkDebtCredit(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
-		creditRepository.findById(creditId).blockOptional().orElseThrow(() -> {
+
+		creditRepository.findByIdAndIsActiveTrue(creditId).blockOptional().orElseThrow(() -> {
 			logger.error("Credit not found: {}", creditId);
-			return new RuntimeException("Crédito no encontrado");
+			return new RuntimeException("Credit not found");
 		});
 
-		List<PaymentScheduleEntity> paymentSchedule = paymentScheduleRepository.findByCreditIdAndPaidFalse(creditId)
-				.collectList().block();
+		List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
+				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId, LocalDate.now()).collectList().block();
 
-		LocalDate today = LocalDate.now();
-		int currentMonth = today.getMonthValue();
-		int currentYear = today.getYear();
+		if (paymentSchedule != null && !paymentSchedule.isEmpty()) {
+			Double totalDebt = paymentSchedule.stream()
+					.max(Comparator.comparingDouble(CreditScheduleEntity::getTotalDebt))
+					.map(CreditScheduleEntity::getTotalDebt).get();
 
-		Double totalDebt = paymentSchedule.stream().filter(payment -> !payment.getPaid())
-				.mapToDouble(PaymentScheduleEntity::getDebtAmount).sum();
+			Double share = paymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
 
-		Double share = paymentSchedule.stream().filter(payment -> !payment.getPaid())
-				.filter(payment -> payment.getPaymentDate().getMonthValue() == currentMonth
-						&& payment.getPaymentDate().getYear() == currentYear)
-				.mapToDouble(PaymentScheduleEntity::getSharePayment).sum();
+			CreditDebtResponse response = new CreditDebtResponse();
+			response.setCreditId(creditId);
+			response.setTotalDebt(totalDebt);
+			response.setShare(share);
 
-		CreditDebtResponse response = new CreditDebtResponse();
-		response.setCreditId(creditId);
-		response.setTotalDebt(totalDebt);
-		response.setShare(share);
-		logger.info("Debt checked successfully for credit: {}", creditId);
-		return response;
+			logger.info("Debt checked successfully for credit: {}", creditId);
+			return response;
+		} else {
+			logger.error("No payment schedule found for credit: {}", creditId);
+			throw new RuntimeException("No payment schedule found");
+		}
 	}
 
 	/**
@@ -190,12 +198,7 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");
-
-		List<CreditResponse> credits = creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse)
-				.collectList().block();
-
-		logger.info("All credits retrieved successfully");
-		return credits;
+		return creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse).collectList().block();
 	}
 
 }

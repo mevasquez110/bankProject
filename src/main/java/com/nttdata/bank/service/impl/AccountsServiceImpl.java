@@ -11,7 +11,10 @@ import com.nttdata.bank.repository.AccountRepository;
 import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.CustomerRepository;
+import com.nttdata.bank.repository.DebitCardRepository;
+import com.nttdata.bank.repository.YankiRepository;
 import com.nttdata.bank.request.AccountRequest;
+import com.nttdata.bank.request.DepositRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.TransactionResponse;
@@ -49,7 +52,13 @@ public class AccountsServiceImpl implements AccountsService {
 	private CreditCardRepository creditCardRepository;
 
 	@Autowired
+	private DebitCardRepository debitCardRepository;
+
+	@Autowired
 	private CreditRepository creditRepository;
+
+	@Autowired
+	private YankiRepository yankiRepository;
 
 	/**
 	 * Registers a new account.
@@ -151,14 +160,25 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public void deleteAccount(String accountNumber) {
 		logger.debug("Deleting account with account number: {}", accountNumber);
-		// no se puede eliminar cuenta si tiene yanki asociado
+		Boolean isPrimaryAccount = debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(accountNumber).block();
+
+		if (isPrimaryAccount) {
+			throw new IllegalArgumentException("The account with number " + accountNumber
+					+ " is the primary account of an active debit card and cannot be deleted.");
+		}
+
 		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
-			accountEntity.setDeleteDate(LocalDateTime.now());
-			accountEntity.setIsActive(false);
-			return accountRepository.save(accountEntity).map(savedEntity -> {
-				logger.info("Account deleted successfully with account number: {}", savedEntity.getAccountNumber());
-				return savedEntity;
-			});
+			return Mono.just(yankiRepository.existsByAccountNumberAndIsActiveTrue(accountNumber).block())
+					.doOnNext(existsYanki -> {
+						if (existsYanki) {
+							throw new IllegalArgumentException("Cannot delete account with associated Yanki");
+						}
+					}).thenReturn(accountEntity).flatMap(entity -> {
+						entity.setDeleteDate(LocalDateTime.now());
+						entity.setIsActive(false);
+						return accountRepository.save(entity);
+					}).doOnSuccess(savedEntity -> logger.info("Account deleted successfully with account number: {}",
+							savedEntity.getAccountNumber()));
 		}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
 				.doOnError(
 						error -> logger.error("Error deleting account with account number: {}", accountNumber, error))
@@ -179,10 +199,10 @@ public class AccountsServiceImpl implements AccountsService {
 	 *         registered transaction.
 	 */
 	private TransactionResponse makeFirstDeposit(AccountRequest accountRequest, AccountEntity accountEntity) {
-        /*TransactionRequest transactionRequest = new TransactionRequest();
-		transactionRequest.setAccountNumber(accountEntity.getAccountNumber());
-		transactionRequest.setAmount(accountRequest.getOpeningAmount());*/
-		TransactionResponse transactionResponse = transactionService.makeDeposit(null);//TODO
+		DepositRequest depositRequest = new DepositRequest();
+		depositRequest.setAccountNumber(accountEntity.getAccountNumber());
+		depositRequest.setAmount(accountRequest.getOpeningAmount());
+		TransactionResponse transactionResponse = transactionService.makeDeposit(depositRequest);
 		logger.info("Transaction registered successfully: {}", transactionResponse);
 		return transactionResponse;
 	}

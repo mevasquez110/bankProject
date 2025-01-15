@@ -39,4 +39,6 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
 	 */
 	Mono<AccountEntity> findByAccountNumberAndIsActiveTrue(String accountNumber);
 
+	Mono<Boolean> existsByAccountNumberAndDocumentNumberAndIsActiveTrue(String documentNumber, String primaryAccount);
+
 }

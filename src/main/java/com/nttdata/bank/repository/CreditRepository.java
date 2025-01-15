@@ -36,4 +36,6 @@ public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, 
 	 * @return A Flux emitting active CreditEntity objects.
 	 */
 	Flux<CreditEntity> findByIsActiveTrue();
+
+	Mono<CreditEntity> findByIdAndIsActiveTrue(String creditId);
 }

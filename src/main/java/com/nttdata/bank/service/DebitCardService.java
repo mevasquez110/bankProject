@@ -30,14 +30,6 @@ public interface DebitCardService {
     List<DebitCardResponse> findAllDebitCard();
 
     /**
-     * Checks the balance of a debit card based on the provided debit card number.
-     *
-     * @param debitCardNumber the debit card number for which to check the balance
-     * @return BalanceResponse containing the balance details
-     */
-    BalanceResponse checkBalance(String debitCardNumber);
-
-    /**
      * Associates an account with a debit card based on the provided request.
      *
      * @param debitCardNumber the debit card number
@@ -45,15 +37,6 @@ public interface DebitCardService {
      * @return DebitCardResponse containing the updated debit card details
      */
     DebitCardResponse associateAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
-
-    /**
-     * Marks an associated account as the primary account for a debit card.
-     *
-     * @param debitCardNumber the debit card number
-     * @param associateAccountRequest the request containing details for marking the primary account
-     * @return DebitCardResponse containing the updated debit card details
-     */
-    DebitCardResponse markAsPrimaryAccount(String debitCardNumber, AssociateAccountRequest associateAccountRequest);
 
     /**
      * Deletes a debit card based on the provided debit card number.

@@ -10,21 +10,6 @@ package com.nttdata.bank.util;
 public class Utility {
 
 	/**
-	 * Calculates the fixed installment amount for a loan based on the annuity
-	 * formula.
-	 *
-	 * @param amount               The principal loan amount
-	 * @param monthlyInterestRate  The monthly interest rate
-	 * @param numberOfInstallments The number of installments
-	 * @return The fixed installment amount
-	 */
-	public static Double calculateInstallmentAmount(Double amount, Double monthlyInterestRate,
-			Integer numberOfInstallments) {
-		return amount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfInstallments)
-				/ (Math.pow(1 + monthlyInterestRate, numberOfInstallments) - 1);
-	}
-
-	/**
 	 * Converts an annual interest rate to a monthly interest rate.
 	 *
 	 * @param annualInterestRate The annual interest rate
@@ -42,5 +27,15 @@ public class Utility {
 	 */
 	public static Double getDailyInterestRate(Double annualInterestRate) {
 		return annualInterestRate / 365 / 100;
+	}
+
+	/**
+	 * Generates a random number to append to the credit card number.
+	 * 
+	 * @return A random number as a string.
+	 */
+	public static String generateRandomNumber() {
+		int randomNumber = (int) (Math.random() * 10000);
+		return String.format("%04d", randomNumber);
 	}
 }

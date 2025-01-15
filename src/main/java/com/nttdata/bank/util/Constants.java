@@ -34,5 +34,16 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_CODE_PYME = "5";
 	public static final String ACCOUNT_TYPE_CODE_YANKI = "6";
 	public static final String CREDIT_TYPE = "7";
+	public static final String DEBIT_TYPE = "8";
+	
 	public static final String CURRENCY_SOL = "Soles";
+	
+	public static final String TRANSACTION_TYPE_DEPOSIT = "DEPOSITO";
+	public static final String TRANSACTION_TYPE_WITHDRAWAL = "RETIRO";
+	public static final String TRANSACTION_TYPE_BANK_TRANSFER = "TRANSFERENCIA BANCARIA";
+	public static final String TRANSACTION_TYPE_MOBILE_TRANSFER = "TRANSFERENCIA MOVIL";
+	public static final String TRANSACTION_TYPE_PAY_CREDIT_CARD = "PAGO DE TARJETA";
+	public static final String TRANSACTION_TYPE_PAY_CREDIT = "PAGO DE CREDITO";
+	public static final String TRANSACTION_TYPE_CONSUMPTION = "CONSUMO DE TARJETA";
+
 }

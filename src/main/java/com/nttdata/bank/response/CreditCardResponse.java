@@ -22,5 +22,4 @@ public class CreditCardResponse {
 	private Integer paymentDay;
 	private Boolean allowConsumption;
 
-
 }

@@ -5,19 +5,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.nttdata.bank.entity.CreditCardEntity;
-import com.nttdata.bank.entity.PaymentScheduleEntity;
+import com.nttdata.bank.entity.CreditCardScheduleEntity;
+import com.nttdata.bank.entity.CreditScheduleEntity;
 import com.nttdata.bank.mapper.CreditCardMapper;
 import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
-import com.nttdata.bank.repository.PaymentScheduleRepository;
+import com.nttdata.bank.repository.CreditScheduleRepository;
+import com.nttdata.bank.repository.CreditCardScheduleRepository;
 import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
 import com.nttdata.bank.util.Constants;
+import com.nttdata.bank.util.Utility;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +40,15 @@ public class CreditCardServiceImpl implements CreditCardService {
 
 	@Autowired
 	private CreditRepository creditRepository;
-	
+
 	@Autowired
 	private CreditCardRepository creditCardRepository;
 
 	@Autowired
-	private PaymentScheduleRepository paymentScheduleRepository;
+	private CreditScheduleRepository creditScheduleRepository;
+
+	@Autowired
+	private CreditCardScheduleRepository creditCardScheduleRepository;
 
 	/**
 	 * Requests a new credit card.
@@ -81,18 +88,18 @@ public class CreditCardServiceImpl implements CreditCardService {
 		if (existingCreditCard) {
 			throw new RuntimeException("The customer already has a credit card");
 		}
-		
-		Optional.ofNullable(creditRepository.findByDocumentNumberAndIsActiveTrue(
-				creditCardRequest.getDocumentNumber())
-				.toFuture().join()).ifPresent(card -> {
-					Optional<Boolean> hasActiveDebt = Optional.ofNullable(
-							paymentScheduleRepository.existsByCreditIdAndPaidFalseAndPaymentDateBefore(
-									card.getCreditId(), LocalDate.now()).block());
-					hasActiveDebt.ifPresent(debt -> {
-						if (debt) {
-							throw new RuntimeException("The client has active debt");
-						}
-					});
+
+		Optional.ofNullable(
+				creditRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
+				.ifPresent(creditEntity -> {
+					List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
+							.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditEntity.getCreditId(),
+									LocalDate.now())
+							.collectList().block();
+
+					if (paymentSchedule.isEmpty()) {
+						throw new RuntimeException("The client has active debt");
+					}
 				});
 	}
 
@@ -112,28 +119,29 @@ public class CreditCardServiceImpl implements CreditCardService {
 					return new RuntimeException("Credit card not found");
 				});
 
-		List<PaymentScheduleEntity> paymentSchedules = paymentScheduleRepository
-				.findByCreditCardNumberAndPaidFalse(creditCardNumber).collectList().block();
+		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
+				.collectList().block();
 
-		LocalDateTime today = LocalDateTime.now();
-		int currentMonth = today.getMonthValue();
-		int currentYear = today.getYear();
+		if (paymentSchedule != null && !paymentSchedule.isEmpty()) {
+			Double totalDebt = paymentSchedule.stream()
+					.max(Comparator.comparingDouble(CreditCardScheduleEntity::getTotalDebt))
+					.map(CreditCardScheduleEntity::getTotalDebt).get();
 
-		Double totalDebt = paymentSchedules.stream().filter(payment -> !payment.getPaid())
-				.mapToDouble(PaymentScheduleEntity::getDebtAmount).sum();
+			Double share = paymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
-		Double currentMonthShare = paymentSchedules.stream().filter(payment -> !payment.getPaid())
-				.filter(payment -> payment.getPaymentDate().getMonthValue() == currentMonth
-						&& payment.getPaymentDate().getYear() == currentYear)
-				.mapToDouble(PaymentScheduleEntity::getSharePayment).sum();
+			CreditCardDebtResponse response = new CreditCardDebtResponse();
+			response.setCreditCardNumber(creditCardNumber);
+			response.setTotalDebt(totalDebt);
+			response.setShare(share);
+			response.setAvailableCredit(creditCard.getAvailableCredit());
 
-		CreditCardDebtResponse response = new CreditCardDebtResponse();
-		response.setCreditCardNumber(creditCard.getCreditCardId());
-		response.setTotalDebt(totalDebt);
-		response.setShare(currentMonthShare);
-		response.setAvailableCredit(creditCard.getAvailableCredit());
-		logger.info("Debt checked successfully for credit card: {}", creditCardNumber);
-		return response;
+			logger.info("Debt checked successfully for credit card : {}", creditCardNumber);
+			return response;
+		} else {
+			logger.error("No payment schedule found for credit card: {}", creditCardNumber);
+			throw new RuntimeException("No payment schedule found");
+		}
 	}
 
 	/**
@@ -165,7 +173,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
-					return new RuntimeException("Tarjeta de crédito no encontrada");
+					return new RuntimeException("Credit card not found");
 				});
 
 		creditCardEntity.setAllowConsumption(!creditCardEntity.getAllowConsumption());
@@ -188,7 +196,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
-					return new RuntimeException("Tarjeta de crédito no encontrada");
+					return new RuntimeException("Credit card not found");
 				});
 
 		creditCardEntity.setIsActive(false);
@@ -207,20 +215,12 @@ public class CreditCardServiceImpl implements CreditCardService {
 		String creditCardNumber;
 		boolean exists;
 		do {
-			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber + generateRandomNumber();
+			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber
+					+ Utility.generateRandomNumber();
+			
 			exists = creditCardRepository.existsByCreditCardNumberAndIsActiveTrue(creditCardNumber).toFuture().join();
 		} while (exists);
 		return creditCardNumber;
-	}
-
-	/**
-	 * Generates a random number to append to the credit card number.
-	 * 
-	 * @return A random number as a string.
-	 */
-	private String generateRandomNumber() {
-		int randomNumber = (int) (Math.random() * 10000);
-		return String.format("%04d", randomNumber);
 	}
 
 }

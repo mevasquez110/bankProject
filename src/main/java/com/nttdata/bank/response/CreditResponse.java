@@ -19,7 +19,6 @@ public class CreditResponse {
 	private Double amount;
 	private Double annualInterestRate;
 	private Integer numberOfInstallments;
-	private Double installmentAmount;
 	private Integer paymentDay;
 	private Double annualLateInterestRate;
 

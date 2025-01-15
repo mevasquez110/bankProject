@@ -25,5 +25,4 @@ public class AccountResponse {
 	private Boolean isBlocked;
 	private Boolean allowWithdrawals;
 
-
 }

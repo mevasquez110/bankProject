@@ -1,15 +1,17 @@
 openapi: 3.0.0
 info:
   title: Banking API
-  description: API for managing accounts, credits, credit cards, customers, and transactions.
   version: 1.0.0
+  description: API for banking operations including accounts, loans, credit and debit cards, transactions, customers and Yanki.
 servers:
-  - url: /api
+  - url: http://localhost:8080/api
+    description: Local development server
 
 paths:
   /account/create:
     post:
-      summary: Create a new account
+      summary: Create an account
+
       requestBody:
         required: true
         content:
@@ -18,83 +20,92 @@ paths:
               $ref: '#/components/schemas/AccountRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Created account
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_AccountResponse'
-
-  /account/balance:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AccountResponse'
+  /account/balance/{accountNumber}:
     get:
       summary: Check account balance
       parameters:
         - name: accountNumber
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_BalanceResponse'
-
-  /account/all:
-    get:
-      summary: Find all accounts
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_List_AccountResponse'
-
-  /account/update/{accountId}:
-    put:
-      summary: Update account
-      parameters:
-        - name: accountId
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccountRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Account balance
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_AccountResponse'
-
-  /account/delete/{accountId}:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BalanceResponse'
+  /account/all/{documentNumber}:
+    get:
+      summary: View all customer accounts
+      parameters:
+        - name: documentNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountResponse'
+  /account/update/{accountNumber}:
+    put:
+      summary: Update account to allow withdrawals
+      parameters:
+        - name: accountNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AccountResponse'
+  /account/delete/{accountNumber}:
     delete:
       summary: Delete account
       parameters:
-        - name: accountId
+        - name: accountNumber
           in: path
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Deleted account
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_void'
-
+                $ref: '#/components/schemas/ApiResponse'
   /credits/grant:
     post:
-      summary: Grant a credit
+      summary: Grant credit
       requestBody:
         required: true
         content:
@@ -103,77 +114,51 @@ paths:
               $ref: '#/components/schemas/CreditRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Credit granted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CreditResponse'
-
-  /credits/debt/{creditId}:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreditResponse'
+  /credits/debt:
     get:
       summary: Check credit debt
       parameters:
         - name: creditId
-          in: path
+          in: query
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Credit debt
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CreditDebtResponse'
-
-  /credits/reprogram:
-    put:
-      summary: Reprogram credit debt
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReprogramDebtRequest'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_CreditResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreditDebtResponse'
   /credits/all:
     get:
-      summary: Find all credits
+      summary: See all credits
       responses:
         '200':
-          description: Successful operation
+          description: List of credits
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_List_CreditResponse'
-
-  /credits/{creditId}:
-    delete:
-      summary: Delete credit
-      parameters:
-        - name: creditId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse_void'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditResponse'
   /credit-cards/request:
     post:
-      summary: Request a credit card
+      summary: Apply for a credit card
       requestBody:
         required: true
         content:
@@ -182,83 +167,86 @@ paths:
               $ref: '#/components/schemas/CreditCardRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Credit card requested
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CreditCardResponse'
-
-  /credit-cards/{creditCardId}:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreditCardResponse'
+  /credit-cards/debt:
     get:
       summary: Check credit card debt
       parameters:
-        - name: creditCardId
-          in: path
+        - name: creditCardNumber
+          in: query
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Credit Card Debt
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CreditCardDebtResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreditCardDebtResponse'
   /credit-cards/all:
     get:
-      summary: Find all credit cards
+      summary: View all credit cards
       responses:
         '200':
-          description: Successful operation
+          description: List of credit cards
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_List_CreditCardResponse'
-
-  /credit-cards/update/{creditCardId}:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditCardResponse'
+  /credit-cards/update/{creditCardNumber}:
     put:
       summary: Update credit card
       parameters:
-        - name: creditCardId
+        - name: creditCardNumber
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreditCardRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Updated credit card
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CreditCardResponse'
-
-  /credit-cards/delete/{creditCardId}:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreditCardResponse'
+  /credit-cards/delete/{creditCardNumber}:
     delete:
       summary: Delete credit card
       parameters:
-        - name: creditCardId
+        - name: creditCardNumber
           in: path
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Credit card removed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_void'
-
+                $ref: '#/components/schemas/ApiResponse'
   /customers/register:
     post:
-      summary: Register a new customer
+      summary: Registrar Client
       requestBody:
         required: true
         content:
@@ -267,15 +255,17 @@ paths:
               $ref: '#/components/schemas/CustomerRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Registered customer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CustomerResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerResponse'
   /customers/search:
     get:
-      summary: Search customer by document number
+      summary: Search for customer by document number
       parameters:
         - name: documentNumber
           in: query
@@ -284,26 +274,32 @@ paths:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Client found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CustomerResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerResponse'
   /customers/all:
     get:
-      summary: Find all customers
+      summary: View all clients
       responses:
         '200':
-          description: Successful operation
+          description: Listado de clientes
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_List_CustomerResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerResponse'
   /customers/update/{documentNumber}:
     put:
-      summary: Update customer
+      summary: Update customer contact information
       parameters:
         - name: documentNumber
           in: path
@@ -318,15 +314,17 @@ paths:
               $ref: '#/components/schemas/ContactDataRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Customer data updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_CustomerResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerResponse'
   /customers/delete/{documentNumber}:
     delete:
-      summary: Delete customer
+      summary: Delete client
       parameters:
         - name: documentNumber
           in: path
@@ -335,63 +333,259 @@ paths:
             type: string
       responses:
         '200':
-          description: Successful operation
+          description: Deleted customer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_void'
-
+                $ref: '#/components/schemas/ApiResponse'
+  /debit-card/create:
+    post:
+      summary: Create debit card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebitCardRequest'
+      responses:
+        '200':
+          description: Debit card created
+          content:
+            application/json:
+          $ref: '#/components/schemas/ApiResponse'
+  /debit-card/all:
+    get:
+      summary: View all debit cards
+      responses:
+        '200':
+          description: List of debit cards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DebitCardResponse'
+  /debit-card/balance/{debitCardNumber}:
+    get:
+      summary: Check debit card balance
+      parameters:
+        - name: debitCardNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Debit card balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BalanceResponse'
+  /debit-card/associate-account/{debitCardNumber}:
+    put:
+      summary: Link account to debit card
+      parameters:
+        - name: debitCardNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociateAccountRequest'
+      responses:
+        '200':
+          description: Account associated with debit card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DebitCardResponse'
+  /debit-card/mark-primary-account/{debitCardNumber}:
+    put:
+      summary: Mark as primary account
+      parameters:
+        - name: debitCardNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociateAccountRequest'
+      responses:
+        '200':
+          description: Mark as primary account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DebitCardResponse'
+  /debit-card/delete/{debitCardNumber}:
+    delete:
+      summary: Delete debit card
+      parameters:
+        - name: debitCardNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Debit card deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
   /transactions/deposit:
     post:
-      summary: Make a deposit
+      summary: Make deposit
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransactionRequest'
+              $ref: '#/components/schemas/DepositRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Deposit made
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_TransactionResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
   /transactions/withdraw:
     post:
-      summary: Make a withdrawal
+      summary: Make withdrawal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransactionRequest'
+              $ref: '#/components/schemas/WithdrawalRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Withdrawal made
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_TransactionResponse'
-
-  /transactions/pay-installment:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
+  /transactions/account-transfer:
     post:
-      summary: Pay an installment
+      summary: Make a transfer between accounts
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransactionRequest'
+              $ref: '#/components/schemas/AccountTransferRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Transfer made
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_TransactionResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
+  /transactions/mobile-transfer:
+    post:
+      summary: Make mobile transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileTransferRequest'
+      responses:
+        '200':
+          description: Mobile transfer made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
+  /transactions/pay-credit-card:
+    post:
+      summary: Pay by credit card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCreditCardRequest'
+      responses:
+        '200':
+          description: Payment made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
+  /transactions/pay-credit:
+    post:
+      summary: Pay credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCreditRequest'
+      responses:
+        '200':
+          description: Payment made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
+  /transactions/charge:
+    post:
+      summary: Make consumption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionRequest'
+      responses:
+        '200':
+          description: Realized consumption
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionResponse'
   /transactions/{accountId}:
     get:
       summary: Check account transactions
@@ -403,73 +597,167 @@ paths:
             type: integer
       responses:
         '200':
-          description: Successful operation
+          description: Transaction List
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_List_TransactionResponse'
-
-  /transactions/charge:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionResponse'
+  /yanki/create:
     post:
-      summary: Charge a consumption
+      summary: Create Yanki
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransactionRequest'
+              $ref: '#/components/schemas/YankiRequest'
       responses:
         '200':
-          description: Successful operation
+          description: Yanki created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse_TransactionResponse'
-
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/YankiResponse'
+  /yanki/all:
+    get:
+      summary: See all the Yanki
+      responses:
+        '200':
+          description: List of Yanki
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/YankiResponse'
+  /yanki/update/{phoneNumber}:
+    put:
+      summary: Update Yanki
+      parameters:
+        - name: phoneNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YankiUpdateRequest'
+      responses:
+        '200':
+          description: Updated Yanki
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/YankiResponse'
+  /yanki/delete/{phoneNumber}:
+    delete:
+      summary: Delete Yanki
+      parameters:
+        - name: phoneNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Yanki eliminated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 components:
   schemas:
     AccountRequest:
       type: object
       properties:
-        documentNumber:
+        holderDoc:
           type: array
           items:
             type: string
-        authorizedSignatory:
+        authorizedSignatoryDoc:
           type: array
           items:
-            $ref: '#/components/schemas/AuthorizedSignatoryRequest'
+            type: string
         accountType:
           type: string
         openingAmount:
           type: number
-          format: double
-
-    AuthorizedSignatoryRequest:
+        currency:
+          type: string
+      required:
+        - accountType
+        - openingAmount
+        - currency
+    AccountTransferRequest:
       type: object
       properties:
-        name:
+        accountNumberSender:
           type: string
-        address:
+        accountNumberRecipient:
           type: string
-        phoneNumber:
+        amount:
+          type: number
+      required:
+        - accountNumberSender
+        - accountNumberRecipient
+        - amount
+    AssociateAccountRequest:
+      type: object
+      properties:
+        associatedAccounts:
+          type: array
+          items:
+            type: string
+        primaryAccount:
           type: string
-        documentType:
+      required:
+        - primaryAccount
+    ConsumptionRequest:
+      type: object
+      properties:
+        creditCardNumber:
           type: string
-        documentNumber:
+        amount:
+          type: number
+        share:
+          type: integer
+        productOrServiceName:
           type: string
-
+      required:
+        - creditCardNumber
+        - amount
+        - share
+        - productOrServiceName
     ContactDataRequest:
       type: object
       properties:
         email:
           type: string
-          format: email
         address:
           type: string
         phoneNumber:
           type: string
-
+      required:
+        - email
+        - address
+        - phoneNumber
     CreditCardRequest:
       type: object
       properties:
@@ -477,16 +765,18 @@ components:
           type: string
         availableCredit:
           type: number
-          format: double
         annualInterestRate:
           type: number
-          format: double
         paymentDay:
           type: integer
         annualLateInterestRate:
           type: number
-          format: double
-
+      required:
+        - documentNumber
+        - availableCredit
+        - annualInterestRate
+        - paymentDay
+        - annualLateInterestRate
     CreditRequest:
       type: object
       properties:
@@ -494,72 +784,132 @@ components:
           type: string
         amount:
           type: number
-          format: double
         accountNumber:
           type: string
         annualInterestRate:
           type: number
-          format: double
         numberOfInstallments:
           type: integer
         paymentDay:
           type: integer
         annualLateInterestRate:
           type: number
-          format: double
-
+      required:
+        - documentNumber
+        - amount
+        - accountNumber
+        - annualInterestRate
+        - numberOfInstallments
+        - paymentDay
+        - annualLateInterestRate
     CustomerRequest:
       type: object
+      allOf:
+        - $ref: '#/components/schemas/ContactDataRequest'
+        - properties:
+            fullName:
+              type: string
+            companyName:
+              type: string
+            documentType:
+              type: string
+            documentNumber:
+              type: string
+            personType:
+              type: string
+      required:
+        - documentType
+        - documentNumber
+        - personType
+    DebitCardRequest:
+      type: object
       properties:
-        fullName:
+        documentNumber:
           type: string
-        companyName:
+        primaryAccount:
+          type: string
+      required:
+        - documentNumber
+        - primaryAccount
+    DepositRequest:
+      type: object
+      properties:
+        creditCardNumber:
+          type: string
+        accountNumber:
+          type: string
+        amount:
+          type: number
+      required:
+        - creditCardNumber
+        - accountNumber
+        - amount
+    MobileTransferRequest:
+      type: object
+      properties:
+        mobileNumberSender:
+          type: string
+        mobileNumberRecipient:
+          type: string
+        amount:
+          type: number
+      required:
+        - mobileNumberSender
+        - mobileNumberRecipient
+        - amount
+    PayCreditCardRequest:
+      type: object
+      properties:
+        creditCardNumber:
+          type: string
+        amount:
+          type: number
+      required:
+        - creditCardNumber
+        - amount
+    PayCreditRequest:
+      type: object
+      properties:
+        creditId:
+          type: string
+        amount:
+          type: number
+      required:
+        - creditId
+        - amount
+    WithdrawalRequest:
+      type: object
+      properties:
+        creditCardNumber:
+          type: string
+        amount:
+          type: number
+      required:
+        - creditCardNumber
+        - amount
+    YankiRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phoneNumber:
           type: string
         documentType:
           type: string
         documentNumber:
           type: string
-        personType:
-          type: string
-        email:
-          type: string
-          format: email
-        address:
-          type: string
-        phoneNumber:
-          type: string
-
-    ReprogramDebtRequest:
-      type: object
-      properties:
-        creditId:
-          type: string
-        newInstallments:
-          type: integer
-        newInterestRate:
-          type: number
-          format: double
-        newLateInterestRate:
-          type: number
-          format: double
-        newNumberOfInstallments:
-          type: integer
-        newPaymentDay:
-          type: integer
-
-    TransactionRequest:
+      required:
+        - name
+        - phoneNumber
+        - documentType
+        - documentNumber
+    YankiUpdateRequest:
       type: object
       properties:
         accountNumber:
           type: string
-        creditCardNumber:
-          type: string
-        creditId:
-          type: string
-        amount:
-          type: number
-          format: double
-
+      required:
+        - accountNumber
     AccountResponse:
       type: object
       properties:
@@ -569,18 +919,18 @@ components:
           type: integer
         maintenanceCommission:
           type: number
-          format: double
         withdrawalDepositDate:
-          type: string
-          format: date-time
-        createDate:
           type: string
           format: date-time
         amount:
           type: number
-          format: double
-
-    ApiResponse_AccountResponse:
+        currency:
+          type: string
+        isBlocked:
+          type: boolean
+        allowWithdrawals:
+          type: boolean
+    ApiResponse:
       type: object
       properties:
         message:
@@ -588,18 +938,7 @@ components:
         statusCode:
           type: integer
         data:
-          $ref: '#/components/schemas/AccountResponse'
-
-    ApiResponse_BalanceResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/BalanceResponse'
-
+          type: object
     BalanceResponse:
       type: object
       properties:
@@ -607,134 +946,8 @@ components:
           type: string
         amount:
           type: number
-          format: double
         allowWithdrawals:
           type: boolean
-
-    ApiResponse_List_AccountResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountResponse'
-
-    ApiResponse_CreditResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/CreditResponse'
-
-    CreditResponse:
-      type: object
-      properties:
-        creditId:
-          type: string
-        amount:
-          type: number
-          format: double
-        annualInterestRate:
-          type: number
-          format: double
-        numberOfInstallments:
-          type: integer
-        installmentAmount:
-          type: number
-          format: double
-        paymentDay:
-          type: integer
-        createDate:
-          type: string
-          format: date-time
-        annualLateInterestRate:
-          type: number
-          format: double
-
-    ApiResponse_CreditDebtResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/CreditDebtResponse'
-
-    CreditDebtResponse:
-      type: object
-      properties:
-        creditId:
-          type: string
-        availableAmount:
-          type: number
-          format: double
-        totalDebt:
-          type: number
-          format: double
-        share:
-          type: number
-          format: double
-
-    ApiResponse_List_CreditResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreditResponse'
-
-    ApiResponse_CreditCardResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/CreditCardResponse'
-
-    CreditCardResponse:
-      type: object
-      properties:
-        creditCardNumber:
-          type: string
-        availableCredit:
-          type: number
-          format: double
-        annualInterestRate:
-          type: number
-          format: double
-        annualLateInterestRate:
-          type: number
-          format: double
-        paymentDay:
-          type: integer
-        createDate:
-          type: string
-          format: date-time
-
-    ApiResponse_CreditCardDebtResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/CreditCardDebtResponse'
-
     CreditCardDebtResponse:
       type: object
       properties:
@@ -742,36 +955,51 @@ components:
           type: string
         totalDebt:
           type: number
-          format: double
         share:
           type: number
-          format: double
         availableCredit:
           type: number
-          format: double
-
-    ApiResponse_List_CreditCardResponse:
+    CreditCardResponse:
       type: object
       properties:
-        message:
+        creditCardNumber:
           type: string
-        statusCode:
+        availableCredit:
+          type: number
+        annualInterestRate:
+          type: number
+        annualLateInterestRate:
+          type: number
+        paymentDay:
           type: integer
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreditCardResponse'
-
-    ApiResponse_CustomerResponse:
+        allowConsumption:
+          type: boolean
+    CreditDebtResponse:
       type: object
       properties:
-        message:
+        creditId:
           type: string
-        statusCode:
+        availableAmount:
+          type: number
+        totalDebt:
+          type: number
+        share:
+          type: number
+    CreditResponse:
+      type: object
+      properties:
+        creditId:
+          type: string
+        amount:
+          type: number
+        annualInterestRate:
+          type: number
+        numberOfInstallments:
           type: integer
-        data:
-          $ref: '#/components/schemas/CustomerResponse'
-
+        paymentDay:
+          type: integer
+        annualLateInterestRate:
+          type: number
     CustomerResponse:
       type: object
       properties:
@@ -783,7 +1011,6 @@ components:
           type: string
         email:
           type: string
-          format: email
         address:
           type: string
         phoneNumber:
@@ -792,29 +1019,21 @@ components:
           type: string
         personType:
           type: string
-
-    ApiResponse_List_CustomerResponse:
+    DebitCardResponse:
       type: object
       properties:
-        message:
+        debitCardNumber:
           type: string
-        statusCode:
-          type: integer
-        data:
+        associatedAccounts:
           type: array
           items:
-            $ref: '#/components/schemas/CustomerResponse'
-
-    ApiResponse_TransactionResponse:
-      type: object
-      properties:
-        message:
+            type: string
+        primaryAccount:
           type: string
-        statusCode:
-          type: integer
-        data:
-          $ref: '#/components/schemas/TransactionResponse'
-
+        isBlocked:
+          type: boolean
+        isActive:
+          type: boolean
     TransactionResponse:
       type: object
       properties:
@@ -828,32 +1047,15 @@ components:
           type: string
         amount:
           type: number
-          format: double
         createDate:
           type: string
           format: date-time
         transactionType:
           type: string
-    ApiResponse_List_TransactionResponse:
+    YankiResponse:
       type: object
       properties:
-        message:
+        name:
           type: string
-        statusCode:
-          type: integer
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionResponse'
-
-    ApiResponse_void:
-      type: object
-      properties:
-        message:
+        phoneNumber:
           type: string
-        statusCode:
-          type: integer
-        data:
-          type: object
-
-      

@@ -18,7 +18,7 @@ import lombok.Data;
 public class CreditCardEntity {
 
 	@Id
-	private String creditCardId;
+	private String id;
 	private String creditCardNumber;
 	private String documentNumber;
 	private Double availableCredit;

@@ -17,6 +17,9 @@ public class DepositRequest {
 
     @NotBlank(message = "Credit card number is mandatory")
     private String creditCardNumber;
+    
+	@NotBlank(message = "Account number is mandatory")
+	private String accountNumber;
 
     @NotNull(message = "Amount is mandatory")
     @Positive(message = "Amount must be greater than zero")

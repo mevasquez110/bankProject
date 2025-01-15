@@ -1,17 +1,9 @@
 package com.nttdata.bank.job;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import com.nttdata.bank.entity.PaymentScheduleEntity;
-import com.nttdata.bank.repository.CreditRepository;
-import com.nttdata.bank.repository.PaymentScheduleRepository;
-import com.nttdata.bank.util.Utility;
 
 /**
  * PaymentScheduleJob is a scheduled task that updates payment schedules. This
@@ -26,58 +18,39 @@ public class PaymentScheduleJob {
 
 	private static final Logger logger = LoggerFactory.getLogger(PaymentScheduleJob.class);
 
-	@Autowired
-	private PaymentScheduleRepository paymentScheduleRepository;
-
-	@Autowired
-	private CreditRepository creditRepository;
-
 	/**
 	 * Scheduled job to update payment schedules. This method is scheduled to run
 	 * daily at midnight.
 	 */
 	@Scheduled(cron = "0 0 0 * * ?")
-	public void updatePaymentSchedules() {
-		LocalDate today = LocalDate.now();
-		logger.debug("Updating payment schedules for date: {}", today);
-		
-		List<PaymentScheduleEntity> list = paymentScheduleRepository.findByPaidFalseAndPaymentDateBefore(today)
-				.collectList().block();
-		
-		for (PaymentScheduleEntity payment : list) {
-			updatePayment(payment, today);
-		}
+	public void updateOverduePaymentSchedules() {
 	}
 
 	/**
-	 * Updates an individual payment schedule.
-	 *
-	 * @param payment The payment schedule entity to update
-	 * @param today   The current date
+	 * Scheduled job to generate the monthly credit card schedule. This method is
+	 * scheduled to run on the first day of every month at midnight.
 	 */
-	private void updatePayment(PaymentScheduleEntity payment, LocalDate today) {
-		logger.debug("Updating payment schedule for payment ID: {}", payment.getId());
-
-		creditRepository.findById(payment.getCreditId()).doOnSuccess(credit -> {
-			if (credit != null) {
-				Double dailyInterestRate = Utility.getDailyInterestRate(credit.getAnnualLateInterestRate());
-
-				Double overdueInterest = payment.getDebtAmount() * dailyInterestRate
-						* ChronoUnit.DAYS.between(payment.getPaymentDate(), today);
-
-				payment.setDebtAmount(payment.getDebtAmount() + overdueInterest);
-				paymentScheduleRepository.save(payment);
-				logger.info("Updated payment schedule for payment ID: {}", payment.getId());
-			}
-		}).subscribe();
-
+	@Scheduled(cron = "0 0 0 1 * ?")
+	public void generateMonthlyCreditCardSchedule() {
+		logger.debug("Generating monthly credit card schedule");
 	}
-	
-	//cierre de mes de tarjeta de credito, debe generar el cronograma del mes, a travez del detalle
-	
-	
-	//se ejecuta cada 6 meses, Si la cuenta no tiene entrada de dinero durante 6 meses, se bloqueará la cuenta, si es que tiene saldo, pero si no tiene, se eliminara
-	
-	
-	//mensualmente se debe revisar la cuenta vip si cumple con el monto minimo diario durante el mes, si no, se cobra comision
+
+	/**
+	 * Scheduled job to check and handle inactive accounts. This method is scheduled
+	 * to run on the first day of every six months at midnight.
+	 */
+	@Scheduled(cron = "0 0 0 1 */6 ?")
+	public void checkAndHandleInactiveAccounts() {
+		logger.debug("Checking and handling inactive accounts");
+	}
+
+	/**
+	 * Scheduled job to review VIP accounts and charge commission if necessary. This
+	 * method is scheduled to run on the first day of every month at midnight.
+	 */
+	@Scheduled(cron = "0 0 0 1 * ?")
+	public void reviewVipAccountsAndChargeCommission() {
+		logger.debug("Reviewing VIP accounts and charging commission if necessary");
+	}
+
 }

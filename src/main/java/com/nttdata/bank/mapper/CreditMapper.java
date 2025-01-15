@@ -3,7 +3,6 @@ package com.nttdata.bank.mapper;
 import com.nttdata.bank.entity.CreditEntity;
 import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.CreditResponse;
-import com.nttdata.bank.util.Utility;
 
 /**
  * CreditMapper provides mapping methods to convert between CreditRequest,
@@ -50,8 +49,6 @@ public class CreditMapper {
 			creditResponse.setAmount(creditEntity.getAmount());
 			creditResponse.setAnnualInterestRate(creditEntity.getAnnualInterestRate());
 			creditResponse.setNumberOfInstallments(creditEntity.getNumberOfInstallments());
-			creditResponse.setInstallmentAmount(Utility.calculateInstallmentAmount(creditEntity.getAmount(),
-					creditEntity.getAnnualInterestRate(), creditEntity.getNumberOfInstallments()));
 			creditResponse.setPaymentDay(creditEntity.getPaymentDay());
 			creditResponse.setAnnualInterestRate(creditEntity.getAnnualLateInterestRate());
 		}
