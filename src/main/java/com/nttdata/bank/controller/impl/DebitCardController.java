@@ -11,7 +11,6 @@ import com.nttdata.bank.controller.DebitCardAPI;
 import com.nttdata.bank.request.AssociateAccountRequest;
 import com.nttdata.bank.request.DebitCardRequest;
 import com.nttdata.bank.response.ApiResponse;
-import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 import com.nttdata.bank.service.DebitCardService;
 
@@ -67,24 +66,6 @@ public class DebitCardController implements DebitCardAPI {
     }
 
     /**
-     * Checks the balance of a debit card.
-     *
-     * @param debitCardNumber The debit card number
-     * @return ApiResponse containing the balance response
-     */
-    @Override
-    public ApiResponse<BalanceResponse> checkBalance(String debitCardNumber) {
-        logger.debug("Received request to check balance for debit card: {}", debitCardNumber);
-        ApiResponse<BalanceResponse> response = new ApiResponse<>();
-        BalanceResponse balanceResponse = debitCardService.checkBalance(debitCardNumber);
-        response.setStatusCode(HttpStatus.OK.value());
-        response.setMessage("Balance retrieved successfully");
-        response.setData(balanceResponse);
-        logger.info("Balance retrieved successfully for debit card: {}", debitCardNumber);
-        return response;
-    }
-
-    /**
      * Associates an account with a debit card.
      *
      * @param debitCardNumber The debit card number
@@ -101,26 +82,6 @@ public class DebitCardController implements DebitCardAPI {
         response.setMessage("Account associated successfully");
         response.setData(debitCardResponse);
         logger.info("Account associated successfully with debit card: {}", debitCardNumber);
-        return response;
-    }
-
-    /**
-     * Marks an account as the primary account for a debit card.
-     *
-     * @param debitCardNumber The debit card number
-     * @param associateAccountRequest The associate account request payload
-     * @return ApiResponse containing the updated debit card response
-     */
-    @Override
-    public ApiResponse<DebitCardResponse> markAsPrimaryAccount(String debitCardNumber,
-            @Valid AssociateAccountRequest associateAccountRequest) {
-        logger.debug("Received request to mark primary account for debit card: {}", debitCardNumber);
-        ApiResponse<DebitCardResponse> response = new ApiResponse<>();
-        DebitCardResponse debitCardResponse = debitCardService.markAsPrimaryAccount(debitCardNumber, associateAccountRequest);
-        response.setStatusCode(HttpStatus.OK.value());
-        response.setMessage("Primary account marked successfully");
-        response.setData(debitCardResponse);
-        logger.info("Primary account marked successfully for debit card: {}", debitCardNumber);
         return response;
     }
 

@@ -16,8 +16,8 @@ import lombok.Data;
 @Data
 public class WithdrawalRequest {
 
-	@NotBlank(message = "Credit card number is mandatory")
-	private String creditCardNumber;
+    @NotBlank(message = "Debit card number is mandatory")
+    private String debitCardNumber;
 
 	@NotNull(message = "Amount is mandatory")
 	@Positive(message = "Amount must be greater than zero")

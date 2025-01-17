@@ -17,4 +17,6 @@ public interface DebitCardRepository extends ReactiveMongoRepository<DebitCardEn
 	
 	Mono<Boolean> existsByPrimaryAccountAndIsActiveTrue(String primaryAccount);
 
+	Mono<Boolean> existsByDebitCardNumber(String debitCardNumber);
+
 }

@@ -834,15 +834,12 @@ components:
     DepositRequest:
       type: object
       properties:
-        creditCardNumber:
-          type: string
-        accountNumber:
+        debitCardNumber:
           type: string
         amount:
           type: number
       required:
-        - creditCardNumber
-        - accountNumber
+        - debitCardNumber
         - amount
     MobileTransferRequest:
       type: object
@@ -880,12 +877,12 @@ components:
     WithdrawalRequest:
       type: object
       properties:
-        creditCardNumber:
+        debitCardNumber:
           type: string
         amount:
           type: number
       required:
-        - creditCardNumber
+        - debitCardNumber
         - amount
     YankiRequest:
       type: object

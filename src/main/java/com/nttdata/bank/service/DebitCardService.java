@@ -3,7 +3,6 @@ package com.nttdata.bank.service;
 import java.util.List;
 import com.nttdata.bank.request.AssociateAccountRequest;
 import com.nttdata.bank.request.DebitCardRequest;
-import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 
 /**

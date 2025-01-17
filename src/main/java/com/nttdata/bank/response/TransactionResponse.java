@@ -16,11 +16,18 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionResponse {
 
-	private String transactionId;
-	private String accountNumber;
+	private String operationNumber;
+	private String name;
+	private String accountNumberClient;
+	private String accountNumberSender;
+	private String accountNumberRecipient;
+	private String nameClient;
+	private String nameSender;
+	private String nameRecipient;
 	private String creditCardNumber;
 	private String creditId;
 	private Double amount;
-	private LocalDateTime createDate;
+	private Double commission;
+	private LocalDateTime transactionDate;
 	private String transactionType;
 }

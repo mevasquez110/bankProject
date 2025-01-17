@@ -218,7 +218,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber
 					+ Utility.generateRandomNumber();
 			
-			exists = creditCardRepository.existsByCreditCardNumberAndIsActiveTrue(creditCardNumber).toFuture().join();
+			exists = creditCardRepository.existsByCreditCardNumber(creditCardNumber).toFuture().join();
 		} while (exists);
 		return creditCardNumber;
 	}

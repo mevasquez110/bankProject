@@ -15,8 +15,8 @@ import lombok.Data;
 @Data
 public class DepositRequest {
 
-    @NotBlank(message = "Credit card number is mandatory")
-    private String creditCardNumber;
+    @NotBlank(message = "Debit card number is mandatory")
+    private String debitCardNumber;
     
 	@NotBlank(message = "Account number is mandatory")
 	private String accountNumber;

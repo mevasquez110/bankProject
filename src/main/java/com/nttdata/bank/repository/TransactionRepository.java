@@ -3,6 +3,7 @@ package com.nttdata.bank.repository;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.TransactionEntity;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * TransactionRepository provides the CRUD operations for TransactionEntity.
@@ -18,4 +19,8 @@ public interface TransactionRepository extends ReactiveMongoRepository<Transacti
 	 * @return A Flux emitting active TransactionEntity objects.
 	 */
 	Flux<TransactionEntity> findByAccountNumberAndIsActiveTrue(String accountNumber);
+
+	Mono<Boolean> existsByOperationNumber(String operationNumber);
+	
+	Mono<TransactionEntity> findFirstByOrderByOperationNumberDesc();
 }

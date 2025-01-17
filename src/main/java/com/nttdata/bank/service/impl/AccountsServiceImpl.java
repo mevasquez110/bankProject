@@ -348,7 +348,7 @@ public class AccountsServiceImpl implements AccountsService {
 		boolean exists;
 		do {
 			accountNumber = generateAccountNumber(accountType);
-			exists = accountRepository.existsByAccountNumberAndIsActiveTrue(accountNumber).toFuture().join();
+			exists = accountRepository.existsByAccountNumber(accountNumber).toFuture().join();
 		} while (exists);
 		return accountNumber;
 	}

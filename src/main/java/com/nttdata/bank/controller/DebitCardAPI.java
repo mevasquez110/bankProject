@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.AssociateAccountRequest;
 import com.nttdata.bank.request.DebitCardRequest;
 import com.nttdata.bank.response.ApiResponse;
-import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.DebitCardResponse;
 
 @RestController
@@ -26,15 +25,8 @@ public interface DebitCardAPI {
 	@GetMapping("/all")
 	ApiResponse<List<DebitCardResponse>> findAllDebitCard();
 
-	@GetMapping("/balance/{debitCardNumber}")
-	ApiResponse<BalanceResponse> checkBalance(@PathVariable String debitCardNumber);
-
 	@PutMapping("/associate-account/{debitCardNumber}")
 	ApiResponse<DebitCardResponse> associateAccount(@PathVariable String debitCardNumber,
-			@RequestBody @Valid AssociateAccountRequest associateAccountRequest);
-
-	@PutMapping("/mark-primary-account/{debitCardNumber}")
-	ApiResponse<DebitCardResponse> markAsPrimaryAccount(@PathVariable String debitCardNumber,
 			@RequestBody @Valid AssociateAccountRequest associateAccountRequest);
 
 	@DeleteMapping("/delete/{debitCardNumber}")

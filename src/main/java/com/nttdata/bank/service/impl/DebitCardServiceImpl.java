@@ -87,7 +87,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 			debitCardNumber = Constants.DEBIT_TYPE + Constants.BANK_CODE + documentNumber
 					+ Utility.generateRandomNumber();
 
-			exists = debitCardRepository.existsByDebitCardNumberAndIsActiveTrue(debitCardNumber).toFuture().join();
+			exists = debitCardRepository.existsByDebitCardNumber(debitCardNumber).toFuture().join();
 		} while (exists);
 		return debitCardNumber;
 	}

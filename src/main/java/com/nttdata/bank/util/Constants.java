@@ -45,5 +45,8 @@ public class Constants {
 	public static final String TRANSACTION_TYPE_PAY_CREDIT_CARD = "PAGO DE TARJETA";
 	public static final String TRANSACTION_TYPE_PAY_CREDIT = "PAGO DE CREDITO";
 	public static final String TRANSACTION_TYPE_CONSUMPTION = "CONSUMO DE TARJETA";
+	
+	public static final Integer TRANSACTIONAL_LIMIT = 10;
+
 
 }

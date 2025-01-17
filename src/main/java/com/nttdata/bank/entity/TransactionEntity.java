@@ -20,13 +20,14 @@ public class TransactionEntity {
 
 	@Id
 	private String id;
+	private String operationNumber;
 	private String accountNumber;
 	private String creditCardNumber;
 	private String creditId;
 	private Double amount;
+	private Double commission;
 	private String transactionType;
 	private Integer numberOfInstallments;
-	private LocalDateTime transactionDate;
 	private LocalDateTime createDate;
 	private LocalDateTime updateDate;
 	private LocalDateTime deleteDate;
