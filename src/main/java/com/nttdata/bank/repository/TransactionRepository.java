@@ -13,14 +13,6 @@ import reactor.core.publisher.Mono;
 public interface TransactionRepository extends ReactiveMongoRepository<TransactionEntity, String> {
 
 	/**
-	 * Finds active transactions by account number.
-	 *
-	 * @param accountNumber The account number to search for.
-	 * @return A Flux emitting active TransactionEntity objects.
-	 */
-	Flux<TransactionEntity> findByAccountNumberAndIsActiveTrue(String accountNumber);
-
-	/**
 	 * Finds the most recent transaction by operation number.
 	 *
 	 * @return A Mono emitting the most recent TransactionEntity object.

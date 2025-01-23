@@ -24,7 +24,7 @@ import com.nttdata.bank.response.CustomerResponse;
  * returns a structured API response.
  */
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("/customer")
 public interface CustomersAPI {
 
 	/**

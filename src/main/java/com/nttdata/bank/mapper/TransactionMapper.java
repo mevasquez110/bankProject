@@ -15,7 +15,7 @@ import com.nttdata.bank.response.TransactionResponse;
 public class TransactionMapper {
 
 	/**
-	 * Maps given parameters to a TransactionEntity object.
+	 * Maps the given parameters to a TransactionEntity object.
 	 *
 	 * @param transactionDate        The date of the transaction
 	 * @param commission             The commission amount
@@ -27,7 +27,7 @@ public class TransactionMapper {
 	 * @param creditId               The credit ID involved in the transaction
 	 * @param accountNumberWithdraws The account number that withdraws the
 	 *                               transaction
-	 * @param creditCard             The credit card number involved in the
+	 * @param creditCardNumber       The credit card number involved in the
 	 *                               transaction
 	 * @param nameWithdraws          The name associated with the withdrawing
 	 *                               account

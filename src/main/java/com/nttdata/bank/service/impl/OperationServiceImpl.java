@@ -429,21 +429,22 @@ public class OperationServiceImpl implements OperationService {
 	/**
 	 * Calculates the commission for a given account and transaction type.
 	 *
-	 * @param primaryAccount  the account number to check for transactions
-	 * @param transactionType the type of transaction to filter
+	 * @param primaryAccount the account number to check for transactions
 	 * @return the commission amount, 1.99 if the number of transactions of the
 	 *         given type in the current month exceeds 10, otherwise 0.00
 	 */
-	private Double getCommission(String primaryAccount, String transactionType) {
+	private Double getCommission(String accountNumber) {
 		Double commission = 0.00;
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime startOfMonth = now.withDayOfMonth(1).with(LocalTime.MIN);
 		LocalDateTime endOfMonth = now.withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
 				.with(LocalTime.MAX);
 
-		List<TransactionEntity> transactions = transactionRepository.findByAccountNumberAndIsActiveTrue(primaryAccount)
+		List<TransactionEntity> transactions = transactionRepository
+				.findAllByAccountNumberWithdrawsOrAccountNumberReceiveAndIsActiveTrue(accountNumber, accountNumber)
 				.toStream()
-				.filter(transaction -> transaction.getTransactionType().equals(transactionType)
+				.filter(transaction -> (transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_WITHDRAWAL)
+						|| transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_DEPOSIT))
 						&& !transaction.getCreateDate().isBefore(startOfMonth)
 						&& !transaction.getCreateDate().isAfter(endOfMonth))
 				.collect(Collectors.toList());
@@ -738,15 +739,15 @@ public class OperationServiceImpl implements OperationService {
 	 * Updates the credit schedule entity with the provided amounts and payment
 	 * status.
 	 *
-	 * @param entity          the credit schedule entity to be updated
-	 * @param principalAmount the new principal amount, or the current principal
-	 *                        amount if null
-	 * @param interestAmount  the new interest amount, or the current interest
-	 *                        amount if null
-	 * @param lateAmount      the new late amount, or the current late amount if
-	 *                        null
-	 * @param paid            the new payment status, or the current payment status
-	 *                        if null
+	 * @param creditScheduleEntity the credit schedule entity to be updated
+	 * @param principalAmount      the new principal amount, or the current
+	 *                             principal amount if null
+	 * @param interestAmount       the new interest amount, or the current interest
+	 *                             amount if null
+	 * @param lateAmount           the new late amount, or the current late amount
+	 *                             if null
+	 * @param paid                 the new payment status, or the current payment
+	 *                             status if null
 	 */
 	private void paidCreditDebt(CreditScheduleEntity creditScheduleEntity, Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {
@@ -766,15 +767,15 @@ public class OperationServiceImpl implements OperationService {
 	 * Updates the credit card schedule entity with the provided amounts and payment
 	 * status.
 	 *
-	 * @param entity          the credit card schedule entity to be updated
-	 * @param principalAmount the new principal amount, or the current principal
-	 *                        amount if null
-	 * @param interestAmount  the new interest amount, or the current interest
-	 *                        amount if null
-	 * @param lateAmount      the new late amount, or the current late amount if
-	 *                        null
-	 * @param paid            the new payment status, or the current payment status
-	 *                        if null
+	 * @param creditCardScheduleEntity the credit card schedule entity to be updated
+	 * @param principalAmount          the new principal amount, or the current
+	 *                                 principal amount if null
+	 * @param interestAmount           the new interest amount, or the current
+	 *                                 interest amount if null
+	 * @param lateAmount               the new late amount, or the current late
+	 *                                 amount if null
+	 * @param paid                     the new payment status, or the current
+	 *                                 payment status if null
 	 */
 	private void paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity, Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {

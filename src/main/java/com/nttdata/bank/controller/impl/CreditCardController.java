@@ -17,16 +17,16 @@ import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
 
 /**
- * CreditCardsController is a REST controller that implements the CreditCardsAPI
+ * CreditCardController is a REST controller that implements the CreditCardsAPI
  * interface. This class handles HTTP requests related to credit card operations
  * such as requesting, checking debt, retrieving, updating, and deleting credit
  * cards. It delegates the actual business logic to the appropriate service
  * layer.
  */
 @RestController
-public class CreditCardsController implements CreditCardsAPI {
+public class CreditCardController implements CreditCardsAPI {
 
-	private static final Logger logger = LoggerFactory.getLogger(CreditCardsController.class);
+	private static final Logger logger = LoggerFactory.getLogger(CreditCardController.class);
 
 	@Autowired
 	CreditCardService creditCardsService;
@@ -90,8 +90,6 @@ public class CreditCardsController implements CreditCardsAPI {
 	 * Updates the specified credit card based on the credit card number.
 	 *
 	 * @param creditCardNumber  - The credit card number to be updated.
-	 * @param creditCardRequest - The updated credit card details provided in the
-	 *                          request body.
 	 * @return ApiResponse containing the updated CreditCardResponse.
 	 */
 	@Override

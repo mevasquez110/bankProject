@@ -31,4 +31,3 @@ public class CreditCardScheduleEntity {
 	private List<Consumption> consumptionQuota;
 
 }
-	

@@ -305,7 +305,7 @@ public class AccountsServiceImpl implements AccountsService {
 					creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber))
 					.map(tuple -> tuple.getT1() || tuple.getT2()).blockOptional().ifPresentOrElse(hasCreditProduct -> {
 						if (!hasCreditProduct) {
-							throw new IllegalStateException("No credit product exists for the given document number.");
+							throw new IllegalStateException("No credit product found for the given document number");
 						}
 					}, () -> {
 						throw new IllegalStateException("Failed to validate credit product.");

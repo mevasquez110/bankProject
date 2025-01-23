@@ -26,7 +26,7 @@ import com.nttdata.bank.response.CreditCardResponse;
  * method maps to an HTTP request and returns a structured API response.
  */
 @RestController
-@RequestMapping("/credit-cards")
+@RequestMapping("/credit-card")
 public interface CreditCardsAPI {
 
 	/**

@@ -32,11 +32,11 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
     /**
      * Checks if an active account exists by its account number and document number.
      *
-     * @param documentNumber The document number to search for.
+     * @param holderDoc The document number to search for.
      * @param accountNumber The account number to check.
      * @return A Mono emitting a boolean indicating if the account exists and is active.
      */
-    Mono<Boolean> existsByAccountNumberAndDocumentNumberAndIsActiveTrue(String documentNumber, String accountNumber);
+    Mono<Boolean> existsByAccountNumberAndHolderDocAndIsActiveTrue(String holderDoc, String accountNumber);
 
     /**
      * Checks if an account has an amount greater than or equal to the specified value.

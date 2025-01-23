@@ -26,7 +26,7 @@ import com.nttdata.bank.response.TransactionResponse;
  * account-linked products.
  */
 @RestController
-@RequestMapping("/operations")
+@RequestMapping("/operation")
 public interface OperationAPI {
 
 	/**

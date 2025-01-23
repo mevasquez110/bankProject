@@ -20,7 +20,7 @@ import com.nttdata.bank.response.CreditResponse;
  * request and returns a structured API response.
  */
 @RestController
-@RequestMapping("/credits")
+@RequestMapping("/credit")
 public interface CreditAPI {
 
 	/**

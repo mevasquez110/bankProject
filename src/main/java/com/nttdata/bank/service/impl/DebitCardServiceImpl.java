@@ -73,7 +73,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 
 		for (String account : nonDuplicateAccounts) {
 			Boolean isClientAccount = accountRepository
-					.existsByAccountNumberAndDocumentNumberAndIsActiveTrue(documentNumber, account).block();
+					.existsByAccountNumberAndHolderDocAndIsActiveTrue(documentNumber, account).block();
 
 			if (isClientAccount) {
 				throw new IllegalArgumentException("The account does not exist or does not belong to the client");
