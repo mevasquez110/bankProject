@@ -1,11 +1,13 @@
 package com.nttdata.bank.mapper;
 
+import java.time.LocalDateTime;
 import com.nttdata.bank.entity.AccountEntity;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.response.AccountResponse;
+import com.nttdata.bank.response.BalanceResponse;
 
 /**
- * AccountMapper provides mapping methods to convert between AccountRequest,
+ * AccountMapper provides methods to convert between AccountRequest,
  * AccountEntity, and AccountResponse objects. This class includes methods to
  * map an AccountRequest to an AccountEntity and to map an AccountEntity to an
  * AccountResponse.
@@ -27,6 +29,10 @@ public class AccountMapper {
 			accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
 			accountEntity.setAccountType(accountRequest.getAccountType());
 			accountEntity.setCurrency(accountRequest.getCurrency());
+			accountEntity.setCommissionPending(0.00);
+			accountEntity.setCreateDate(LocalDateTime.now());
+			accountEntity.setIsBlocked(false);
+			accountEntity.setIsActive(true);
 		}
 
 		return accountEntity;
@@ -46,11 +52,24 @@ public class AccountMapper {
 			accountResponse.setMonthlyTransactionLimit(accountEntity.getMonthlyTransactionLimit());
 			accountResponse.setMaintenanceCommission(accountEntity.getMaintenanceCommission());
 			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
-			accountResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
-			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
+			accountResponse.setAmount(accountEntity.getAmount());
 			accountResponse.setCurrency(accountEntity.getCurrency());
+			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
 		}
 
 		return accountResponse;
+	}
+
+	/**
+	 * Maps an AccountEntity object to a BalanceResponse object.
+	 *
+	 * @param accountEntity The account entity to map
+	 * @return The mapped balance response
+	 */
+	public static BalanceResponse mapperToBalanceResponse(AccountEntity accountEntity) {
+		BalanceResponse balanceResponse = new BalanceResponse();
+		balanceResponse.setAccountNumber(accountEntity.getAccountNumber());
+		balanceResponse.setAmount(accountEntity.getAmount());
+		return balanceResponse;
 	}
 }

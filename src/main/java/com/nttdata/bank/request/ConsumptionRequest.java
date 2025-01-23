@@ -8,9 +8,9 @@ import lombok.Data;
 /**
  * ConsumptionRequest is a data transfer object that represents the request
  * payload for recording a consumption made using a credit card. This class
- * includes attributes such as credit card number, amount, share, and
- * productOrServiceName. It uses validation annotations to enforce constraints
- * and Lombok annotations for getters and setters.
+ * includes attributes such as credit card number, amount, number of
+ * installments, and product or service name. It uses validation annotations to
+ * enforce constraints and Lombok annotations for getters and setters.
  */
 
 @Data
@@ -23,8 +23,9 @@ public class ConsumptionRequest {
 	@Positive(message = "Amount must be greater than zero")
 	private Double amount;
 
-	@NotBlank(message = "Share is mandatory")
-	private Integer share;
+	@NotNull(message = "Number of installments is mandatory")
+	@Positive(message = "Number of installments must be greater than zero")
+	private Integer numberOfInstallments;
 
 	@NotBlank(message = "Product or service name is mandatory")
 	private String productOrServiceName;

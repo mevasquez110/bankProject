@@ -7,33 +7,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
-import com.nttdata.bank.controller.TransactionAPI;
+import com.nttdata.bank.controller.OperationAPI;
 import com.nttdata.bank.request.AccountTransferRequest;
-import com.nttdata.bank.request.ConsumptionRequest;
 import com.nttdata.bank.request.DepositRequest;
 import com.nttdata.bank.request.MobileTransferRequest;
 import com.nttdata.bank.request.PayCreditCardRequest;
 import com.nttdata.bank.request.PayCreditRequest;
 import com.nttdata.bank.request.WithdrawalRequest;
 import com.nttdata.bank.response.ApiResponse;
+import com.nttdata.bank.response.ProductResponse;
 import com.nttdata.bank.response.TransactionResponse;
-import com.nttdata.bank.service.TransactionService;
+import com.nttdata.bank.service.OperationService;
 
 /**
- * * TransactionController is a REST controller that implements the
- * TransactionAPI * interface. This class handles HTTP requests related to
- * transaction operations * such as making deposits, withdrawals, paying credit
- * installments, checking * transaction history, and charging consumptions. It
- * delegates the actual * business logic to the appropriate service layer.
+ * OperationController is a REST controller that implements the OperationAPI
+ * interface. This class handles HTTP requests related to transaction operations
+ * such as making deposits, withdrawals, paying credit installments, checking
+ * transaction history, and mobile transfers. It delegates the actual business
+ * logic to the appropriate service layer.
  */
-
 @RestController
-public class TransactionController implements TransactionAPI {
+public class OperationController implements OperationAPI {
 
-	private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
+	private static final Logger logger = LoggerFactory.getLogger(OperationController.class);
 
 	@Autowired
-	TransactionService transactionService;
+	OperationService transactionService;
 
 	/**
 	 * Makes a deposit.
@@ -43,7 +42,7 @@ public class TransactionController implements TransactionAPI {
 	 */
 	@Override
 	public ApiResponse<TransactionResponse> makeDeposit(@Valid DepositRequest depositRequest) {
-		logger.debug("Received request to make deposit: {}", depositRequest);
+		logger.debug("Received request to make a deposit: {}", depositRequest);
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeDeposit(depositRequest);
 		response.setStatusCode(HttpStatus.OK.value());
@@ -61,7 +60,7 @@ public class TransactionController implements TransactionAPI {
 	 */
 	@Override
 	public ApiResponse<TransactionResponse> makeWithdrawal(@Valid WithdrawalRequest withdrawalRequest) {
-		logger.debug("Received request to make withdrawal: {}", withdrawalRequest);
+		logger.debug("Received request to make a withdrawal: {}", withdrawalRequest);
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeWithdrawal(withdrawalRequest);
 		response.setStatusCode(HttpStatus.OK.value());
@@ -79,7 +78,7 @@ public class TransactionController implements TransactionAPI {
 	 */
 	@Override
 	public ApiResponse<TransactionResponse> makeAccountTransfer(@Valid AccountTransferRequest accountTransferRequest) {
-		logger.debug("Received request to make account transfer: {}", accountTransferRequest);
+		logger.debug("Received request to make an account transfer: {}", accountTransferRequest);
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeAccountTransfer(accountTransferRequest);
 		response.setStatusCode(HttpStatus.OK.value());
@@ -97,7 +96,7 @@ public class TransactionController implements TransactionAPI {
 	 */
 	@Override
 	public ApiResponse<TransactionResponse> makeMobileTransfer(@Valid MobileTransferRequest mobileTransferRequest) {
-		logger.debug("Received request to make mobile transfer: {}", mobileTransferRequest);
+		logger.debug("Received request to make a mobile transfer: {}", mobileTransferRequest);
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.makeMobileTransfer(mobileTransferRequest);
 		response.setStatusCode(HttpStatus.OK.value());
@@ -137,45 +136,45 @@ public class TransactionController implements TransactionAPI {
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		TransactionResponse transactionResponse = transactionService.payCredit(payCreditRequest);
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Credit paid successfully");
+		response.setMessage("Credit installment paid successfully");
 		response.setData(transactionResponse);
-		logger.info("Credit paid successfully: {}", transactionResponse);
-		return response;
-	}
-
-	/**
-	 * Charges a consumption.
-	 *
-	 * @param consumptionRequest The consumption request payload
-	 * @return ApiResponse containing the transaction response
-	 */
-	@Override
-	public ApiResponse<TransactionResponse> chargeConsumption(@Valid ConsumptionRequest consumptionRequest) {
-		logger.debug("Received request to charge consumption: {}", consumptionRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.chargeConsumption(consumptionRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Consumption charged successfully");
-		response.setData(transactionResponse);
-		logger.info("Consumption charged successfully: {}", transactionResponse);
+		logger.info("Credit installment paid successfully: {}", transactionResponse);
 		return response;
 	}
 
 	/**
 	 * Checks transactions.
 	 *
-	 * @param accountId The account ID
+	 * @param documentNumber The document number
 	 * @return ApiResponse containing the list of transaction responses
 	 */
 	@Override
-	public ApiResponse<List<TransactionResponse>> checkTransactions(Integer accountId) {
-		logger.debug("Received request to check transactions for account ID: {}", accountId);
+	public ApiResponse<List<TransactionResponse>> checkTransactions(String documentNumber) {
+		logger.debug("Received request to check transactions for document number: {}", documentNumber);
 		ApiResponse<List<TransactionResponse>> response = new ApiResponse<>();
-		List<TransactionResponse> transactionResponses = transactionService.checkTransactions(accountId);
+		List<TransactionResponse> transactions = transactionService.checkTransactions(documentNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Transactions retrieved successfully");
-		response.setData(transactionResponses);
-		logger.info("Transactions retrieved successfully for account ID: {}", accountId);
+		response.setData(transactions);
+		logger.info("Transactions retrieved successfully for document number: {}", documentNumber);
+		return response;
+	}
+
+	/**
+	 * Gets the products.
+	 *
+	 * @param documentNumber The document number
+	 * @return ApiResponse containing the list of product responses
+	 */
+	@Override
+	public ApiResponse<List<ProductResponse>> getProducts(String documentNumber) {
+		logger.debug("Received request to get products for document number: {}", documentNumber);
+		ApiResponse<List<ProductResponse>> response = new ApiResponse<>();
+		List<ProductResponse> products = transactionService.getProducts(documentNumber);
+		response.setStatusCode(HttpStatus.OK.value());
+		response.setMessage("Products retrieved successfully");
+		response.setData(products);
+		logger.info("Products retrieved successfully for document number: {}", documentNumber);
 		return response;
 	}
 }

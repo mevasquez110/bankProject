@@ -15,11 +15,12 @@ import com.nttdata.bank.repository.DebitCardRepository;
 import com.nttdata.bank.repository.YankiRepository;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.request.DepositRequest;
+import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
 import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.AccountsService;
-import com.nttdata.bank.service.TransactionService;
+import com.nttdata.bank.service.OperationService;
 import com.nttdata.bank.util.Constants;
 import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
@@ -28,10 +29,10 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * * AccountsServiceImpl is the implementation class for the AccountsService
- * interface. * This class provides the actual logic for handling
- * account-related operations such as registering an account, * checking account
- * balance, finding all accounts, updating an account, and deleting an account.
+ * AccountsServiceImpl is the implementation class for the AccountsService
+ * interface. This class provides the actual logic for handling account-related
+ * operations such as registering an account, checking account balance, finding
+ * all accounts, updating an account, and deleting an account.
  */
 
 @Service
@@ -46,7 +47,7 @@ public class AccountsServiceImpl implements AccountsService {
 	private CustomerRepository customerRepository;
 
 	@Autowired
-	private TransactionService transactionService;
+	private OperationService transactionService;
 
 	@Autowired
 	private CreditCardRepository creditCardRepository;
@@ -74,16 +75,9 @@ public class AccountsServiceImpl implements AccountsService {
 		AccountEntity accountEntity = AccountMapper.mapperToEntity(accountRequest);
 		accountEntity.setAccountNumber(generateUniqueAccountNumber(accountRequest.getAccountType()));
 		setAccountDetails(accountRequest, accountEntity);
-		accountEntity.setCommissionPending(0.00);
-		accountEntity.setAllowWithdrawals(true);
-		accountEntity.setCreateDate(LocalDateTime.now());
-		accountEntity.setIsBlocked(false);
-		accountEntity.setIsActive(true);
 		accountEntity = accountRepository.save(accountEntity).block();
+		makeFirstDeposit(accountRequest, accountEntity, accountRequest.getHolderDoc().get(0));
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
-		TransactionResponse transactionResponse = makeFirstDeposit(accountRequest, accountEntity);
-		accountEntity.setAmount(transactionResponse.getAmount());
-		accountEntity = accountRepository.save(accountEntity).block();
 		logger.info("Account registered successfully: {}", response);
 		return response;
 	}
@@ -98,19 +92,12 @@ public class AccountsServiceImpl implements AccountsService {
 	public BalanceResponse checkBalance(String accountNumber) {
 		logger.debug("Checking balance for account: {}", accountNumber);
 
-		AccountEntity accountEntity = accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).toFuture()
-				.join();
+		AccountEntity accountEntity = Optional
+				.ofNullable(accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).toFuture().join())
+				.orElseThrow(() -> new IllegalArgumentException("Account not found with number: " + accountNumber));
 
-		if (accountEntity == null) {
-			throw new IllegalArgumentException("Account not found with number: " + accountNumber);
-		}
-
-		BalanceResponse balanceResponse = new BalanceResponse();
-		balanceResponse.setAccountNumber(accountEntity.getAccountNumber());
-		balanceResponse.setAmount(accountEntity.getAmount());
-		balanceResponse.setAllowWithdrawals(accountEntity.getAllowWithdrawals());
-		logger.info("Balance checked successfully: {}", balanceResponse);
-		return balanceResponse;
+		logger.info("Balance checked successfully");
+		return AccountMapper.mapperToBalanceResponse(accountEntity);
 	}
 
 	/**
@@ -121,35 +108,29 @@ public class AccountsServiceImpl implements AccountsService {
 	 */
 	@Override
 	public List<AccountResponse> findAllAccounts(String documentNumber) {
-		logger.debug("Finding all accounts");
-
-		List<AccountResponse> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
-				.map(AccountMapper::mapperToResponse).collectList().toFuture().join();
-
 		logger.info("All accounts retrieved successfully");
-		return accounts;
+		return accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+				.map(AccountMapper::mapperToResponse).collectList().toFuture().join();
 	}
 
 	/**
-	 * Updates an account.
+	 * Updates an existing account.
 	 *
-	 * @param accountNumber The account number
-	 * @return The updated account response
+	 * @param updateAccountRequest The request containing updated account details
+	 * @return The response containing updated account information
 	 */
 	@Override
-	public AccountResponse updateAccountAllowWithdrawals(String accountNumber) {
-		logger.debug("Updating account with account number: {}", accountNumber);
-
-		return accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
-			accountEntity.setAllowWithdrawals(!accountEntity.getAllowWithdrawals());
-			accountEntity.setUpdateDate(LocalDateTime.now());
-
-			return accountRepository.save(accountEntity).map(savedEntity -> {
-				AccountResponse response = AccountMapper.mapperToResponse(savedEntity);
-				logger.info("Account updated successfully: {}", response);
-				return response;
-			});
-		}).switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).toFuture().join();
+	public AccountResponse updateAccount(UpdateAccountRequest updateAccountRequest) {
+		return accountRepository.findByAccountNumberAndIsActiveTrue(updateAccountRequest.getAccountNumber())
+				.flatMap(accountEntity -> {
+					accountEntity.setUpdateDate(LocalDateTime.now());
+					accountEntity.setAmount(accountEntity.getAmount() + updateAccountRequest.getAmount());
+					return accountRepository.save(accountEntity).map(savedEntity -> {
+						AccountResponse response = AccountMapper.mapperToResponse(savedEntity);
+						logger.info("Account updated successfully: {}", response);
+						return response;
+					});
+				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).toFuture().join();
 	}
 
 	/**
@@ -160,12 +141,11 @@ public class AccountsServiceImpl implements AccountsService {
 	@Override
 	public void deleteAccount(String accountNumber) {
 		logger.debug("Deleting account with account number: {}", accountNumber);
-		Boolean isPrimaryAccount = debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(accountNumber).block();
 
-		if (isPrimaryAccount) {
-			throw new IllegalArgumentException("The account with number " + accountNumber
-					+ " is the primary account of an active debit card and cannot be deleted.");
-		}
+		Optional.ofNullable(debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(accountNumber).block())
+				.filter(isPrimary -> !isPrimary)
+				.orElseThrow(() -> new IllegalArgumentException("The account with number " + accountNumber
+						+ " is the primary account of an active debit card and cannot be deleted."));
 
 		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
 			return Mono.just(yankiRepository.existsByAccountNumberAndIsActiveTrue(accountNumber).block())
@@ -195,12 +175,16 @@ public class AccountsServiceImpl implements AccountsService {
 	 *                       opening amount.
 	 * @param accountEntity  The entity object representing the account for which
 	 *                       the deposit is being made.
+	 * @param documentNumber The document number of the customer creating the
+	 *                       account.
 	 * @return TransactionResponse The response object containing details of the
 	 *         registered transaction.
 	 */
-	private TransactionResponse makeFirstDeposit(AccountRequest accountRequest, AccountEntity accountEntity) {
+	private TransactionResponse makeFirstDeposit(AccountRequest accountRequest, AccountEntity accountEntity,
+			String documentNumber) {
 		DepositRequest depositRequest = new DepositRequest();
 		depositRequest.setAccountNumber(accountEntity.getAccountNumber());
+		depositRequest.setDocumentNumber(documentNumber);
 		depositRequest.setAmount(accountRequest.getOpeningAmount());
 		TransactionResponse transactionResponse = transactionService.makeDeposit(depositRequest);
 		logger.info("Transaction registered successfully: {}", transactionResponse);
@@ -213,7 +197,6 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @param accountRequest The account request payload
 	 */
 	private void validateAccountRequest(AccountRequest accountRequest) {
-
 		if (accountRequest.getHolderDoc() == null || accountRequest.getHolderDoc().isEmpty()) {
 			throw new IllegalArgumentException("Holder doc is mandatory.");
 		}
@@ -252,25 +235,24 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @throws IllegalArgumentException if any validation rule is violated
 	 */
 	private void typeBusinessValidation(AccountRequest accountRequest, String documentNumber) {
-		Optional<CustomerEntity> optionalCustomerEntity = Optional
-				.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join());
+		Optional.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join())
+				.ifPresentOrElse(customerEntity -> {
+					if (!Constants.DOCUMENT_TYPE_RUC.equals(customerEntity.getDocumentType())) {
+						throw new IllegalArgumentException("The holder is not registered as a business customer.");
+					}
 
-		optionalCustomerEntity.ifPresentOrElse(customerEntity -> {
-			if (!Constants.DOCUMENT_TYPE_RUC.equals(customerEntity.getDocumentType())) {
-				throw new IllegalArgumentException("The holder is not registered as a business customer.");
-			}
+					if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
+							|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
+						throw new IllegalArgumentException(
+								"Business customers cannot have savings or fixed-term accounts.");
+					}
 
-			if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
-					|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
-				throw new IllegalArgumentException("Business customers cannot have savings or fixed-term accounts.");
-			}
-
-			if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
-				throw new IllegalArgumentException("A business customer cannot have a VIP account.");
-			}
-		}, () -> {
-			throw new IllegalArgumentException("The holder is not registered.");
-		});
+					if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
+						throw new IllegalArgumentException("A business customer cannot have a VIP account.");
+					}
+				}, () -> {
+					throw new IllegalArgumentException("The holder is not registered.");
+				});
 	}
 
 	/**
@@ -319,21 +301,15 @@ public class AccountsServiceImpl implements AccountsService {
 		if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
 				|| Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
 
-			Mono<Boolean> hasCreditCardMono = creditCardRepository
-					.existsByDocumentNumberAndIsActiveTrue(documentNumber);
-
-			Mono<Boolean> hasCreditMono = creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber);
-
-			Mono<Boolean> hasCreditProductMono = Mono.zip(hasCreditCardMono, hasCreditMono)
-					.map(tuple -> tuple.getT1() || tuple.getT2());
-
-			hasCreditProductMono.blockOptional().ifPresentOrElse(hasCreditProduct -> {
-				if (!hasCreditProduct) {
-					throw new IllegalStateException("No credit product exists for the given document number.");
-				}
-			}, () -> {
-				throw new IllegalStateException("Failed to validate credit product.");
-			});
+			Mono.zip(creditCardRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber),
+					creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber))
+					.map(tuple -> tuple.getT1() || tuple.getT2()).blockOptional().ifPresentOrElse(hasCreditProduct -> {
+						if (!hasCreditProduct) {
+							throw new IllegalStateException("No credit product exists for the given document number.");
+						}
+					}, () -> {
+						throw new IllegalStateException("Failed to validate credit product.");
+					});
 		}
 	}
 
@@ -362,6 +338,7 @@ public class AccountsServiceImpl implements AccountsService {
 	private String generateAccountNumber(String accountType) {
 		Random random = new Random();
 		StringBuilder accountNumber = new StringBuilder(Constants.BANK_CODE);
+
 		switch (accountType) {
 		case Constants.ACCOUNT_TYPE_SAVINGS:
 			accountNumber.append(Constants.ACCOUNT_TYPE_CODE_SAVINGS);
@@ -393,28 +370,20 @@ public class AccountsServiceImpl implements AccountsService {
 	/**
 	 * Retrieves the person type based on the customer ID.
 	 *
-	 * @param customerId The customer ID
+	 * @param documentNumber The customer document number
 	 * @return The person type
 	 */
 	private String getPersonType(String documentNumber) {
-		CustomerEntity customer = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture()
-				.join();
-
-		if (customer != null) {
-			return customer.getPersonType();
-		}
-
-		throw new IllegalArgumentException("Customer not found with document number: " + documentNumber);
+		return Optional.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).block())
+				.map(CustomerEntity::getPersonType).orElseThrow(() -> new IllegalArgumentException(
+						"Customer not found with document number: " + documentNumber));
 	}
 
 	/**
-	 * Configura los detalles específicos de la cuenta en función del tipo de cuenta
-	 * solicitado.
+	 * Sets specific details for the account based on the requested account type.
 	 *
-	 * @param accountRequest Objeto que contiene la información de la cuenta
-	 *                       solicitada.
-	 * @param accountEntity  Entidad de la cuenta que se va a actualizar con los
-	 *                       detalles específicos.
+	 * @param accountRequest The request object containing the account details
+	 * @param accountEntity  The account entity to be updated with specific details
 	 */
 	private void setAccountDetails(AccountRequest accountRequest, AccountEntity accountEntity) {
 		if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())) {

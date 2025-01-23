@@ -5,10 +5,10 @@ import com.nttdata.bank.request.CreditCardRequest;
 import com.nttdata.bank.response.CreditCardResponse;
 
 /**
- * CreditCardMapper provides mapping methods to convert between
- * CreditCardRequest, CreditCardEntity, and CreditCardResponse objects. This
- * class includes methods to map a CreditCardRequest to a CreditCardEntity and
- * to map a CreditCardEntity to a CreditCardResponse.
+ * CreditCardMapper provides methods to convert between CreditCardRequest,
+ * CreditCardEntity, and CreditCardResponse objects. This class includes methods
+ * to map a CreditCardRequest to a CreditCardEntity and to map a
+ * CreditCardEntity to a CreditCardResponse.
  */
 
 public class CreditCardMapper {
@@ -43,11 +43,11 @@ public class CreditCardMapper {
 		CreditCardResponse creditCardResponse = new CreditCardResponse();
 
 		if (creditCardEntity != null) {
+			creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
 			creditCardResponse.setAvailableCredit(creditCardEntity.getAvailableCredit());
 			creditCardResponse.setAnnualInterestRate(creditCardEntity.getAnnualInterestRate());
 			creditCardResponse.setAnnualLateInterestRate(creditCardEntity.getAnnualLateInterestRate());
 			creditCardResponse.setPaymentDay(creditCardEntity.getPaymentDay());
-			creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
 			creditCardResponse.setAllowConsumption(creditCardEntity.getAllowConsumption());
 		}
 

@@ -5,11 +5,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
- * * AccountResponse is a data transfer object that represents the response
- * payload for an account. * This class includes attributes such as account
- * number, monthly transaction limit, maintenance commission, * withdrawal
- * deposit date, and creation date. It uses Jackson annotations for JSON
- * inclusion and * Lombok annotations for getters and setters.
+ * AccountResponse is a data transfer object representing the response payload
+ * for an account. This class includes attributes such as account number,
+ * monthly transaction limit, maintenance commission, withdrawal deposit date,
+ * amount, currency, and status details like whether the account is blocked or
+ * allows withdrawals. It uses Jackson annotations for JSON inclusion and Lombok
+ * annotations for getters and setters.
  */
 
 @Data
@@ -23,6 +24,5 @@ public class AccountResponse {
 	private Double amount;
 	private String currency;
 	private Boolean isBlocked;
-	private Boolean allowWithdrawals;
 
 }

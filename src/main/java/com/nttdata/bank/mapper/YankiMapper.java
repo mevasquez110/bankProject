@@ -5,9 +5,9 @@ import com.nttdata.bank.request.YankiRequest;
 import com.nttdata.bank.response.YankiResponse;
 
 /**
- * YankiMapper provides mapping methods to convert between YankiRequest,
- * YankiEntity, and YankiResponse objects. This class includes methods to map a
- * YankiRequest to a YankiEntity and to map a YankiEntity to a YankiResponse.
+ * YankiMapper provides methods to convert between YankiRequest, YankiEntity,
+ * and YankiResponse objects. This class includes methods to map a YankiRequest
+ * to a YankiEntity and to map a YankiEntity to a YankiResponse.
  */
 
 public class YankiMapper {

@@ -14,13 +14,11 @@ import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.service.CreditService;
 
 /**
- * * CreditController is a REST controller that implements the CreditAPI
- * interface. * This class handles HTTP requests related to credit operations
- * such as granting credits, * checking credit debt, reprogramming debt,
- * retrieving all credits, and deleting credits. * It delegates the actual
- * business logic to the appropriate service layer.
+ * CreditController is a REST controller that implements the CreditAPI
+ * interface. This class handles HTTP requests related to credit operations such
+ * as granting credits, checking credit debt, and retrieving all credits. It
+ * delegates the actual business logic to the CreditService.
  */
-
 @RestController
 public class CreditController implements CreditAPI {
 
@@ -30,10 +28,10 @@ public class CreditController implements CreditAPI {
 	CreditService creditService;
 
 	/**
-	 * Grants a new credit.
+	 * Grants a new credit based on the provided CreditRequest object.
 	 *
-	 * @param creditRequest The credit request payload
-	 * @return ApiResponse containing the credit response
+	 * @param creditRequest - The credit details provided in the request body.
+	 * @return ApiResponse containing the granted CreditResponse.
 	 */
 	@Override
 	public ApiResponse<CreditResponse> grantCredit(CreditRequest creditRequest) {
@@ -41,17 +39,17 @@ public class CreditController implements CreditAPI {
 		ApiResponse<CreditResponse> response = new ApiResponse<>();
 		CreditResponse creditResponse = creditService.grantCredit(creditRequest);
 		response.setStatusCode(HttpStatus.CREATED.value());
-		response.setMessage("Credit granted successfully");
+		response.setMessage("Credit granted successfully.");
 		response.setData(creditResponse);
 		logger.info("Credit granted successfully: {}", creditResponse);
 		return response;
 	}
 
 	/**
-	 * Checks the debt of a credit.
+	 * Checks the debt for the specified credit.
 	 *
-	 * @param creditId The credit ID
-	 * @return ApiResponse containing the credit debt response
+	 * @param creditId - The ID of the credit for which the debt is to be checked.
+	 * @return ApiResponse containing the CreditDebtResponse.
 	 */
 	@Override
 	public ApiResponse<CreditDebtResponse> checkDebtCredit(String creditId) {
@@ -59,27 +57,26 @@ public class CreditController implements CreditAPI {
 		ApiResponse<CreditDebtResponse> response = new ApiResponse<>();
 		CreditDebtResponse creditDebtResponse = creditService.checkDebtCredit(creditId);
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Debt retrieved successfully");
+		response.setMessage("Debt retrieved successfully.");
 		response.setData(creditDebtResponse);
 		logger.info("Debt retrieved successfully for credit: {}", creditId);
 		return response;
 	}
 
 	/**
-	 * Finds all credits.
+	 * Retrieves a list of all credits.
 	 *
-	 * @return ApiResponse containing the list of credit responses
+	 * @return ApiResponse containing a list of CreditResponse objects.
 	 */
 	@Override
 	public ApiResponse<List<CreditResponse>> findAllCredits() {
-		logger.debug("Received request to find all credits");
+		logger.debug("Received request to find all credits.");
 		ApiResponse<List<CreditResponse>> response = new ApiResponse<>();
 		List<CreditResponse> creditResponses = creditService.findAllCredits();
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Credits retrieved successfully");
+		response.setMessage("Credits retrieved successfully.");
 		response.setData(creditResponses);
-		logger.info("All credits retrieved successfully");
+		logger.info("All credits retrieved successfully.");
 		return response;
 	}
-
 }

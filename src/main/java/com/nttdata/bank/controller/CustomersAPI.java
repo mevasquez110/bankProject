@@ -23,14 +23,13 @@ import com.nttdata.bank.response.CustomerResponse;
  * details, and deleting customers. Each method maps to an HTTP request and
  * returns a structured API response.
  */
-
 @RestController
 @RequestMapping("/customers")
 public interface CustomersAPI {
 
 	/**
 	 * Registers a new customer based on the provided CustomerRequest object.
-	 * 
+	 *
 	 * @param customerRequest - The customer details provided in the request body.
 	 * @return ApiResponse containing the registered CustomerResponse.
 	 */
@@ -39,7 +38,7 @@ public interface CustomersAPI {
 
 	/**
 	 * Searches for a customer by their document number.
-	 * 
+	 *
 	 * @param documentNumber - The document number of the customer to search for.
 	 * @return ApiResponse containing the CustomerResponse.
 	 */
@@ -48,18 +47,19 @@ public interface CustomersAPI {
 
 	/**
 	 * Retrieves a list of all customers.
-	 * 
+	 *
 	 * @return ApiResponse containing a list of CustomerResponse objects.
 	 */
 	@GetMapping("/all")
 	ApiResponse<List<CustomerResponse>> findAllCustomers();
 
 	/**
-	 * Updates the details of a specified customer based on their ID.
-	 * 
-	 * @param documentNumber - The document number to be updated.
-	 * @param contactDataRequest - The updated customer details provided in the request
-	 *                        body.
+	 * Updates the details of a specified customer based on their document number.
+	 *
+	 * @param documentNumber     - The document number of the customer to be
+	 *                           updated.
+	 * @param contactDataRequest - The updated customer details provided in the
+	 *                           request body.
 	 * @return ApiResponse containing the updated CustomerResponse.
 	 */
 	@PutMapping("/update/{documentNumber}")
@@ -67,10 +67,10 @@ public interface CustomersAPI {
 			@RequestBody @Valid ContactDataRequest contactDataRequest);
 
 	/**
-	 * Deletes a specified customer based on their ID.
-	 * 
-	 * @param documentNumber - The document number to be deleted.
-	 * @return ApiResponse with no content upon successful deletion.
+	 * Deletes a specified customer based on their document number.
+	 *
+	 * @param documentNumber - The document number of the customer to be deleted.
+	 * @return ApiResponse with a status message upon successful deletion.
 	 */
 	@DeleteMapping("/delete/{documentNumber}")
 	ApiResponse<Void> deleteCustomer(@PathVariable String documentNumber);

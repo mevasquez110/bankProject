@@ -19,18 +19,21 @@ import com.nttdata.bank.repository.CreditCardScheduleRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.CreditScheduleRepository;
 import com.nttdata.bank.request.CreditRequest;
+import com.nttdata.bank.request.DepositRequest;
+import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.CreditResponse;
 import com.nttdata.bank.response.CreditDebtResponse;
+import com.nttdata.bank.service.AccountsService;
 import com.nttdata.bank.service.CreditService;
+import com.nttdata.bank.service.OperationService;
 import com.nttdata.bank.util.Utility;
 
 /**
- * * CreditServiceImpl is the implementation class for the CreditService
- * interface. * This class provides the actual logic for handling credit-related
- * operations such as granting a credit, * checking credit debt, updating
+ * CreditServiceImpl is the implementation class for the CreditService
+ * interface. This class provides the actual logic for handling credit-related
+ * operations such as granting a credit, checking credit debt, updating
  * reprogrammed debt, finding all credits, and deleting a credit.
  */
-
 @Service
 public class CreditServiceImpl implements CreditService {
 
@@ -48,11 +51,16 @@ public class CreditServiceImpl implements CreditService {
 	@Autowired
 	private CreditCardScheduleRepository creditCardScheduleRepository;
 
+	@Autowired
+	private AccountsService accountService;
+
+	@Autowired
+	private OperationService transactionService;
+
 	/**
-	 * Grants credit based on the provided credit request. This method handles the
-	 * validation of the credit request, maps the request to a credit entity,
-	 * activates and timestamps the entity, saves it to the repository, generates a
-	 * payment schedule, and maps the entity to a response.
+	 * Grants credit based on the provided credit request. This method handles
+	 * validation, mapping the request to an entity, activating and saving it,
+	 * generating a payment schedule, and mapping the entity to a response.
 	 *
 	 * @param creditRequest the credit request containing the details for granting
 	 *                      credit
@@ -67,29 +75,34 @@ public class CreditServiceImpl implements CreditService {
 		creditEntity.setIsActive(true);
 		creditEntity.setCreateDate(LocalDateTime.now());
 		creditEntity = creditRepository.save(creditEntity).block();
-		List<CreditScheduleEntity> schedule = generatePaymentSchedule(creditEntity);
-		creditScheduleRepository.saveAll(schedule);
+		DepositRequest depositRequest = new DepositRequest();
+		depositRequest.setAccountNumber(creditRequest.getAccountNumber());
+		depositRequest.setAmount(creditRequest.getAmount());
+		transactionService.makeDeposit(depositRequest);
+		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
+		updateAccountRequest.setAccountNumber(creditRequest.getAccountNumber());
+		updateAccountRequest.setAmount(creditEntity.getAmount());
+		accountService.updateAccount(updateAccountRequest);
+		creditScheduleRepository.saveAll(generatePaymentSchedule(creditEntity));
 		CreditResponse response = CreditMapper.mapperToResponse(creditEntity);
 		logger.info("Credit granted successfully: {}", response);
 		return response;
 	}
 
 	/**
-	 * Validates the credit request details provided by the customer. This method
-	 * checks if the customer has any active credit that would prevent them from
-	 * being approved for new credit.
+	 * Validates the credit request details provided by the customer. Checks if the
+	 * customer has any active credit that would prevent approval.
 	 *
 	 * @param creditRequest the credit request containing the document number and
-	 *                      other relevant details
+	 *                      relevant details
 	 * @throws RuntimeException if the customer already has an active credit
 	 */
 	private void validateCredit(CreditRequest creditRequest) {
-		Boolean existingCredit = creditRepository
-				.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block();
-
-		if (existingCredit) {
-			throw new RuntimeException("The customer already has an active credit");
-		}
+		Optional.ofNullable(
+				creditRepository.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
+				.filter(Boolean::booleanValue).ifPresent(exists -> {
+					throw new RuntimeException("The customer already has an active credit");
+				});
 
 		Optional.ofNullable(
 				creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
@@ -106,17 +119,16 @@ public class CreditServiceImpl implements CreditService {
 	}
 
 	/**
-	 * Generates a payment schedule for the given credit entity. This method
-	 * initializes the payment schedule list, calculates the first payment date,
-	 * computes the monthly interest rate, calculates the fixed installment amount,
-	 * iterates over the number of installments to create each payment schedule
-	 * entry, updates the debt amount and adjusts the remaining principal, adds each
-	 * payment schedule entry to the list, and logs the successful generation of the
-	 * payment schedule.
+	 * Generates a payment schedule for the given credit entity. Initializes the
+	 * payment schedule list, calculates the first payment date, computes the
+	 * monthly interest rate, calculates the fixed installment amount, iterates over
+	 * the number of installments to create each payment schedule entry, updates the
+	 * debt amount and adjusts the remaining principal, adds each entry to the list,
+	 * and logs the successful generation of the schedule.
 	 *
 	 * @param creditEntity the credit entity for which the payment schedule is to be
 	 *                     generated
-	 * @return List of PaymentScheduleEntity representing the payment schedule
+	 * @return List of CreditScheduleEntity representing the payment schedule
 	 */
 	private List<CreditScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
 		logger.debug("Generating payment schedule for credit: {}", creditEntity.getCreditId());
@@ -146,10 +158,9 @@ public class CreditServiceImpl implements CreditService {
 	}
 
 	/**
-	 * Checks the debt for a given credit ID. This method finds the credit entity by
-	 * ID, retrieves the unpaid payment schedule entries, calculates the total debt
-	 * and the share for the current month, and returns the debt details in a
-	 * response.
+	 * Checks the debt for a given credit ID. Finds the credit entity by ID,
+	 * retrieves unpaid payment schedule entries, calculates the total debt and the
+	 * share for the current month, and returns the debt details in a response.
 	 *
 	 * @param creditId the credit ID for which to check the debt
 	 * @return CreditDebtResponse containing the total debt and the share for the
@@ -165,21 +176,24 @@ public class CreditServiceImpl implements CreditService {
 			return new RuntimeException("Credit not found");
 		});
 
-		List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId, LocalDate.now()).collectList().block();
+		List<CreditScheduleEntity> paymentScheduleShare = creditScheduleRepository
+				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId, LocalDateTime.now()).collectList()
+				.block();
 
-		if (paymentSchedule != null && !paymentSchedule.isEmpty()) {
+		if (paymentScheduleShare != null && !paymentScheduleShare.isEmpty()) {
+			Double share = paymentScheduleShare.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
+
+			List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
+					.findByCreditIdAndPaidFalseAndPaymentDateAfter(creditId, LocalDateTime.now()).collectList().block();
+
 			Double totalDebt = paymentSchedule.stream()
 					.max(Comparator.comparingDouble(CreditScheduleEntity::getTotalDebt))
-					.map(CreditScheduleEntity::getTotalDebt).get();
-
-			Double share = paymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
+					.map(CreditScheduleEntity::getTotalDebt).get() + share;
 
 			CreditDebtResponse response = new CreditDebtResponse();
 			response.setCreditId(creditId);
 			response.setTotalDebt(totalDebt);
 			response.setShare(share);
-
 			logger.info("Debt checked successfully for credit: {}", creditId);
 			return response;
 		} else {
@@ -189,9 +203,8 @@ public class CreditServiceImpl implements CreditService {
 	}
 
 	/**
-	 * Retrieves all active credits. This method finds all credits that are active,
-	 * maps them to credit response objects, and returns the list of credit
-	 * responses.
+	 * Retrieves all active credits. Finds all credits that are active, maps them to
+	 * credit response objects, and returns the list of credit responses.
 	 *
 	 * @return List of CreditResponse containing details of all active credits
 	 */
@@ -201,4 +214,21 @@ public class CreditServiceImpl implements CreditService {
 		return creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse).collectList().block();
 	}
 
+	/**
+	 * Deactivates a credit based on the provided credit ID. Finds the credit by ID,
+	 * marks it as inactive, and saves the updated credit entity to the repository.
+	 *
+	 * @param creditId the credit ID of the credit to be deactivated
+	 */
+	@Override
+	public void desactivateCredit(String creditId) {
+		Optional.ofNullable(creditRepository.findByCreditIdAndIsActiveTrue(creditId).toFuture().join())
+				.ifPresentOrElse(entity -> {
+					entity.setDeleteDate(LocalDateTime.now());
+					entity.setIsActive(false);
+					creditRepository.save(entity);
+				}, () -> {
+					throw new IllegalArgumentException("CreditEntity with credit does not exist.");
+				});
+	}
 }

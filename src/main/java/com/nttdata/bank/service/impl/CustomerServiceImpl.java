@@ -14,6 +14,7 @@ import com.nttdata.bank.service.CustomerService;
 import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -52,13 +53,11 @@ public class CustomerServiceImpl implements CustomerService {
 	 * @throws IllegalArgumentException if the document number is already registered
 	 */
 	private void existsDocumentNumber(String documentNumber) {
-		Boolean existsDocumentNumber = customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber)
-				.toFuture().join();
-
-		if (existsDocumentNumber) {
-			logger.warn("The document is already registered: {}", documentNumber);
-			throw new IllegalArgumentException("The document is already registered");
-		}
+		Optional.ofNullable(customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join())
+				.filter(Boolean::booleanValue).ifPresent(exists -> {
+					logger.warn("The document is already registered: {}", documentNumber);
+					throw new IllegalArgumentException("The document is already registered");
+				});
 	}
 
 	/**
@@ -70,13 +69,12 @@ public class CustomerServiceImpl implements CustomerService {
 	 * @throws IllegalArgumentException if the phone number is already registered
 	 */
 	private void existsPhoneNumber(String phoneNumber) {
-		Boolean existsPhoneNumber = customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture()
-				.join();
+		Optional.ofNullable(customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture().join())
+				.filter(Boolean::booleanValue).ifPresent(exists -> {
+					logger.warn("The phone is already registered: {}", phoneNumber);
+					throw new IllegalArgumentException("The phone number is already registered");
+				});
 
-		if (existsPhoneNumber) {
-			logger.warn("The phone is already registered: {}", phoneNumber);
-			throw new IllegalArgumentException("The phone number is already registered");
-		}
 	}
 
 	/**
@@ -106,13 +104,9 @@ public class CustomerServiceImpl implements CustomerService {
 	 */
 	@Override
 	public List<CustomerResponse> findAllCustomers() {
-		logger.debug("Finding all customers");
-
-		List<CustomerResponse> customers = customerRepository.findByIsActiveTrue().map(CustomerMapper::mapperToResponse)
-				.collectList().toFuture().join();
-
 		logger.info("All customers retrieved successfully");
-		return customers;
+		return customerRepository.findByIsActiveTrue().map(CustomerMapper::mapperToResponse).collectList().toFuture()
+				.join();
 	}
 
 	/**

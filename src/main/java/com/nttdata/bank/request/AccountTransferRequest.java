@@ -16,11 +16,17 @@ import lombok.Data;
 @Data
 public class AccountTransferRequest {
 
-	@NotBlank(message = "Account number sender is mandatory")
-	private String accountNumberSender;
+	@NotBlank(message = "Account number withdraws is mandatory")
+	private String accountNumberWithdraws;
 
-	@NotBlank(message = "Account number recipient is mandatory")
-	private String accountNumberRecipient;
+	@NotBlank(message = "Account number receive is mandatory")
+	private String accountNumberReceive;
+
+	@NotBlank(message = "Document number withdraws is mandatory")
+	private String documentNumberWithdraws;
+
+	@NotBlank(message = "Document number receive is mandatory")
+	private String documentNumberReceive;
 
 	@NotNull(message = "Amount is mandatory")
 	@Positive(message = "Amount must be greater than zero")

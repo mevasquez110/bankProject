@@ -14,14 +14,12 @@ import com.nttdata.bank.response.CustomerResponse;
 import com.nttdata.bank.service.CustomerService;
 
 /**
- * * CustomerController is a REST controller that implements the CustomersAPI
- * interface. * This class handles HTTP requests related to customer operations
- * such as registering customers, * searching customers by document number,
- * retrieving all customers, updating customer details, * and deleting
- * customers. It delegates the actual business logic to the appropriate service
- * layer.
+ * CustomerController is a REST controller that implements the CustomersAPI
+ * interface. This class handles HTTP requests related to customer operations
+ * such as registering customers, searching customers by document number,
+ * retrieving all customers, updating customer details, and deleting customers.
+ * It delegates the actual business logic to the CustomerService.
  */
-
 @RestController
 public class CustomerController implements CustomersAPI {
 
@@ -31,10 +29,10 @@ public class CustomerController implements CustomersAPI {
 	private CustomerService customerService;
 
 	/**
-	 * Creates a new customer.
+	 * Registers a new customer based on the provided CustomerRequest object.
 	 *
-	 * @param customerRequest The customer request payload
-	 * @return ApiResponse containing the customer response
+	 * @param customerRequest - The customer details provided in the request body.
+	 * @return ApiResponse containing the registered CustomerResponse.
 	 */
 	@Override
 	public ApiResponse<CustomerResponse> createCustomer(CustomerRequest customerRequest) {
@@ -42,17 +40,17 @@ public class CustomerController implements CustomersAPI {
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
 		CustomerResponse customerResponse = customerService.createCustomer(customerRequest);
 		response.setStatusCode(HttpStatus.CREATED.value());
-		response.setMessage("Customer registered successfully");
+		response.setMessage("Customer registered successfully.");
 		response.setData(customerResponse);
 		logger.info("Customer registered successfully: {}", customerResponse);
 		return response;
 	}
 
 	/**
-	 * Retrieves a customer by their document number. 
+	 * Searches for a customer by their document number.
 	 *
-	 * @param documentNumber The document number of the customer
-	 * @return ApiResponse containing the customer response
+	 * @param documentNumber - The document number of the customer to search for.
+	 * @return ApiResponse containing the CustomerResponse.
 	 */
 	@Override
 	public ApiResponse<CustomerResponse> getCustomerByDocumentNumber(String documentNumber) {
@@ -60,35 +58,37 @@ public class CustomerController implements CustomersAPI {
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
 		CustomerResponse customerResponse = customerService.getCustomerByDocumentNumber(documentNumber);
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Customer retrieved successfully");
+		response.setMessage("Customer retrieved successfully.");
 		response.setData(customerResponse);
 		logger.info("Customer retrieved successfully by document number: {}", documentNumber);
 		return response;
 	}
 
 	/**
-	 * Retrieves all customers. 
+	 * Retrieves a list of all customers.
 	 *
-	 * @return ApiResponse containing the list of customer responses
+	 * @return ApiResponse containing a list of CustomerResponse objects.
 	 */
 	@Override
 	public ApiResponse<List<CustomerResponse>> findAllCustomers() {
-		logger.debug("Received request to retrieve all customers");
+		logger.debug("Received request to retrieve all customers.");
 		ApiResponse<List<CustomerResponse>> response = new ApiResponse<>();
 		List<CustomerResponse> customers = customerService.findAllCustomers();
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Customers retrieved successfully");
+		response.setMessage("Customers retrieved successfully.");
 		response.setData(customers);
-		logger.info("All customers retrieved successfully");
+		logger.info("All customers retrieved successfully.");
 		return response;
 	}
 
 	/**
-	 * Updates a customer. 
+	 * Updates the specified customer based on their document number.
 	 *
-	 * @param documentNumber      The document number to update
-	 * @param contactDataRequest The customer request payload containing update details
-	 * @return ApiResponse containing the updated customer response
+	 * @param documentNumber     - The document number of the customer to be
+	 *                           updated.
+	 * @param contactDataRequest - The updated customer details provided in the
+	 *                           request body.
+	 * @return ApiResponse containing the updated CustomerResponse.
 	 */
 	@Override
 	public ApiResponse<CustomerResponse> updateCustomer(String documentNumber, ContactDataRequest contactDataRequest) {
@@ -96,17 +96,17 @@ public class CustomerController implements CustomersAPI {
 		ApiResponse<CustomerResponse> response = new ApiResponse<>();
 		CustomerResponse customerResponse = customerService.updateCustomer(documentNumber, contactDataRequest);
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Customer updated successfully");
+		response.setMessage("Customer updated successfully.");
 		response.setData(customerResponse);
 		logger.info("Customer updated successfully with document number: {}", documentNumber);
 		return response;
 	}
 
 	/**
-	 * Deletes a customer. 
+	 * Deletes the specified customer based on their document number.
 	 *
-	 * @param documentNumber The document number to delete
-	 * @return ApiResponse indicating the result of the delete operation
+	 * @param documentNumber - The document number of the customer to be deleted.
+	 * @return ApiResponse with a status message upon successful deletion.
 	 */
 	@Override
 	public ApiResponse<Void> deleteCustomer(String documentNumber) {
@@ -114,7 +114,7 @@ public class CustomerController implements CustomersAPI {
 		ApiResponse<Void> response = new ApiResponse<>();
 		customerService.deleteCustomer(documentNumber);
 		response.setStatusCode(HttpStatus.NO_CONTENT.value());
-		response.setMessage("Customer deleted successfully");
+		response.setMessage("Customer deleted successfully.");
 		logger.info("Customer deleted successfully with document number: {}", documentNumber);
 		return response;
 	}

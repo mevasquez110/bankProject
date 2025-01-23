@@ -6,19 +6,26 @@ import javax.validation.constraints.Positive;
 import lombok.Data;
 
 /**
- * PayCreditRequest is a data transfer object that represents the request 
- * payload for making a credit payment. This class includes attributes such as 
- * credit ID and amount. It uses validation annotations to enforce constraints 
- * and Lombok annotations for getters and setters.
+ * PayCreditRequest is a data transfer object representing the request payload
+ * for making a credit payment. This class includes attributes such as credit
+ * ID, amount, document number, and account number. It uses validation
+ * annotations to enforce constraints and Lombok annotations for getters and
+ * setters.
  */
 
 @Data
 public class PayCreditRequest {
 
-    @NotBlank(message = "Credit id is mandatory")
-    private String creditId;
+	@NotBlank(message = "Credit ID is mandatory")
+	private String creditId;
 
-    @NotNull(message = "Amount is mandatory")
-    @Positive(message = "Amount must be greater than zero")
-    private Double amount;
+	@NotNull(message = "Amount is mandatory")
+	@Positive(message = "Amount must be greater than zero")
+	private Double amount;
+
+	@NotBlank(message = "Document number is mandatory")
+	private String documentNumber;
+
+	@NotBlank(message = "Account number is mandatory")
+	private String accountNumber;
 }

@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * * CustomerRequest is a data transfer object that represents the request
- * payload for creating or updating a customer. * This class includes attributes
- * such as full name, company name, email, address, phone number, document type,
- * * document number, and person type. It uses validation annotations to enforce
- * constraints and Lombok annotations * for getters and setters.
+ * CustomerRequest is a data transfer object representing the request payload
+ * for creating or updating a customer. This class includes attributes such as
+ * full name, company name, email, address, phone number, document type,
+ * document number, and person type. It uses validation annotations to enforce
+ * constraints and Lombok annotations for getters and setters.
  */
 
 @Data

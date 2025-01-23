@@ -6,12 +6,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 /**
- * * PaymentScheduleEntity represents the payment schedule document stored in
- * the MongoDB collection "payment_schedules". * This class includes various
- * attributes related to the payment schedule, such as payment date, debt
- * amount, * share payment, credit ID, credit card number, and payment status.
- * It uses Lombok annotations for getters and setters, * and Jackson for JSON
- * inclusion.
+ * TransactionEntity represents the transaction document stored in the MongoDB
+ * collection "transactions". This class includes attributes related to the
+ * transaction, such as operation number, account details, credit card details,
+ * amount, commission, transaction type, and status. It uses Lombok annotations
+ * for getters and setters.
  */
 
 @Data
@@ -21,7 +20,10 @@ public class TransactionEntity {
 	@Id
 	private String id;
 	private String operationNumber;
-	private String accountNumber;
+	private String accountNumberWithdraws;
+	private String accountNumberReceive;
+	private String nameWithdraws;
+	private String nameReceive;
 	private String creditCardNumber;
 	private String creditId;
 	private Double amount;

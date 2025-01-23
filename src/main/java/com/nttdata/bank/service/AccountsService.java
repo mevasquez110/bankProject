@@ -2,6 +2,7 @@ package com.nttdata.bank.service;
 
 import java.util.List;
 import com.nttdata.bank.request.AccountRequest;
+import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
 
@@ -33,7 +34,7 @@ public interface AccountsService {
 	/**
 	 * Finds all accounts.
 	 * 
-	 * @param documentNumber The document number to update
+	 * @param documentNumber The document number to find accounts for
 	 * @return A list of responses containing account details
 	 */
 	List<AccountResponse> findAllAccounts(String documentNumber);
@@ -41,10 +42,10 @@ public interface AccountsService {
 	/**
 	 * Updates an existing account.
 	 *
-	 * @param accountNumber The account number to update
+	 * @param updateAccountRequest The request containing updated account details
 	 * @return The response containing updated account details
 	 */
-	AccountResponse updateAccountAllowWithdrawals(String accountNumber);
+	AccountResponse updateAccount(UpdateAccountRequest updateAccountRequest);
 
 	/**
 	 * Deletes an account.

@@ -17,8 +17,9 @@ public interface CreditService {
 	/**
 	 * Grants a new credit.
 	 *
-	 * @param creditRequest The credit request to create a new credit
-	 * @return The response containing credit details
+	 * @param creditRequest The request containing details necessary to create a new
+	 *                      credit
+	 * @return The response containing detailed information about the created credit
 	 */
 	CreditResponse grantCredit(CreditRequest creditRequest);
 
@@ -26,15 +27,21 @@ public interface CreditService {
 	 * Checks the debt of a credit.
 	 *
 	 * @param creditId The ID of the credit to check the debt for
-	 * @return The response containing credit debt details
+	 * @return The response containing detailed information about the credit debt
 	 */
 	CreditDebtResponse checkDebtCredit(String creditId);
 
 	/**
 	 * Finds all credits.
 	 *
-	 * @return A list of responses containing credit details
+	 * @return A list of responses containing detailed information about all credits
 	 */
 	List<CreditResponse> findAllCredits();
 
+	/**
+	 * Deactivates a credit.
+	 *
+	 * @param creditId The ID of the credit to deactivate
+	 */
+	void desactivateCredit(String creditId);
 }

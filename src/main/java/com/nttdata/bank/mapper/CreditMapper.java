@@ -5,9 +5,9 @@ import com.nttdata.bank.request.CreditRequest;
 import com.nttdata.bank.response.CreditResponse;
 
 /**
- * CreditMapper provides mapping methods to convert between CreditRequest,
- * CreditEntity, and CreditResponse objects. This class includes methods to map
- * a CreditRequest to a CreditEntity and to map a CreditEntity to a
+ * CreditMapper provides methods to convert between CreditRequest, CreditEntity,
+ * and CreditResponse objects. This class includes methods to map a
+ * CreditRequest to a CreditEntity and to map a CreditEntity to a
  * CreditResponse.
  */
 

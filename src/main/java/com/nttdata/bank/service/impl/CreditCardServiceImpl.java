@@ -4,31 +4,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.nttdata.bank.entity.Consumption;
 import com.nttdata.bank.entity.CreditCardEntity;
 import com.nttdata.bank.entity.CreditCardScheduleEntity;
-import com.nttdata.bank.entity.CreditScheduleEntity;
 import com.nttdata.bank.mapper.CreditCardMapper;
 import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.CreditScheduleRepository;
 import com.nttdata.bank.repository.CreditCardScheduleRepository;
+import com.nttdata.bank.request.ConsumptionRequest;
 import com.nttdata.bank.request.CreditCardRequest;
+import com.nttdata.bank.response.ConsumptionResponse;
 import com.nttdata.bank.response.CreditCardDebtResponse;
 import com.nttdata.bank.response.CreditCardResponse;
 import com.nttdata.bank.service.CreditCardService;
 import com.nttdata.bank.util.Constants;
 import com.nttdata.bank.util.Utility;
-
+import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
- * * CreditCardServiceImpl is the implementation class for the CreditCardService
- * interface. * This class provides the actual logic for handling credit
- * card-related operations such as requesting a credit card, * checking credit
+ * CreditCardServiceImpl is the implementation class for the CreditCardService
+ * interface. This class provides the actual logic for handling credit
+ * card-related operations such as requesting a credit card, checking credit
  * card debt, finding all credit cards, updating a credit card, and deleting a
  * credit card.
  */
@@ -76,30 +79,26 @@ public class CreditCardServiceImpl implements CreditCardService {
 	 * if the customer has an active credit card and any active debt associated with
 	 * it.
 	 *
-	 * @param creditCardRequest the credit card request containing the document
+	 * @param creditCardRequest The credit card request containing the document
 	 *                          number and other details
-	 * @throws RuntimeException if the customer already has an active credit card or
+	 * @throws RuntimeException If the customer already has an active credit card or
 	 *                          active debt
 	 */
 	private void validateCreditCard(CreditCardRequest creditCardRequest) {
-		Boolean existingCreditCard = creditCardRepository
-				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block();
-
-		if (existingCreditCard) {
-			throw new RuntimeException("The customer already has a credit card");
-		}
+		Optional.ofNullable(creditCardRepository
+				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
+				.filter(Boolean::booleanValue).ifPresent(exists -> {
+					throw new RuntimeException("The customer already has a credit card");
+				});
 
 		Optional.ofNullable(
 				creditRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
 				.ifPresent(creditEntity -> {
-					List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
+					Optional.ofNullable(creditScheduleRepository
 							.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditEntity.getCreditId(),
-									LocalDate.now())
-							.collectList().block();
-
-					if (paymentSchedule.isEmpty()) {
-						throw new RuntimeException("The client has active debt");
-					}
+									LocalDateTime.now())
+							.collectList().block()).filter(schedule -> !schedule.isEmpty())
+							.orElseThrow(() -> new RuntimeException("The client has active debt"));
 				});
 	}
 
@@ -119,29 +118,26 @@ public class CreditCardServiceImpl implements CreditCardService {
 					return new RuntimeException("Credit card not found");
 				});
 
-		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+		List<CreditCardScheduleEntity> paymentScheduleShare = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
 				.collectList().block();
 
-		if (paymentSchedule != null && !paymentSchedule.isEmpty()) {
-			Double totalDebt = paymentSchedule.stream()
-					.max(Comparator.comparingDouble(CreditCardScheduleEntity::getTotalDebt))
-					.map(CreditCardScheduleEntity::getTotalDebt).get();
+		Double share = paymentScheduleShare.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
-			Double share = paymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
+				.collectList().block();
 
-			CreditCardDebtResponse response = new CreditCardDebtResponse();
-			response.setCreditCardNumber(creditCardNumber);
-			response.setTotalDebt(totalDebt);
-			response.setShare(share);
-			response.setAvailableCredit(creditCard.getAvailableCredit());
+		Double totalDebt = paymentSchedule.stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.mapToDouble(Consumption::getAmount).sum() + share;
 
-			logger.info("Debt checked successfully for credit card : {}", creditCardNumber);
-			return response;
-		} else {
-			logger.error("No payment schedule found for credit card: {}", creditCardNumber);
-			throw new RuntimeException("No payment schedule found");
-		}
+		CreditCardDebtResponse response = new CreditCardDebtResponse();
+		response.setCreditCardNumber(creditCardNumber);
+		response.setTotalDebt(totalDebt);
+		response.setShare(share);
+		response.setAvailableCredit(creditCard.getAvailableCredit());
+		logger.info("Debt checked successfully for credit card : {}", creditCardNumber);
+		return response;
 	}
 
 	/**
@@ -151,13 +147,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 	 */
 	@Override
 	public List<CreditCardResponse> findAllCreditCards() {
-		logger.debug("Finding all credit cards");
-
-		List<CreditCardResponse> creditCards = creditCardRepository.findByIsActiveTrue()
-				.map(CreditCardMapper::mapperToResponse).collectList().block();
-
 		logger.info("All credit cards retrieved successfully");
-		return creditCards;
+		return creditCardRepository.findByIsActiveTrue().map(CreditCardMapper::mapperToResponse).collectList().block();
 	}
 
 	/**
@@ -199,10 +190,92 @@ public class CreditCardServiceImpl implements CreditCardService {
 					return new RuntimeException("Credit card not found");
 				});
 
+		List<CreditCardScheduleEntity> paymentScheduleShare = creditCardScheduleRepository
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
+				.collectList().block();
+
+		Double share = paymentScheduleShare.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+
+		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
+				.collectList().block();
+
+		Double totalDebt = paymentSchedule.stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.mapToDouble(Consumption::getAmount).sum() + share;
+
+		if (totalDebt > 0) {
+			throw new IllegalArgumentException("You cannot delete a card with outstanding debt");
+		}
+
 		creditCardEntity.setIsActive(false);
 		creditCardEntity.setUpdateDate(LocalDateTime.now());
 		creditCardEntity = creditCardRepository.save(creditCardEntity).block();
 		logger.info("Credit card deleted successfully with ID: {}", creditCardNumber);
+	}
+
+	/**
+	 * Charges a consumption to the credit card.
+	 *
+	 * @param consumptionRequest The request containing details about the
+	 *                           consumption to be charged
+	 * @return The response containing details about the charged consumption
+	 */
+	@Override
+	public ConsumptionResponse chargeConsumption(@Valid ConsumptionRequest consumptionRequest) {
+		CreditCardEntity creditCardEntity = creditCardRepository
+				.findByCreditCardNumberAndIsActiveTrue(consumptionRequest.getCreditCardNumber()).toFuture().join();
+
+		if (!creditCardEntity.getAllowConsumption()) {
+			throw new RuntimeException("Consumption is not allowed.");
+		}
+		if (consumptionRequest.getAmount() > creditCardEntity.getAvailableCredit()) {
+			throw new RuntimeException("Amount exceeds available credit.");
+		}
+
+		LocalDate consumptionDate = LocalDate.now();
+		LocalDate billingDate = consumptionDate.withDayOfMonth(21);
+		int paymentDay = creditCardEntity.getPaymentDay();
+		LocalDate paymentDate;
+
+		if (consumptionDate.getDayOfMonth() >= 21) {
+			billingDate = billingDate.plusMonths(1);
+		}
+		if (paymentDay <= 21) {
+			paymentDate = billingDate.withDayOfMonth(paymentDay);
+		} else {
+			paymentDate = billingDate.plusMonths(1).withDayOfMonth(paymentDay);
+		}
+
+		CreditCardScheduleEntity schedule = creditCardScheduleRepository
+				.findByCreditCardNumberAndPaymentDate(creditCardEntity.getCreditCardNumber(), paymentDate)
+				.switchIfEmpty(Mono.defer(() -> {
+					CreditCardScheduleEntity newSchedule = new CreditCardScheduleEntity();
+					newSchedule.setCreditCartNumber(creditCardEntity.getCreditCardNumber());
+					newSchedule.setPaymentDate(paymentDate);
+					newSchedule.setPaid(false);
+					newSchedule.setConsumptionQuota(new ArrayList<>());
+					return creditCardScheduleRepository.save(newSchedule);
+				})).block();
+
+		schedule.getConsumptionQuota().add(Optional.ofNullable(consumptionRequest).map(request -> {
+			Consumption newConsumption = new Consumption();
+			newConsumption.setAmount(request.getAmount());
+			newConsumption.setNumberOfInstallments(request.getNumberOfInstallments());
+			newConsumption.setProductOrServiceName(request.getProductOrServiceName());
+			return newConsumption;
+		}).orElseThrow(() -> new IllegalArgumentException("Consumption request cannot be null")));
+		creditCardScheduleRepository.save(schedule);
+
+		Optional.ofNullable(creditCardEntity).ifPresent(entity -> {
+			entity.setAvailableCredit(entity.getAvailableCredit() - consumptionRequest.getAmount());
+			entity.setUpdateDate(LocalDateTime.now());
+			creditCardRepository.save(entity);
+		});
+
+		ConsumptionResponse consumptionResponse = new ConsumptionResponse();
+		consumptionResponse.setBillingDate(billingDate);
+		consumptionResponse.setPaymentDate(paymentDate);
+		return consumptionResponse;
 	}
 
 	/**
@@ -217,7 +290,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		do {
 			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber
 					+ Utility.generateRandomNumber();
-			
+
 			exists = creditCardRepository.existsByCreditCardNumber(creditCardNumber).toFuture().join();
 		} while (exists);
 		return creditCardNumber;

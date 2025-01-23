@@ -45,6 +45,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 		if (debitCardRepository.existsByDocumentNumberAndIsActiveTrue(debitCardRequest.getDocumentNumber()).block()) {
 			throw new IllegalArgumentException("The client has a valid debit card");
 		}
+
 		List<String> associatedAccounts = Collections.singletonList(debitCardRequest.getPrimaryAccount());
 		validateClientAccount(debitCardRequest.getDocumentNumber(), associatedAccounts);
 
@@ -61,6 +62,12 @@ public class DebitCardServiceImpl implements DebitCardService {
 		return Optional.of(debitCardEntity).map(DebitCardMapper::mapperToResponse).orElseThrow();
 	}
 
+	/**
+	 * Validates if the provided accounts belong to the client and are active.
+	 *
+	 * @param documentNumber the document number of the client
+	 * @param accounts       list of account numbers to validate
+	 */
 	private void validateClientAccount(String documentNumber, List<String> accounts) {
 		Set<String> nonDuplicateAccounts = new HashSet<>(accounts);
 
@@ -99,8 +106,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 	 */
 	@Override
 	public List<DebitCardResponse> findAllDebitCard() {
-		return debitCardRepository.findByIsActiveTrue()
-				.map(DebitCardMapper::mapperToResponse).collectList().block();
+		return debitCardRepository.findByIsActiveTrue().map(DebitCardMapper::mapperToResponse).collectList().block();
 	}
 
 	/**

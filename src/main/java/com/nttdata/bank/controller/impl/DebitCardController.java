@@ -15,11 +15,10 @@ import com.nttdata.bank.response.DebitCardResponse;
 import com.nttdata.bank.service.DebitCardService;
 
 /**
- * DebitCardController is a REST controller that implements the DebitCardAPI
- * interface. This class handles HTTP requests related to debit card operations
- * such as creating, finding, checking balance, associating accounts, marking
- * primary accounts, and deleting debit cards. It delegates the actual business
- * logic to the DebitCardService.
+ * DebitCardController is a REST controller that implements the DebitCardAPI 
+ * interface. This class handles HTTP requests related to debit card operations 
+ * such as creating, finding, associating accounts, and deleting debit cards. 
+ * It delegates the actual business logic to DebitCardService.
  */
 
 @RestController
@@ -31,10 +30,10 @@ public class DebitCardController implements DebitCardAPI {
     DebitCardService debitCardService;
 
     /**
-     * Creates a new debit card.
+     * Creates a new debit card based on the provided DebitCardRequest object.
      *
-     * @param debitCardRequest The debit card request payload
-     * @return ApiResponse containing the debit card response
+     * @param debitCardRequest - The debit card details provided in the request body.
+     * @return ApiResponse containing the created DebitCardResponse.
      */
     @Override
     public ApiResponse<DebitCardResponse> createDebitCard(@Valid DebitCardRequest debitCardRequest) {
@@ -42,35 +41,36 @@ public class DebitCardController implements DebitCardAPI {
         ApiResponse<DebitCardResponse> response = new ApiResponse<>();
         DebitCardResponse debitCardResponse = debitCardService.createDebitCard(debitCardRequest);
         response.setStatusCode(HttpStatus.CREATED.value());
-        response.setMessage("Debit card created successfully");
+        response.setMessage("Debit card successfully created.");
         response.setData(debitCardResponse);
         logger.info("Debit card created successfully: {}", debitCardResponse);
         return response;
     }
 
     /**
-     * Retrieves all debit cards.
+     * Retrieves a list of all debit cards.
      *
-     * @return ApiResponse containing the list of debit card responses
+     * @return ApiResponse containing a list of DebitCardResponse objects.
      */
     @Override
     public ApiResponse<List<DebitCardResponse>> findAllDebitCard() {
-        logger.debug("Received request to find all debit cards");
+        logger.debug("Received request to find all debit cards.");
         ApiResponse<List<DebitCardResponse>> response = new ApiResponse<>();
         List<DebitCardResponse> debitCards = debitCardService.findAllDebitCard();
         response.setStatusCode(HttpStatus.OK.value());
-        response.setMessage("Debit cards retrieved successfully");
+        response.setMessage("Debit cards retrieved successfully.");
         response.setData(debitCards);
-        logger.info("Debit cards retrieved successfully");
+        logger.info("All debit cards retrieved successfully.");
         return response;
     }
 
     /**
-     * Associates an account with a debit card.
+     * Associates an account with the specified debit card based on the provided
+     * AssociateAccountRequest object.
      *
-     * @param debitCardNumber The debit card number
-     * @param associateAccountRequest The associate account request payload
-     * @return ApiResponse containing the updated debit card response
+     * @param debitCardNumber - The debit card number to be associated with an account.
+     * @param associateAccountRequest - The association details provided in the request body.
+     * @return ApiResponse containing the updated DebitCardResponse.
      */
     @Override
     public ApiResponse<DebitCardResponse> associateAccount(String debitCardNumber,
@@ -79,17 +79,17 @@ public class DebitCardController implements DebitCardAPI {
         ApiResponse<DebitCardResponse> response = new ApiResponse<>();
         DebitCardResponse debitCardResponse = debitCardService.associateAccount(debitCardNumber, associateAccountRequest);
         response.setStatusCode(HttpStatus.OK.value());
-        response.setMessage("Account associated successfully");
+        response.setMessage("Account successfully associated.");
         response.setData(debitCardResponse);
         logger.info("Account associated successfully with debit card: {}", debitCardNumber);
         return response;
     }
 
     /**
-     * Deletes a debit card.
+     * Deletes the specified debit card based on the debit card number.
      *
-     * @param debitCardNumber The debit card number
-     * @return ApiResponse indicating the result of the delete operation
+     * @param debitCardNumber - The debit card number to be deleted.
+     * @return ApiResponse with a status message upon successful deletion.
      */
     @Override
     public ApiResponse<Void> deleteDebitCard(String debitCardNumber) {
@@ -97,7 +97,7 @@ public class DebitCardController implements DebitCardAPI {
         ApiResponse<Void> response = new ApiResponse<>();
         debitCardService.deleteDebitCard(debitCardNumber);
         response.setStatusCode(HttpStatus.NO_CONTENT.value());
-        response.setMessage("Debit card deleted successfully");
+        response.setMessage("Debit card successfully deleted.");
         logger.info("Debit card deleted successfully with number: {}", debitCardNumber);
         return response;
     }

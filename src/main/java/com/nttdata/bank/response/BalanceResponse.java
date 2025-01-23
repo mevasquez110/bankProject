@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
- * * BalanceResponse is a data transfer object that represents the response
- * payload for a balance inquiry. * This class includes attributes such as
- * account number, amount, and whether withdrawals are allowed. * It uses
- * Jackson annotations for JSON inclusion and Lombok annotations for getters and
- * setters.
+ * BalanceResponse is a data transfer object representing the response payload
+ * for a balance inquiry. This class includes attributes such as account number,
+ * amount, and whether withdrawals are allowed. It uses Jackson annotations for
+ * JSON inclusion and Lombok annotations for getters and setters.
  */
 
 @Data

@@ -20,6 +20,7 @@ import lombok.Data;
 public class AccountRequest {
 
     private List<String> holderDoc;
+    
     private List<String> authorizedSignatoryDoc;
 
     @NotBlank(message = "Account type is mandatory")

@@ -20,7 +20,6 @@ import com.nttdata.bank.service.YankiService;
  * creating, updating, deleting, and retrieving Yanki entities. It delegates the
  * actual business logic to the YankiService.
  */
-
 @RestController
 public class YankiController implements YankiAPI {
 
@@ -30,10 +29,10 @@ public class YankiController implements YankiAPI {
 	private YankiService yankiService;
 
 	/**
-	 * Creates a new Yanki entity.
+	 * Creates a new Yanki entity based on the provided YankiRequest object.
 	 *
-	 * @param yankiRequest The Yanki request payload
-	 * @return ApiResponse containing the Yanki response
+	 * @param yankiRequest - The Yanki details provided in the request body.
+	 * @return ApiResponse containing the created YankiResponse.
 	 */
 	@Override
 	public ApiResponse<YankiResponse> createYanki(@Valid YankiRequest yankiRequest) {
@@ -41,17 +40,17 @@ public class YankiController implements YankiAPI {
 		ApiResponse<YankiResponse> response = new ApiResponse<>();
 		YankiResponse yankiResponse = yankiService.createYanki(yankiRequest);
 		response.setStatusCode(HttpStatus.CREATED.value());
-		response.setMessage("Yanki created successfully");
+		response.setMessage("Yanki successfully created.");
 		response.setData(yankiResponse);
 		logger.info("Yanki created successfully: {}", yankiResponse);
 		return response;
 	}
 
 	/**
-	 * Deletes a Yanki entity.
+	 * Deletes the specified Yanki entity based on the phone number.
 	 *
-	 * @param phoneNumber The phone number of the Yanki entity to be deleted
-	 * @return ApiResponse indicating the result of the delete operation
+	 * @param phoneNumber - The phone number of the Yanki entity to be deleted.
+	 * @return ApiResponse with a status message upon successful deletion.
 	 */
 	@Override
 	public ApiResponse<Void> deleteYanki(String phoneNumber) {
@@ -59,34 +58,36 @@ public class YankiController implements YankiAPI {
 		ApiResponse<Void> response = new ApiResponse<>();
 		yankiService.deleteYanki(phoneNumber);
 		response.setStatusCode(HttpStatus.NO_CONTENT.value());
-		response.setMessage("Yanki deleted successfully");
+		response.setMessage("Yanki successfully deleted.");
 		logger.info("Yanki deleted successfully with phone number: {}", phoneNumber);
 		return response;
 	}
 
 	/**
-	 * Retrieves all active Yanki entities.
+	 * Retrieves a list of all Yanki entities.
 	 *
-	 * @return ApiResponse containing the list of Yanki responses
+	 * @return ApiResponse containing a list of YankiResponse objects.
 	 */
 	@Override
 	public ApiResponse<List<YankiResponse>> findAllYanki() {
-		logger.debug("Received request to find all Yanki entities");
+		logger.debug("Received request to find all Yanki entities.");
 		ApiResponse<List<YankiResponse>> response = new ApiResponse<>();
 		List<YankiResponse> yankis = yankiService.findAllYanki();
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Yanki entities retrieved successfully");
+		response.setMessage("Yanki entities retrieved successfully.");
 		response.setData(yankis);
-		logger.info("Yanki entities retrieved successfully");
+		logger.info("Yanki entities retrieved successfully.");
 		return response;
 	}
 
 	/**
-	 * Updates a Yanki entity.
+	 * Updates the specified Yanki entity based on its phone number.
 	 *
-	 * @param phoneNumber        The phone number of the Yanki entity to be updated
-	 * @param yankiUpdateRequest The Yanki update request payload
-	 * @return ApiResponse containing the updated Yanki response
+	 * @param phoneNumber        - The phone number of the Yanki entity to be
+	 *                           updated.
+	 * @param yankiUpdateRequest - The updated Yanki details provided in the request
+	 *                           body.
+	 * @return ApiResponse containing the updated YankiResponse.
 	 */
 	@Override
 	public ApiResponse<YankiResponse> updateYanki(String phoneNumber, @Valid YankiUpdateRequest yankiUpdateRequest) {
@@ -94,9 +95,9 @@ public class YankiController implements YankiAPI {
 		ApiResponse<YankiResponse> response = new ApiResponse<>();
 		YankiResponse yankiResponse = yankiService.updateYanki(phoneNumber, yankiUpdateRequest);
 		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Yanki updated successfully");
+		response.setMessage("Yanki successfully updated.");
 		response.setData(yankiResponse);
-		logger.info("Yanki updated successfully with phone number: {}", phoneNumber);
+		logger.info("Yanki updated successfully: {}", yankiResponse);
 		return response;
 	}
 }

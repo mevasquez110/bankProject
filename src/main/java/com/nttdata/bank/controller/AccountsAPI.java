@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.AccountRequest;
+import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.BalanceResponse;
@@ -21,7 +22,6 @@ import com.nttdata.bank.response.BalanceResponse;
  * deleting accounts, as well as checking account balance. Each method maps to
  * an HTTP request and returns a structured API response.
  */
-
 @RestController
 @RequestMapping("/account")
 public interface AccountsAPI {
@@ -48,27 +48,29 @@ public interface AccountsAPI {
 	/**
 	 * Retrieves a list of all accounts by customer.
 	 * 
-	 * @param documentNumber - The document number for which the balance is to be
-	 *                       checked.
+	 * @param documentNumber - The document number for which the accounts are to be
+	 *                       retrieved.
 	 * @return ApiResponse containing a list of AccountResponse objects.
 	 */
 	@GetMapping("/all/{documentNumber}")
 	ApiResponse<List<AccountResponse>> findAllAccounts(@PathVariable String documentNumber);
 
 	/**
-	 * Updates the specified account based on the account ID.
+	 * Updates the details of an existing account based on the provided
+	 * UpdateAccountRequest object.
 	 * 
-	 * @param accountNumber - The account number to be updated.
+	 * @param updateAccountRequest - The updated account details provided in the
+	 *                             request body.
 	 * @return ApiResponse containing the updated AccountResponse.
 	 */
-	@PutMapping("/update/{accountNumber}")
-	ApiResponse<AccountResponse> updateAccountAllowWithdrawals(@PathVariable String accountNumber);
+	@PutMapping("/update")
+	ApiResponse<AccountResponse> updateAccount(@RequestBody @Valid UpdateAccountRequest updateAccountRequest);
 
 	/**
-	 * Deletes the specified account based on the account ID.
+	 * Deletes the specified account based on the account number.
 	 * 
 	 * @param accountNumber - The account number to be deleted.
-	 * @return ApiResponse with no content upon successful deletion.
+	 * @return ApiResponse with a status message upon successful deletion.
 	 */
 	@DeleteMapping("/delete/{accountNumber}")
 	ApiResponse<Void> deleteAccount(@PathVariable String accountNumber);

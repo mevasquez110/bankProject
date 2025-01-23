@@ -6,43 +6,43 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * YankiRepository is an interface that extends ReactiveMongoRepository for
- * performing CRUD operations on YankiEntity documents in MongoDB.
- * 
- * <p>
- * This repository provides reactive support for accessing YankiEntity
- * documents by their ID and other attributes, leveraging Spring Data MongoDB.
+ * YankiRepository provides CRUD operations for YankiEntity. This interface
+ * extends ReactiveMongoRepository and defines custom query methods to check for
+ * active Yanki entities by document number, account number, and phone number,
+ * and retrieve all active Yanki entities.
  */
 public interface YankiRepository extends ReactiveMongoRepository<YankiEntity, String> {
 
-    /**
-     * Checks if a Yanki entity exists by document number and is active.
-     *
-     * @param documentNumber the document number to check for existence
-     * @return Mono emitting true if a Yanki entity with the given document number exists and is active, false otherwise
-     */
-    Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
-    
-    /**
-     * Checks if a Yanki entity exists by account number and is active.
-     *
-     * @param accountNumber the account number to check for existence
-     * @return Mono emitting true if a Yanki entity with the given account number exists and is active, false otherwise
-     */
-    Mono<Boolean> existsByAccountNumberAndIsActiveTrue(String accountNumber);
+	/**
+	 * Checks if an active Yanki entity exists by document number.
+	 *
+	 * @param documentNumber The document number to check for.
+	 * @return A Mono emitting true if an active Yanki entity exists, false
+	 *         otherwise.
+	 */
+	Mono<Boolean> existsByDocumentNumberAndIsActiveTrue(String documentNumber);
 
-    /**
-     * Finds a Yanki entity by phone number and is active.
-     *
-     * @param phoneNumber the phone number to search for
-     * @return Mono emitting the Yanki entity if found and is active, empty otherwise
-     */
-    Mono<YankiEntity> findByPhoneNumberAndIsActiveTrue(String phoneNumber);
+	/**
+	 * Checks if an active Yanki entity exists by account number.
+	 *
+	 * @param accountNumber The account number to check for.
+	 * @return A Mono emitting true if an active Yanki entity exists, false
+	 *         otherwise.
+	 */
+	Mono<Boolean> existsByAccountNumberAndIsActiveTrue(String accountNumber);
 
-    /**
-     * Finds all Yanki entities that are active.
-     *
-     * @return Flux emitting all active Yanki entities
-     */
-    Flux<YankiEntity> findAllByIsActiveTrue();
+	/**
+	 * Finds an active Yanki entity by phone number.
+	 *
+	 * @param phoneNumber The phone number to search for.
+	 * @return A Mono emitting the active YankiEntity object, if found.
+	 */
+	Mono<YankiEntity> findByPhoneNumberAndIsActiveTrue(String phoneNumber);
+
+	/**
+	 * Finds all active Yanki entities.
+	 *
+	 * @return A Flux emitting all active YankiEntity objects.
+	 */
+	Flux<YankiEntity> findAllByIsActiveTrue();
 }

@@ -5,7 +5,7 @@ import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
 
 /**
- * CustomerMapper provides mapping methods to convert between CustomerRequest,
+ * CustomerMapper provides methods to convert between CustomerRequest,
  * CustomerEntity, and CustomerResponse objects. This class includes methods to
  * map a CustomerRequest to a CustomerEntity and to map a CustomerEntity to a
  * CustomerResponse.
@@ -46,6 +46,7 @@ public class CustomerMapper {
 		CustomerResponse customerResponse = new CustomerResponse();
 
 		if (customerEntity != null) {
+			customerResponse.setCustomerId(customerEntity.getId());
 			customerResponse.setFullName(customerEntity.getFullName());
 			customerResponse.setCompanyName(customerEntity.getCompanyName());
 			customerResponse.setEmail(customerEntity.getEmail());

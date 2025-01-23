@@ -27,6 +27,10 @@ import com.nttdata.bank.service.CustomerService;
 import com.nttdata.bank.service.YankiService;
 import com.nttdata.bank.util.Constants;
 
+/**
+ * YankiServiceImpl is an implementation class for YankiService interface that
+ * provides a service for managing Yanki accounts.
+ */
 @Service
 public class YankiServiceImpl implements YankiService {
 
@@ -47,18 +51,22 @@ public class YankiServiceImpl implements YankiService {
 	@Autowired
 	private YankiRepository yankiRepository;
 
+	/**
+	 * Creates a new Yanki account.
+	 *
+	 * @param yankiRequest the request object containing Yanki account information
+	 * @return YankiResponse the response object containing the saved Yanki account
+	 *         information
+	 */
 	@Override
 	public YankiResponse createYanki(YankiRequest yankiRequest) {
 		logger.debug("Registering yanki: {}", yankiRequest);
 
-		boolean existsYanki = Optional
-				.ofNullable(
-						yankiRepository.existsByDocumentNumberAndIsActiveTrue(yankiRequest.getDocumentNumber()).block())
-				.orElse(false);
-
-		if (existsYanki) {
-			throw new IllegalArgumentException("The customer already has a Yanki account.");
-		}
+		Optional.ofNullable(
+				yankiRepository.existsByDocumentNumberAndIsActiveTrue(yankiRequest.getDocumentNumber()).block())
+				.filter(Boolean::booleanValue).ifPresent(exists -> {
+					throw new IllegalArgumentException("The customer already has a Yanki account.");
+				});
 
 		YankiEntity yankiEntity = YankiMapper.mapperToEntity(yankiRequest);
 		yankiEntity.setCreateDate(LocalDateTime.now());
@@ -98,6 +106,12 @@ public class YankiServiceImpl implements YankiService {
 				yankiFuture.thenApply(entity -> yankiRepository.save(entity).toFuture().join()).join());
 	}
 
+	/**
+	 * Creates and sets a Yanki account based on the provided Yanki request.
+	 *
+	 * @param yankiEntity  the Yanki entity to be updated
+	 * @param yankiRequest the Yanki request containing account information
+	 */
 	private void createAndSetYankiAccount(YankiEntity yankiEntity, YankiRequest yankiRequest) {
 		AccountRequest accountRequest = new AccountRequest();
 		accountRequest.setAccountType(Constants.ACCOUNT_TYPE_CODE_YANKI);
@@ -108,6 +122,14 @@ public class YankiServiceImpl implements YankiService {
 		yankiEntity.setAccountNumber(accountResponse.getAccountNumber());
 	}
 
+	/**
+	 * Creates a new customer and sets a Yanki account based on the provided Yanki
+	 * request.
+	 *
+	 * @param yankiEntity  the Yanki entity to be updated
+	 * @param yankiRequest the Yanki request containing customer and account
+	 *                     information
+	 */
 	private void createCustomerAndAccount(YankiEntity yankiEntity, YankiRequest yankiRequest) {
 		CustomerRequest customerRequest = new CustomerRequest();
 		customerRequest.setDocumentType(yankiRequest.getDocumentType());
@@ -127,6 +149,11 @@ public class YankiServiceImpl implements YankiService {
 		createAndSetYankiAccount(yankiEntity, yankiRequest);
 	}
 
+	/**
+	 * Retrieves all active Yanki accounts.
+	 *
+	 * @return a list of Yanki response objects containing Yanki account information
+	 */
 	@Override
 	public List<YankiResponse> findAllYanki() {
 		logger.debug("Finding all accounts");
@@ -143,6 +170,16 @@ public class YankiServiceImpl implements YankiService {
 		return response;
 	}
 
+	/**
+	 * Updates an existing Yanki account with new information.
+	 *
+	 * @param phoneNumber        the phone number associated with the Yanki account
+	 *                           to be updated
+	 * @param yankiUpdateRequest the request object containing the updated Yanki
+	 *                           account information
+	 * @return YankiResponse the response object containing the updated Yanki
+	 *         account information
+	 */
 	@Override
 	public YankiResponse updateYanki(String phoneNumber, YankiUpdateRequest yankiUpdateRequest) {
 		YankiEntity yankiEntity = Optional
@@ -152,15 +189,12 @@ public class YankiServiceImpl implements YankiService {
 
 		yankiEntity.setUpdateDate(LocalDateTime.now());
 
-		boolean hasAccounts = accountRepository
-				.findByHolderDocContainingAndIsActiveTrue(yankiEntity.getDocumentNumber()).collectList().toFuture()
-				.join().stream().findAny().isPresent();
-
-		if (hasAccounts) {
-			yankiEntity.setAccountNumber(yankiUpdateRequest.getAccountNumber());
-		} else {
-			throw new IllegalArgumentException("YankiEntity with phone number " + phoneNumber + " does not exist.");
-		}
+		Optional.of(accountRepository.findByHolderDocContainingAndIsActiveTrue(yankiEntity.getDocumentNumber())
+				.collectList().toFuture().join().stream().findAny().isPresent()).filter(Boolean::booleanValue)
+				.ifPresentOrElse(exists -> yankiEntity.setAccountNumber(yankiUpdateRequest.getAccountNumber()), () -> {
+					throw new IllegalArgumentException(
+							"YankiEntity with phone number " + phoneNumber + " does not exist.");
+				});
 
 		YankiEntity savedEntity = yankiRepository.save(yankiEntity).toFuture().join();
 		YankiResponse yankiResponse = new YankiResponse();
@@ -169,6 +203,11 @@ public class YankiServiceImpl implements YankiService {
 		return yankiResponse;
 	}
 
+	/**
+	 * Deletes a Yanki account based on the provided phone number.
+	 *
+	 * @param phoneNumber the phone number associated with the Yanki account
+	 */
 	@Override
 	public void deleteYanki(String phoneNumber) {
 		logger.debug("Deleting yanki: ", phoneNumber);
