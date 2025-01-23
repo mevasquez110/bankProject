@@ -17,7 +17,7 @@ import lombok.Data;
 public class CreditEntity {
 
 	@Id
-	private String creditId;
+	private String id;
 	private String documentNumber;
 	private Double amount;
 	private Double totalDebt;

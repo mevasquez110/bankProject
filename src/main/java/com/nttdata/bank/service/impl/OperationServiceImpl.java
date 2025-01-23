@@ -95,7 +95,7 @@ public class OperationServiceImpl implements OperationService {
 		LocalDateTime transactionDate = LocalDateTime.now();
 		String accountReceive = getPrimaryAccount(depositRequest);
 		String transactionType = Constants.TRANSACTION_TYPE_DEPOSIT;
-		Double commission = -getCommission(accountReceive, transactionType);
+		Double commission = -getCommission(accountReceive);
 
 		TransactionEntity transactionEntity = transactionRepository
 				.save(TransactionMapper.mapperToEntity(transactionDate, commission, transactionType,
@@ -135,7 +135,7 @@ public class OperationServiceImpl implements OperationService {
 				accountWithdraws = debitCardEntity.getAssociatedAccounts().get(i);
 			}
 
-			commission = -getCommission(accountWithdraws, transactionType);
+			commission = -getCommission(accountWithdraws);
 			balance = -(amount + commission);
 
 			hasBalance = accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(accountWithdraws, balance)
@@ -235,7 +235,7 @@ public class OperationServiceImpl implements OperationService {
 	public TransactionResponse payCredit(PayCreditRequest payCreditRequest) {
 		LocalDateTime transactionDate = LocalDateTime.now();
 
-		if (creditRepository.existsCreditIdAndIsActiveTrue(payCreditRequest.getCreditId()).block()) {
+		if (creditRepository.existsByIdAndIsActiveTrue(payCreditRequest.getCreditId()).block()) {
 			throw new IllegalArgumentException("credit does not exist or does not active");
 		}
 
@@ -287,7 +287,7 @@ public class OperationServiceImpl implements OperationService {
 				creditRepository.findAllByDocumentNumberAndIsActiveTrue(documentNumber).collectList().block())
 				.ifPresent(credits -> credits.forEach(creditEntity -> {
 					ProductResponse product = new ProductResponse();
-					product.setCreditId(creditEntity.getCreditId());
+					product.setCreditId(creditEntity.getId());
 					product.setProductType(Constants.PRODUCT_CREDIT);
 					products.add(product);
 				}));
@@ -345,7 +345,7 @@ public class OperationServiceImpl implements OperationService {
 		TransactionResponse transactionResponse = new TransactionResponse();
 		LocalDateTime transactionDate = LocalDateTime.now();
 
-		if (creditCardRepository.existsCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
+		if (creditCardRepository.existsByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
 				.block()) {
 			throw new IllegalArgumentException("credit card does not exist or does not active");
 		}
@@ -429,7 +429,7 @@ public class OperationServiceImpl implements OperationService {
 	/**
 	 * Calculates the commission for a given account and transaction type.
 	 *
-	 * @param primaryAccount the account number to check for transactions
+	 * @param accountNumber the account number to check for transactions
 	 * @return the commission amount, 1.99 if the number of transactions of the
 	 *         given type in the current month exceeds 10, otherwise 0.00
 	 */

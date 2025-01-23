@@ -37,17 +37,6 @@ public interface CreditCardScheduleRepository extends ReactiveMongoRepository<Cr
 			String creditCardNumber, LocalDate currentDate);
 
 	/**
-	 * Finds pending payments for a specific credit card that are due on or before
-	 * the specified date.
-	 *
-	 * @param creditCardNumber The credit card number to search for.
-	 * @param currentDate      The current date.
-	 * @return A Flux emitting the pending CreditCardScheduleEntity objects.
-	 */
-	Flux<CreditCardScheduleEntity> findByCreditCardAndPaidFalseAndPaymentDateLessThanEqual(String creditCardNumber,
-			LocalDate currentDate);
-
-	/**
 	 * Finds a scheduled payment for a specific credit card by its payment date.
 	 *
 	 * @param creditCardNumber The credit card number to search for.

@@ -37,20 +37,12 @@ public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, 
 	Flux<CreditEntity> findByIsActiveTrue();
 
 	/**
-	 * Finds an active credit by credit ID.
-	 *
-	 * @param creditId The credit ID to search for.
-	 * @return A Mono emitting the active CreditEntity object.
-	 */
-	Mono<CreditEntity> findByIdAndIsActiveTrue(String creditId);
-
-	/**
 	 * Checks if an active credit exists by credit ID.
 	 *
 	 * @param creditId The credit ID to check for.
 	 * @return A Mono emitting true if the active credit exists, false otherwise.
 	 */
-	Mono<Boolean> existsCreditIdAndIsActiveTrue(String creditId);
+	Mono<Boolean> existsByIdAndIsActiveTrue(String creditId);
 
 	/**
 	 * Finds an active credit by its credit ID.
@@ -58,7 +50,7 @@ public interface CreditRepository extends ReactiveMongoRepository<CreditEntity, 
 	 * @param creditId The credit ID to search for.
 	 * @return A Mono emitting the active CreditEntity object.
 	 */
-	Mono<CreditEntity> findByCreditIdAndIsActiveTrue(String creditId);
+	Mono<CreditEntity> findByIdAndIsActiveTrue(String creditId);
 
 	/**
 	 * Finds all active credits by document number.

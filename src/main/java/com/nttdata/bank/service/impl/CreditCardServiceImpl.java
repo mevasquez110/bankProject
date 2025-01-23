@@ -95,7 +95,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 				creditRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
 				.ifPresent(creditEntity -> {
 					Optional.ofNullable(creditScheduleRepository
-							.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditEntity.getCreditId(),
+							.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditEntity.getId(),
 									LocalDateTime.now())
 							.collectList().block()).filter(schedule -> !schedule.isEmpty())
 							.orElseThrow(() -> new RuntimeException("The client has active debt"));
@@ -250,7 +250,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 				.findByCreditCardNumberAndPaymentDate(creditCardEntity.getCreditCardNumber(), paymentDate)
 				.switchIfEmpty(Mono.defer(() -> {
 					CreditCardScheduleEntity newSchedule = new CreditCardScheduleEntity();
-					newSchedule.setCreditCartNumber(creditCardEntity.getCreditCardNumber());
+					newSchedule.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
 					newSchedule.setPaymentDate(paymentDate);
 					newSchedule.setPaid(false);
 					newSchedule.setConsumptionQuota(new ArrayList<>());

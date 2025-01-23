@@ -45,7 +45,7 @@ public class CreditMapper {
 		CreditResponse creditResponse = new CreditResponse();
 
 		if (creditEntity != null) {
-			creditResponse.setCreditId(creditEntity.getCreditId());
+			creditResponse.setCreditId(creditEntity.getId());
 			creditResponse.setAmount(creditEntity.getAmount());
 			creditResponse.setAnnualInterestRate(creditEntity.getAnnualInterestRate());
 			creditResponse.setNumberOfInstallments(creditEntity.getNumberOfInstallments());

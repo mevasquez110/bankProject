@@ -67,6 +67,6 @@ public interface CreditCardRepository extends ReactiveMongoRepository<CreditCard
 	 * @return a Mono that emits true if the credit card number exists and is
 	 *         active, otherwise false
 	 */
-	Mono<Boolean> existsCreditCardNumberAndIsActiveTrue(String creditCardNumber);
+	Mono<Boolean> existsByCreditCardNumberAndIsActiveTrue(String creditCardNumber);
 
 }

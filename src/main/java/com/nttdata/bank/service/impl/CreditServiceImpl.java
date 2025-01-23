@@ -108,7 +108,7 @@ public class CreditServiceImpl implements CreditService {
 				creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
 				.ifPresent(creditCardEntity -> {
 					List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
-							.findByCreditCardAndPaidFalseAndPaymentDateLessThanEqual(
+							.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(
 									creditCardEntity.getCreditCardNumber(), LocalDate.now())
 							.collectList().block();
 
@@ -131,7 +131,7 @@ public class CreditServiceImpl implements CreditService {
 	 * @return List of CreditScheduleEntity representing the payment schedule
 	 */
 	private List<CreditScheduleEntity> generatePaymentSchedule(CreditEntity creditEntity) {
-		logger.debug("Generating payment schedule for credit: {}", creditEntity.getCreditId());
+		logger.debug("Generating payment schedule for credit: {}", creditEntity.getId());
 		List<CreditScheduleEntity> schedule = new ArrayList<>();
 		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
 		Double monthlyInterestRate = Utility.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
@@ -147,13 +147,13 @@ public class CreditServiceImpl implements CreditService {
 			payment.setPrincipalAmount(principalAmount);
 			payment.setCurrentDebt(currentDebt);
 			payment.setTotalDebt(totalDebt);
-			payment.setCreditId(creditEntity.getCreditId());
+			payment.setCreditId(creditEntity.getId());
 			payment.setPaid(false);
 			schedule.add(payment);
 			totalDebt -= principalAmount;
 		}
 
-		logger.info("Payment schedule generated for credit: {}", creditEntity.getCreditId());
+		logger.info("Payment schedule generated for credit: {}", creditEntity.getId());
 		return schedule;
 	}
 
@@ -222,7 +222,7 @@ public class CreditServiceImpl implements CreditService {
 	 */
 	@Override
 	public void desactivateCredit(String creditId) {
-		Optional.ofNullable(creditRepository.findByCreditIdAndIsActiveTrue(creditId).toFuture().join())
+		Optional.ofNullable(creditRepository.findByIdAndIsActiveTrue(creditId).toFuture().join())
 				.ifPresentOrElse(entity -> {
 					entity.setDeleteDate(LocalDateTime.now());
 					entity.setIsActive(false);

@@ -20,7 +20,7 @@ public class CreditCardScheduleEntity {
 
 	@Id
 	private String id;
-	private String creditCartNumber;
+	private String creditCardNumber;
 	private LocalDate paymentDate;
 	private Double interestAmount;
 	private Double lateAmount;
