@@ -5,6 +5,7 @@ import com.nttdata.bank.entity.AccountEntity;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
+import com.nttdata.bank.util.Constants;
 
 /**
  * AccountMapper provides methods to convert between AccountRequest,
@@ -28,7 +29,7 @@ public class AccountMapper {
 			accountEntity.setHolderDoc(accountRequest.getHolderDoc());
 			accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
 			accountEntity.setAccountType(accountRequest.getAccountType());
-			accountEntity.setCurrency(accountRequest.getCurrency());
+			accountEntity.setCurrency(Constants.CURRENCY_SOL);
 			accountEntity.setCommissionPending(0.00);
 			accountEntity.setCreateDate(LocalDateTime.now());
 			accountEntity.setIsBlocked(false);

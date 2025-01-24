@@ -63,5 +63,5 @@ public interface AccountRepository extends ReactiveMongoRepository<AccountEntity
 	 *
 	 * @return A Flux emitting the list of active AccountEntity objects.
 	 */
-	Flux<AccountEntity> findAllAndIsActiveTrue();
+	Flux<AccountEntity> findAllByIsActiveTrue();
 }

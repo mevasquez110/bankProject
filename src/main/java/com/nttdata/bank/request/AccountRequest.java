@@ -30,7 +30,4 @@ public class AccountRequest {
     @Min(value = 0, message = "Opening amount must be zero or greater")
     private Double openingAmount;
 
-    @NotBlank(message = "Currency is mandatory")
-    private String currency;
-
 }

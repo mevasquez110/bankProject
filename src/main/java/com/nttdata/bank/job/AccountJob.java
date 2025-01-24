@@ -33,7 +33,7 @@ public class AccountJob {
 	public void checkAndHandleInactiveAccounts() {
 		LocalDateTime sixMonthsAgo = LocalDateTime.now().minus(6, ChronoUnit.MONTHS);
 
-		accountRepository.findAllAndIsActiveTrue().collectList().toFuture().join().stream()
+		accountRepository.findAllByIsActiveTrue().collectList().toFuture().join().stream()
 				.filter(account -> transactionRepository.findAllByIsActiveTrue().collectList().block().stream()
 						.anyMatch(transaction -> (transaction.getAccountNumberReceive()
 								.equalsIgnoreCase(account.getAccountNumber())
@@ -55,7 +55,7 @@ public class AccountJob {
 	public void reviewVipAccountsAndChargeCommission() {
 		LocalDateTime oneMonthAgo = LocalDateTime.now().minus(1, ChronoUnit.MONTHS);
 
-		accountRepository.findAllAndIsActiveTrue().collectList().toFuture().join().stream()
+		accountRepository.findAllByIsActiveTrue().collectList().toFuture().join().stream()
 				.filter(account -> Constants.ACCOUNT_TYPE_VIP.equalsIgnoreCase(account.getAccountType()))
 				.collect(Collectors.toList()).forEach(accountEntity -> {
 					Double averageAmount = transactionRepository.findAllByIsActiveTrue().collectList().block().stream()
@@ -64,7 +64,7 @@ public class AccountJob {
 									|| accountEntity.getAccountNumber()
 									.equalsIgnoreCase(transaction.getAccountNumberWithdraws()))
 									&& Constants.TRANSACTION_TYPE_DEPOSIT
-									.equals(transaction.getTransactionType())
+									.equalsIgnoreCase(transaction.getTransactionType())
 									&& transaction.getCreateDate().isAfter(oneMonthAgo))
 							.mapToDouble(TransactionEntity::getAmount).average().orElse(0.0);
 
@@ -72,35 +72,5 @@ public class AccountJob {
 					accountRepository.save(accountEntity);
 				});
 	}
-
-	/*
-	 * Para un cliente se debe generar un resumen con los saldos promedio diarios
-	 * del mes en curso de todos los productos de crédito o cuentas bancarias que
-	 * posee.
-	 */
-	
-	
-	
-	
-	/*
-	 * Generar un reporte de todas las comisiones cobradas por producto en un
-	 * periodo de tiempo.
-	 */
-	
-	
-	
-	
-	/*
-	 * Permitir elaborar un resumen consolidado de un cliente con todos los
-	 * productos que pueda tener en el banco.
-	 */
-	
-	
-	
-	
-	/*
-	 * Generar un reporte completo y general por producto del banco en intervalo de
-	 * tiempo especificado por el usuario.
-	 */
 
 }

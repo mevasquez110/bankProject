@@ -116,7 +116,6 @@ public class YankiServiceImpl implements YankiService {
 		AccountRequest accountRequest = new AccountRequest();
 		accountRequest.setAccountType(Constants.ACCOUNT_TYPE_CODE_YANKI);
 		accountRequest.setHolderDoc(List.of(yankiRequest.getDocumentNumber()));
-		accountRequest.setCurrency(Constants.CURRENCY_SOL);
 		accountRequest.setOpeningAmount(0.00);
 		AccountResponse accountResponse = accountsService.registerAccount(accountRequest);
 		yankiEntity.setAccountNumber(accountResponse.getAccountNumber());

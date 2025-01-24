@@ -14,17 +14,14 @@ import java.util.List;
  * logic for account request objects. It checks for valid account types and
  * mandatory fields such as customerId and accountType.
  */
-
 public class AccountRequestValidatorImpl implements ConstraintValidator<AccountRequestValidator, AccountRequest> {
 
-	// List of valid account types
 	private static final List<String> VALID_ACCOUNT_TYPES = Arrays.asList(Constants.ACCOUNT_TYPE_SAVINGS,
 			Constants.ACCOUNT_TYPE_CHECKING, Constants.ACCOUNT_TYPE_FIXED_TERM, Constants.ACCOUNT_TYPE_VIP,
 			Constants.ACCOUNT_TYPE_PYME);
 
 	@Override
 	public void initialize(AccountRequestValidator constraintAnnotation) {
-		// No initialization required
 	}
 
 	/**
@@ -42,13 +39,11 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 
 		boolean isValid = true;
 
-		// Validate customerId
 		if (accountRequest.getHolderDoc() == null || accountRequest.getHolderDoc().isEmpty()) {
 			addViolation(context, "Holder is mandatory", "holderDoc");
 			isValid = false;
 		}
 
-		// Validate accountType
 		if (accountRequest.getAccountType() == null || accountRequest.getAccountType().isEmpty()) {
 			addViolation(context, "accountType is mandatory", "accountType");
 			isValid = false;

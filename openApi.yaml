@@ -711,6 +711,12 @@ components:
           type: string
         personType:
           type: string
+        email:
+          type: string
+        address:
+          type: string
+        phoneNumber:
+          type: string
     DebitCardRequest:
       type: object
       properties:
