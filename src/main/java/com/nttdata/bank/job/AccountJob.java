@@ -37,7 +37,8 @@ public class AccountJob {
 				.filter(account -> transactionRepository.findAllByIsActiveTrue().collectList().block().stream()
 						.anyMatch(transaction -> (transaction.getAccountNumberReceive()
 								.equalsIgnoreCase(account.getAccountNumber())
-								|| transaction.getAccountNumberWithdraws().equalsIgnoreCase(account.getAccountNumber()))
+								|| transaction.getAccountNumberWithdraws()
+								.equalsIgnoreCase(account.getAccountNumber()))
 								&& transaction.getCreateDate().isAfter(sixMonthsAgo)))
 				.forEach(account -> {
 					account.setIsActive(false);
@@ -61,8 +62,9 @@ public class AccountJob {
 							.filter(transaction -> (accountEntity.getAccountNumber()
 									.equalsIgnoreCase(transaction.getAccountNumberReceive())
 									|| accountEntity.getAccountNumber()
-											.equalsIgnoreCase(transaction.getAccountNumberWithdraws()))
-									&& Constants.TRANSACTION_TYPE_DEPOSIT.equals(transaction.getTransactionType())
+									.equalsIgnoreCase(transaction.getAccountNumberWithdraws()))
+									&& Constants.TRANSACTION_TYPE_DEPOSIT
+									.equals(transaction.getTransactionType())
 									&& transaction.getCreateDate().isAfter(oneMonthAgo))
 							.mapToDouble(TransactionEntity::getAmount).average().orElse(0.0);
 

@@ -491,7 +491,7 @@ public class OperationServiceImpl implements OperationService {
 	 * Processes the payment of debt based on the provided pay credit request and
 	 * schedules.
 	 *
-	 * @param payCreditRequest        the request containing the payment details
+	 * @param amount                  amount paid
 	 * @param overduePaymentSchedule  the current list of credit schedules to be
 	 *                                paid
 	 * @param share                   the share amount for current installments
@@ -523,7 +523,7 @@ public class OperationServiceImpl implements OperationService {
 	 * Processes the payment of debt based on the provided pay credit card request
 	 * and schedules.
 	 *
-	 * @param payCreditCardRequest    the request containing the payment details
+	 * @param amount                  amount paid
 	 * @param overduePaymentSchedule  the current list of credit schedules to be
 	 *                                paid
 	 * @param share                   the share amount for current installments
@@ -827,6 +827,7 @@ public class OperationServiceImpl implements OperationService {
 	 *                                 amount if null
 	 * @param paid                     the new payment status, or the current
 	 *                                 payment status if null
+	 * @return balance returned.
 	 */
 	private Double paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity, Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {

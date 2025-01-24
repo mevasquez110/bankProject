@@ -55,7 +55,8 @@ public class PaymentScheduleJob {
 		Map<String, List<CreditScheduleEntity>> groupedAndSortedSchedules = paymentScheduleShare.stream()
 				.collect(Collectors.groupingBy(CreditScheduleEntity::getId,
 						Collectors.collectingAndThen(Collectors.toList(),
-								list -> list.stream().sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
+								list -> list.stream()
+								.sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
 										.collect(Collectors.toList()))));
 
 		for (Map.Entry<String, List<CreditScheduleEntity>> entry : groupedAndSortedSchedules.entrySet()) {
@@ -104,7 +105,8 @@ public class PaymentScheduleJob {
 				.collect(Collectors.groupingBy(CreditCardScheduleEntity::getId,
 						Collectors.collectingAndThen(Collectors.toList(),
 								list -> list.stream()
-										.sorted(Comparator.comparing(CreditCardScheduleEntity::getPaymentDate))
+									    .sorted(Comparator
+									    		.comparing(CreditCardScheduleEntity::getPaymentDate))
 										.collect(Collectors.toList()))));
 
 		for (Map.Entry<String, List<CreditCardScheduleEntity>> entry : groupedAndSortedSchedules.entrySet()) {
