@@ -20,7 +20,6 @@ public class CreditEntity {
 	private String id;
 	private String documentNumber;
 	private Double amount;
-	private Double totalDebt;
 	private String accountNumber;
 	private Double annualInterestRate;
 	private Integer numberOfInstallments;

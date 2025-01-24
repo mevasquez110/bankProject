@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.nttdata.bank.entity.CreditScheduleEntity;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * CreditScheduleRepository provides CRUD operations for CreditScheduleEntity.
@@ -35,5 +36,22 @@ public interface CreditScheduleRepository extends ReactiveMongoRepository<Credit
 	 */
 	Flux<CreditScheduleEntity> findByCreditIdAndPaidFalseAndPaymentDateAfter(String creditId,
 			LocalDateTime paymentDate);
+
+	/**
+	 * Finds unpaid payment schedules that are due on or before the specified date.
+	 *
+	 * @param currentDate The current date to filter payment schedules.
+	 * @return A Flux emitting the unpaid CreditScheduleEntity objects.
+	 */
+	Flux<CreditScheduleEntity> findByPaidFalseAndPaymentDateLessThanEqual(LocalDateTime currentDate);
+
+	/**
+	 * Checks if there is an unpaid payment schedule for a specific credit ID.
+	 *
+	 * @param creditId The credit ID to search for.
+	 * @return A Mono emitting true if an unpaid payment schedule exists, false
+	 *         otherwise.
+	 */
+	Mono<Boolean> existsByIdAndPaidFalse(String creditId);
 
 }

@@ -3,7 +3,6 @@ package com.nttdata.bank.service.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -146,7 +145,7 @@ public class CreditServiceImpl implements CreditService {
 			payment.setInterestAmount(interestPayment);
 			payment.setPrincipalAmount(principalAmount);
 			payment.setCurrentDebt(currentDebt);
-			payment.setTotalDebt(totalDebt);
+			payment.setBalance(totalDebt);
 			payment.setCreditId(creditEntity.getId());
 			payment.setPaid(false);
 			schedule.add(payment);
@@ -176,30 +175,20 @@ public class CreditServiceImpl implements CreditService {
 			return new RuntimeException("Credit not found");
 		});
 
-		List<CreditScheduleEntity> paymentScheduleShare = creditScheduleRepository
+		Double share = creditScheduleRepository
 				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId, LocalDateTime.now()).collectList()
-				.block();
+				.block().stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
 
-		if (paymentScheduleShare != null && !paymentScheduleShare.isEmpty()) {
-			Double share = paymentScheduleShare.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
+		Double totalDebt = creditScheduleRepository
+				.findByCreditIdAndPaidFalseAndPaymentDateAfter(creditId, LocalDateTime.now()).collectList().block()
+				.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum() + share;
 
-			List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
-					.findByCreditIdAndPaidFalseAndPaymentDateAfter(creditId, LocalDateTime.now()).collectList().block();
-
-			Double totalDebt = paymentSchedule.stream()
-					.max(Comparator.comparingDouble(CreditScheduleEntity::getTotalDebt))
-					.map(CreditScheduleEntity::getTotalDebt).get() + share;
-
-			CreditDebtResponse response = new CreditDebtResponse();
-			response.setCreditId(creditId);
-			response.setTotalDebt(totalDebt);
-			response.setShare(share);
-			logger.info("Debt checked successfully for credit: {}", creditId);
-			return response;
-		} else {
-			logger.error("No payment schedule found for credit: {}", creditId);
-			throw new RuntimeException("No payment schedule found");
-		}
+		CreditDebtResponse response = new CreditDebtResponse();
+		response.setCreditId(creditId);
+		response.setTotalDebt(totalDebt);
+		response.setShare(share);
+		logger.info("Debt checked successfully for credit: {}", creditId);
+		return response;
 	}
 
 	/**

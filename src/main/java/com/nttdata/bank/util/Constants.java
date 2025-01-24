@@ -15,7 +15,7 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_VIP = "VIP";
 	public static final String ACCOUNT_TYPE_PYME = "PYME";
 	public static final String ACCOUNT_TYPE_YANKI = "Yanki";
-	
+
 	// Constants for different types of documents
 	public static final String DOCUMENT_TYPE_DNI = "DNI";
 	public static final String DOCUMENT_TYPE_CE = "CE";
@@ -35,9 +35,9 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_CODE_YANKI = "6";
 	public static final String CREDIT_TYPE = "7";
 	public static final String DEBIT_TYPE = "8";
-	
+
 	public static final String CURRENCY_SOL = "Soles";
-	
+
 	public static final String TRANSACTION_TYPE_DEPOSIT = "Deposito";
 	public static final String TRANSACTION_TYPE_WITHDRAWAL = "Retiro";
 	public static final String TRANSACTION_TYPE_BANK_TRANSFER = "Transferencia bancaria";
@@ -45,12 +45,11 @@ public class Constants {
 	public static final String TRANSACTION_TYPE_PAY_CREDIT_CARD = "Pago de tarjeta";
 	public static final String TRANSACTION_TYPE_PAY_CREDIT = "Pago de credito";
 	public static final String TRANSACTION_TYPE_CONSUMPTION = "Consumo de tarjeta";
-	
+
 	public static final String PRODUCT_CREDIT = "Credito";
 	public static final String PRODUCT_CREDIT_CARD = "Tarjeta de credito";
 
-	
 	public static final Integer TRANSACTIONAL_LIMIT = 10;
-
+	public static final Double COMMISSION_ADD = 1.99;
 
 }

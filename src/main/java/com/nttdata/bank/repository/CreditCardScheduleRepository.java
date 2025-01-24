@@ -44,4 +44,21 @@ public interface CreditCardScheduleRepository extends ReactiveMongoRepository<Cr
 	 * @return A Mono emitting the found CreditCardScheduleEntity object.
 	 */
 	Mono<CreditCardScheduleEntity> findByCreditCardNumberAndPaymentDate(String creditCardNumber, LocalDate paymentDate);
+
+	/**
+	 * Finds scheduled payments for a specific date.
+	 *
+	 * @param now The specific date and time to search for.
+	 * @return A Flux emitting the found CreditCardScheduleEntity objects.
+	 */
+	Flux<CreditCardScheduleEntity> findByPaymentDate(LocalDateTime now);
+
+	/**
+	 * Finds pending payments that are due on or before the specified date and time.
+	 *
+	 * @param now The date and time to search for.
+	 * @return A Flux emitting the pending CreditCardScheduleEntity objects.
+	 */
+	Flux<CreditCardScheduleEntity> findByPaidFalseAndPaymentDateLessThanEqual(LocalDateTime now);
+
 }

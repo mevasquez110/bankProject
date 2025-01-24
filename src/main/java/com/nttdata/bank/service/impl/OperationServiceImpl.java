@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.nttdata.bank.entity.Consumption;
+import com.nttdata.bank.entity.CreditCardEntity;
 import com.nttdata.bank.entity.CreditCardScheduleEntity;
 import com.nttdata.bank.entity.CreditScheduleEntity;
 import com.nttdata.bank.entity.CustomerEntity;
@@ -246,20 +247,20 @@ public class OperationServiceImpl implements OperationService {
 
 		updateAccount(payCreditRequest.getAccountNumber(), -payCreditRequest.getAmount());
 
-		List<CreditScheduleEntity> listSchedule = creditScheduleRepository
+		List<CreditScheduleEntity> overduePaymentSchedule = creditScheduleRepository
 				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(payCreditRequest.getCreditId(), transactionDate)
-				.collectList().block();
+				.collectList().block().stream().sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
+				.collect(Collectors.toList());
 
-		Double share = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(payCreditRequest.getCreditId(), transactionDate)
-				.collectList().block().stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
+		Double share = overduePaymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
 
-		List<CreditScheduleEntity> paymentSchedule = creditScheduleRepository
+		List<CreditScheduleEntity> upcomingPaymentSchedule = creditScheduleRepository
 				.findByCreditIdAndPaidFalseAndPaymentDateAfter(payCreditRequest.getCreditId(), transactionDate)
-				.collectList().block();
+				.collectList().block().stream().sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
+				.collect(Collectors.toList());
 
-		Double totalDebt = paymentSchedule.stream().max(Comparator.comparingDouble(CreditScheduleEntity::getTotalDebt))
-				.map(CreditScheduleEntity::getTotalDebt).get() + share;
+		Double totalDebt = upcomingPaymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum()
+				+ share;
 
 		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionDate, 0.00,
 				Constants.TRANSACTION_TYPE_PAY_CREDIT, payCreditRequest.getAmount(), null,
@@ -267,8 +268,12 @@ public class OperationServiceImpl implements OperationService {
 				null, getName(payCreditRequest.getDocumentNumber()), null);
 
 		transactionEntity = transactionRepository.save(transactionEntity).block();
-		payCreditDebt(payCreditRequest, listSchedule, share, paymentSchedule, totalDebt);
-		creditService.desactivateCredit(payCreditRequest.getCreditId());
+		payCreditDebt(payCreditRequest.getAmount(), overduePaymentSchedule, share, upcomingPaymentSchedule, totalDebt);
+
+		if (!creditScheduleRepository.existsByIdAndPaidFalse(payCreditRequest.getCreditId()).block()) {
+			creditService.desactivateCredit(payCreditRequest.getCreditId());
+		}
+
 		return TransactionMapper.mapperToResponse(transactionEntity);
 	}
 
@@ -323,11 +328,11 @@ public class OperationServiceImpl implements OperationService {
 	@Override
 	public List<TransactionResponse> checkTransactions(String documentNumber) {
 		return accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber).collectList().block().stream()
-				.flatMap(
-						account -> transactionRepository
-								.findAllByAccountNumberWithdrawsOrAccountNumberReceiveAndIsActiveTrue(
-										account.getAccountNumber(), account.getAccountNumber())
-								.collectList().block().stream())
+				.flatMap(account -> transactionRepository.findAllByIsActiveTrue().collectList().block().stream()
+						.filter(transaction -> transaction.getAccountNumberReceive()
+								.equalsIgnoreCase(account.getAccountNumber())
+								|| transaction.getAccountNumberWithdraws()
+										.equalsIgnoreCase(account.getAccountNumber())))
 				.sorted(Comparator.comparing(TransactionEntity::getCreateDate).reversed()).limit(10)
 				.map(TransactionMapper::mapperToResponse).collect(Collectors.toList());
 	}
@@ -355,20 +360,20 @@ public class OperationServiceImpl implements OperationService {
 			throw new IllegalArgumentException("The account has no balance for this transaction");
 		}
 
-		List<CreditCardScheduleEntity> listSchedule = creditCardScheduleRepository
+		List<CreditCardScheduleEntity> overduePaymentSchedule = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(
 						payCreditCardRequest.getCreditCardNumber(), LocalDate.now())
 				.collectList().block();
 
-		Double share = listSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+		Double share = overduePaymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
-		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+		List<CreditCardScheduleEntity> upcomingPaymentSchedule = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(payCreditCardRequest.getCreditCardNumber(),
 						LocalDateTime.now())
 				.collectList().block();
 
-		Double totalDebt = paymentSchedule.stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
-				.mapToDouble(Consumption::getAmount).sum() + share;
+		Double totalDebt = upcomingPaymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum()
+				+ share;
 
 		if (payCreditCardRequest.getAccountNumber() != null) {
 			if (payCreditCardRequest.getDocumentNumber() == null) {
@@ -387,7 +392,14 @@ public class OperationServiceImpl implements OperationService {
 			transactionResponse = TransactionMapper.mapperToResponse(transactionEntity);
 		}
 
-		payCreditCardDebt(payCreditCardRequest, listSchedule, share, paymentSchedule, totalDebt);
+		Double balanceReturned = payCreditCardDebt(payCreditCardRequest.getAmount(), overduePaymentSchedule, share,
+				upcomingPaymentSchedule, totalDebt);
+
+		CreditCardEntity entity = creditCardRepository
+				.findByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber()).block();
+
+		entity.setAvailableCredit(entity.getAvailableCredit() + balanceReturned);
+		creditCardRepository.save(entity);
 		return transactionResponse;
 	}
 
@@ -440,19 +452,19 @@ public class OperationServiceImpl implements OperationService {
 		LocalDateTime endOfMonth = now.withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
 				.with(LocalTime.MAX);
 
-		List<TransactionEntity> transactions = transactionRepository
-				.findAllByAccountNumberWithdrawsOrAccountNumberReceiveAndIsActiveTrue(accountNumber, accountNumber)
-				.toStream()
+		List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue().toStream()
 				.filter(transaction -> (transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_WITHDRAWAL)
 						|| transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_DEPOSIT))
 						&& !transaction.getCreateDate().isBefore(startOfMonth)
-						&& !transaction.getCreateDate().isAfter(endOfMonth))
+						&& !transaction.getCreateDate().isAfter(endOfMonth)
+						&& (transaction.getAccountNumberReceive().equalsIgnoreCase(accountNumber)
+								|| transaction.getAccountNumberWithdraws().equalsIgnoreCase(accountNumber)))
 				.collect(Collectors.toList());
 
 		boolean isExceeded = transactions.size() > 10;
 
 		if (isExceeded) {
-			commission = 1.99;
+			commission = Constants.COMMISSION_ADD;
 		}
 
 		return commission;
@@ -479,26 +491,31 @@ public class OperationServiceImpl implements OperationService {
 	 * Processes the payment of debt based on the provided pay credit request and
 	 * schedules.
 	 *
-	 * @param payCreditRequest the request containing the payment details
-	 * @param listSchedule     the current list of credit schedules to be paid
-	 * @param share            the share amount for current installments
-	 * @param paymentSchedule  the list of credit schedules for the total debt
-	 *                         payment
-	 * @param totalDebt        the total amount of debt to be paid
+	 * @param payCreditRequest        the request containing the payment details
+	 * @param overduePaymentSchedule  the current list of credit schedules to be
+	 *                                paid
+	 * @param share                   the share amount for current installments
+	 * @param upcomingPaymentSchedule the list of credit schedules for the total
+	 *                                debt payment
+	 * @param totalDebt               the total amount of debt to be paid
 	 * @throws IllegalArgumentException if the payment amount exceeds the total debt
 	 */
-	private void payCreditDebt(PayCreditRequest payCreditRequest, List<CreditScheduleEntity> listSchedule, Double share,
-			List<CreditScheduleEntity> paymentSchedule, Double totalDebt) {
-		if (totalDebt > payCreditRequest.getAmount()) {
-			throw new IllegalArgumentException("the amount exceeds the total debt");
-		} else if (totalDebt == payCreditRequest.getAmount()) {
-			payCreditCurrentInstallments(listSchedule, share);
+	private void payCreditDebt(Double amount, List<CreditScheduleEntity> overduePaymentSchedule, Double share,
+			List<CreditScheduleEntity> upcomingPaymentSchedule, Double totalDebt) {
+		List<CreditScheduleEntity> combinedSchedule = new ArrayList<>();
+		combinedSchedule.addAll(overduePaymentSchedule);
+		combinedSchedule.addAll(upcomingPaymentSchedule);
 
-			if (totalDebt > 0) {
-				payCreditTotalDebt(paymentSchedule, totalDebt);
+		if (totalDebt > amount) {
+			throw new IllegalArgumentException("the amount exceeds the total debt");
+		} else if (totalDebt == amount) {
+			payCreditCurrentInstallments(combinedSchedule, totalDebt);
+		} else if (totalDebt < amount) {
+			if (share > amount) {
+				payCreditCurrentInstallments(combinedSchedule, amount);
+			} else if (share <= amount) {
+				payCreditCurrentInstallments(overduePaymentSchedule, amount);
 			}
-		} else if (totalDebt < payCreditRequest.getAmount()) {
-			payCreditCurrentInstallments(listSchedule, payCreditRequest.getAmount());
 		}
 	}
 
@@ -506,51 +523,69 @@ public class OperationServiceImpl implements OperationService {
 	 * Processes the payment of debt based on the provided pay credit card request
 	 * and schedules.
 	 *
-	 * @param payCreditCardRequest the request containing the payment details
-	 * @param listSchedule         the current list of credit schedules to be paid
-	 * @param share                the share amount for current installments
-	 * @param paymentSchedule      the list of credit schedules for the total debt
-	 *                             payment
-	 * @param totalDebt            the total amount of debt to be paid
+	 * @param payCreditCardRequest    the request containing the payment details
+	 * @param overduePaymentSchedule  the current list of credit schedules to be
+	 *                                paid
+	 * @param share                   the share amount for current installments
+	 * @param upcomingPaymentSchedule the list of credit schedules for the total
+	 *                                payment
+	 * @param totalDebt               the total amount of debt to be paid
+	 * @return balance returned.
 	 * @throws IllegalArgumentException if the payment amount exceeds the total debt
 	 */
-	private void payCreditCardDebt(PayCreditCardRequest payCreditCardRequest,
-			List<CreditCardScheduleEntity> listSchedule, Double share, List<CreditCardScheduleEntity> paymentSchedule,
-			Double totalDebt) {
-		if (totalDebt > payCreditCardRequest.getAmount()) {
+	private Double payCreditCardDebt(Double amount, List<CreditCardScheduleEntity> overduePaymentSchedule, Double share,
+			List<CreditCardScheduleEntity> upcomingPaymentSchedule, Double totalDebt) {
+		Double balanceReturned = 0.00;
+
+		if (totalDebt > amount) {
 			throw new IllegalArgumentException("the amount exceeds the total debt");
-		} else if (totalDebt == payCreditCardRequest.getAmount()) {
-			payCreditCardCurrentInstallments(listSchedule, share);
-
-			if (totalDebt > 0) {
-				payCreditCardTotalDebt(paymentSchedule, totalDebt);
+		} else if (totalDebt == amount) {
+			balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, share);
+			balanceReturned += totalDebt - share;
+			payConsumptionCreditCard(upcomingPaymentSchedule, totalDebt - share);
+		} else if (totalDebt < amount) {
+			if (share > amount) {
+				balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, amount);
+				balanceReturned += totalDebt - amount;
+				payConsumptionCreditCard(upcomingPaymentSchedule, totalDebt - amount);
+			} else if (share <= amount) {
+				balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, amount);
 			}
-		} else if (totalDebt < payCreditCardRequest.getAmount()) {
-			payCreditCardCurrentInstallments(listSchedule, payCreditCardRequest.getAmount());
 		}
+		return balanceReturned;
 	}
 
 	/**
-	 * Marks the entire debt as paid for the provided payment schedule.
+	 * Method to pay off credit card consumption installments using an available
+	 * amount. The method sorts consumptions by the number of installments in
+	 * descending order and reduces the available amount from the consumptions,
+	 * starting with those that have the highest number of installments, until the
+	 * amount is exhausted.
 	 *
-	 * @param paymentSchedule the list of credit schedules to mark as paid
-	 * @param totalDebt       the total amount of debt to be marked as paid
+	 * @param upcomingPaymentSchedule List of pending payment schedules for the
+	 *                                credit card.
+	 * @param amount                  Available amount to pay the consumptions.
 	 */
-	private void payCreditTotalDebt(List<CreditScheduleEntity> paymentSchedule, Double totalDebt) {
-		for (CreditScheduleEntity creditScheduleEntity : paymentSchedule) {
-			paidCreditDebt(creditScheduleEntity, 0.00, 0.00, 0.00, true);
-		}
-	}
+	private void payConsumptionCreditCard(List<CreditCardScheduleEntity> upcomingPaymentSchedule, Double amount) {
+		for (CreditCardScheduleEntity creditCardScheduleEntity : upcomingPaymentSchedule) {
+			List<Consumption> consumptions = creditCardScheduleEntity.getConsumptionQuota();
+			consumptions.sort(Comparator.comparing(Consumption::getNumberOfInstallments).reversed());
 
-	/**
-	 * Marks the entire debt as paid for the provided payment schedule.
-	 *
-	 * @param paymentSchedule the list of credit card schedules to mark as paid
-	 * @param totalDebt       the total amount of debt to be marked as paid
-	 */
-	private void payCreditCardTotalDebt(List<CreditCardScheduleEntity> paymentSchedule, Double totalDebt) {
-		for (CreditCardScheduleEntity creditCardScheduleEntity : paymentSchedule) {
-			paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+			for (Consumption consumption : consumptions) {
+				if (amount <= 0) {
+					break;
+				}
+
+				double remainingAmount = consumption.getAmount();
+
+				if (remainingAmount <= amount) {
+					amount -= remainingAmount;
+					consumption.setAmount(0.0);
+				} else {
+					consumption.setAmount(remainingAmount - amount);
+					amount = 0.0;
+				}
+			}
 		}
 	}
 
@@ -581,21 +616,26 @@ public class OperationServiceImpl implements OperationService {
 	 *
 	 * @param listSchedule the list of credit card schedules to be paid
 	 * @param amount       the amount available for payment
+	 * @return balance returned.
 	 */
-	private void payCreditCardCurrentInstallments(List<CreditCardScheduleEntity> listSchedule, Double amount) {
+	private Double payCreditCardCurrentInstallments(List<CreditCardScheduleEntity> listSchedule, Double amount) {
+		Double balanceReturned = 0.00;
+
 		for (CreditCardScheduleEntity creditCardScheduleEntity : listSchedule) {
 			if (creditCardScheduleEntity.getCurrentDebt() > amount) {
-				processCreditCardPayment(creditCardScheduleEntity, amount);
+				balanceReturned += processCreditCardPayment(creditCardScheduleEntity, amount);
 				continue;
 			} else if (creditCardScheduleEntity.getCurrentDebt() < amount) {
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
 			} else if (creditCardScheduleEntity.getCurrentDebt() == amount) {
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
 				continue;
 			}
 
 			amount -= creditCardScheduleEntity.getCurrentDebt();
 		}
+
+		return balanceReturned;
 	}
 
 	/**
@@ -628,20 +668,21 @@ public class OperationServiceImpl implements OperationService {
 	 * @param creditCardScheduleEntity the credit card schedule entity to process
 	 *                                 the payment for
 	 * @param amount                   the amount available for payment
+	 * @return balance returned.
 	 */
-	private void processCreditCardPayment(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
-		while (true) {
-			if (creditCardScheduleEntity.getPrincipalAmount() > amount) {
-				Double principalAmount = creditCardScheduleEntity.getPrincipalAmount() - amount;
-				paidCreditCardDebt(creditCardScheduleEntity, principalAmount, null, null, null);
-				continue;
-			} else if (creditCardScheduleEntity.getPrincipalAmount() < amount) {
-				processCreditCardInterestAndLateAmount(creditCardScheduleEntity, amount);
-			} else if (creditCardScheduleEntity.getPrincipalAmount() == amount) {
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, null, null, null);
-				continue;
-			}
+	private Double processCreditCardPayment(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
+		Double balanceReturned = 0.00;
+
+		if (creditCardScheduleEntity.getPrincipalAmount() > amount) {
+			Double principalAmount = creditCardScheduleEntity.getPrincipalAmount() - amount;
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, principalAmount, null, null, null);
+		} else if (creditCardScheduleEntity.getPrincipalAmount() < amount) {
+			balanceReturned += processCreditCardInterestAndLateAmount(creditCardScheduleEntity, amount);
+		} else if (creditCardScheduleEntity.getPrincipalAmount() == amount) {
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, null, null, null);
 		}
+
+		return balanceReturned;
 	}
 
 	/**
@@ -673,20 +714,25 @@ public class OperationServiceImpl implements OperationService {
 	 * @param creditCardScheduleEntity the credit card schedule entity to process
 	 *                                 the interest and late amount for
 	 * @param amount                   the amount available for payment
+	 * @return balance returned.
 	 */
-	private void processCreditCardInterestAndLateAmount(CreditCardScheduleEntity creditCardScheduleEntity,
+	private Double processCreditCardInterestAndLateAmount(CreditCardScheduleEntity creditCardScheduleEntity,
 			Double amount) {
+		Double balanceReturned = 0.00;
+
 		amount -= creditCardScheduleEntity.getPrincipalAmount();
 
 		if (creditCardScheduleEntity.getInterestAmount() > amount) {
 			Double interestAmount = creditCardScheduleEntity.getInterestAmount() - amount;
-			paidCreditCardDebt(creditCardScheduleEntity, 0.00, interestAmount, null, null);
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, interestAmount, null, null);
 		} else if (creditCardScheduleEntity.getInterestAmount() < amount) {
 			amount -= creditCardScheduleEntity.getInterestAmount();
-			processCrediCardLateAmount(creditCardScheduleEntity, amount);
+			balanceReturned += processCrediCardLateAmount(creditCardScheduleEntity, amount);
 		} else if (creditCardScheduleEntity.getInterestAmount() == amount) {
-			processCrediCardLateAmount(creditCardScheduleEntity, amount);
+			balanceReturned += processCrediCardLateAmount(creditCardScheduleEntity, amount);
 		}
+
+		return balanceReturned;
 	}
 
 	/**
@@ -719,20 +765,25 @@ public class OperationServiceImpl implements OperationService {
 	 * @param creditCardScheduleEntity the credit card schedule entity to process
 	 *                                 the late amount for
 	 * @param amount                   the amount available for payment
+	 * @return balance returned.
 	 */
-	private void processCrediCardLateAmount(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
+	private Double processCrediCardLateAmount(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
+		Double balanceReturned = 0.00;
+
 		if (creditCardScheduleEntity.getLateAmount() > 0) {
 			if (creditCardScheduleEntity.getLateAmount() > amount) {
 				Double lateAmount = creditCardScheduleEntity.getLateAmount() - amount;
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, lateAmount, null);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, lateAmount, null);
 			} else if (creditCardScheduleEntity.getLateAmount() < amount) {
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
 			} else if (creditCardScheduleEntity.getLateAmount() == amount) {
-				paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
 			}
 		} else {
-			paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, null);
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, null);
 		}
+
+		return balanceReturned;
 	}
 
 	/**
@@ -777,8 +828,9 @@ public class OperationServiceImpl implements OperationService {
 	 * @param paid                     the new payment status, or the current
 	 *                                 payment status if null
 	 */
-	private void paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity, Double principalAmount,
+	private Double paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity, Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {
+		Double balanceReturned = creditCardScheduleEntity.getPrincipalAmount();
 		creditCardScheduleEntity.setPaid(paid != null ? paid : creditCardScheduleEntity.getPaid());
 
 		creditCardScheduleEntity
@@ -791,6 +843,7 @@ public class OperationServiceImpl implements OperationService {
 				principalAmount != null ? principalAmount : creditCardScheduleEntity.getPrincipalAmount());
 
 		creditCardScheduleRepository.save(creditCardScheduleEntity);
+		return balanceReturned;
 	}
 
 	/**

@@ -20,16 +20,9 @@ public interface TransactionRepository extends ReactiveMongoRepository<Transacti
 	Mono<TransactionEntity> findFirstByOrderByOperationNumberDesc();
 
 	/**
-	 * Finds all active transactions involving either the withdraw or receive
-	 * account number.
-	 *
-	 * @param accountNumberWithdraws The account number that withdraws the
-	 *                               transaction.
-	 * @param accountNumberReceive   The account number that receives the
-	 *                               transaction.
-	 * @return A Flux emitting active TransactionEntity objects involving the
-	 *         specified accounts.
+	 * Finds all active transactions involving.
+	 * 
+	 * @return A Flux emitting active TransactionEntity.
 	 */
-	Flux<TransactionEntity> findAllByAccountNumberWithdrawsOrAccountNumberReceiveAndIsActiveTrue(
-			String accountNumberWithdraws, String accountNumberReceive);
+	Flux<TransactionEntity> findAllByIsActiveTrue();
 }

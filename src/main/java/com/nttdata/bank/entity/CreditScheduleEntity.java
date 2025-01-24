@@ -25,6 +25,6 @@ public class CreditScheduleEntity {
 	private Double lateAmount;
 	private Double principalAmount;
 	private Double currentDebt;
-	private Double totalDebt;
+	private Double balance;
 	private Boolean paid;
 }

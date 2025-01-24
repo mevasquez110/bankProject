@@ -118,17 +118,13 @@ public class CreditCardServiceImpl implements CreditCardService {
 					return new RuntimeException("Credit card not found");
 				});
 
-		List<CreditCardScheduleEntity> paymentScheduleShare = creditCardScheduleRepository
+		Double share = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
-				.collectList().block();
+				.collectList().block().stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
-		Double share = paymentScheduleShare.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
-
-		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+		Double totalDebt = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
-				.collectList().block();
-
-		Double totalDebt = paymentSchedule.stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.collectList().block().stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
 				.mapToDouble(Consumption::getAmount).sum() + share;
 
 		CreditCardDebtResponse response = new CreditCardDebtResponse();
@@ -190,17 +186,13 @@ public class CreditCardServiceImpl implements CreditCardService {
 					return new RuntimeException("Credit card not found");
 				});
 
-		List<CreditCardScheduleEntity> paymentScheduleShare = creditCardScheduleRepository
+		Double share = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
-				.collectList().block();
+				.collectList().block().stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
-		Double share = paymentScheduleShare.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
-
-		List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
+		Double totalDebt = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
-				.collectList().block();
-
-		Double totalDebt = paymentSchedule.stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.collectList().block().stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
 				.mapToDouble(Consumption::getAmount).sum() + share;
 
 		if (totalDebt > 0) {
@@ -243,7 +235,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 		if (paymentDay <= 21) {
 			paymentDate = billingDate.withDayOfMonth(paymentDay);
 		} else {
-			paymentDate = billingDate.plusMonths(1).withDayOfMonth(paymentDay);
+			paymentDate = billingDate.plusMonths(2).withDayOfMonth(paymentDay);
 		}
 
 		CreditCardScheduleEntity schedule = creditCardScheduleRepository

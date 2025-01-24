@@ -26,7 +26,6 @@ public class CreditCardScheduleEntity {
 	private Double lateAmount;
 	private Double principalAmount;
 	private Double currentDebt;
-	private Double totalDebt;
 	private Boolean paid;
 	private List<Consumption> consumptionQuota;
 
