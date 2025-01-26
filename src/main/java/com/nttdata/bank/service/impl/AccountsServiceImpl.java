@@ -168,14 +168,8 @@ public class AccountsServiceImpl implements AccountsService {
 								entity.setDeleteDate(LocalDateTime.now());
 								entity.setIsActive(false);
 								return accountRepository.save(entity);
-							})
-							.doOnSuccess(savedEntity -> logger.info(
-									"Account deleted successfully with account number: {}",
-									savedEntity.getAccountNumber()));
+							});
 				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
-				.doOnError(
-						error -> logger.error("Error deleting account with account number: {}",
-								accountNumber, error))
 				.toFuture().join();
 	}
 
@@ -385,19 +379,24 @@ public class AccountsServiceImpl implements AccountsService {
 		if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(100);
-		} else if (Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())) {
+		}
+		if (Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(15.0);
 			accountEntity.setMonthlyTransactionLimit(null);
-		} else if (Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
+		}
+		if (Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(1);
-		} else if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
+		}
+		if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(15.0);
 			accountEntity.setMonthlyTransactionLimit(null);
-		} else if (Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
+		}
+		if (Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(null);
-		} else if (Constants.ACCOUNT_TYPE_YANKI.equals(accountRequest.getAccountType())) {
+		}
+		if (Constants.ACCOUNT_TYPE_YANKI.equals(accountRequest.getAccountType())) {
 			accountEntity.setMaintenanceCommission(0.0);
 			accountEntity.setMonthlyTransactionLimit(null);
 		}

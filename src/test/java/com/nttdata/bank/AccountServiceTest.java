@@ -26,6 +26,8 @@ import com.nttdata.bank.repository.AccountRepository;
 import com.nttdata.bank.repository.CreditCardRepository;
 import com.nttdata.bank.repository.CreditRepository;
 import com.nttdata.bank.repository.CustomerRepository;
+import com.nttdata.bank.repository.DebitCardRepository;
+import com.nttdata.bank.repository.YankiRepository;
 import com.nttdata.bank.request.AccountRequest;
 import com.nttdata.bank.request.DepositRequest;
 import com.nttdata.bank.request.UpdateAccountRequest;
@@ -57,6 +59,12 @@ public class AccountServiceTest {
 	@Mock
 	private OperationService operationService;
 
+	@Mock
+	private DebitCardRepository debitCardRepository;
+
+	@Mock
+	private YankiRepository yankiRepository;
+
 	@InjectMocks
 	private AccountsServiceImpl accountsService;
 
@@ -85,7 +93,7 @@ public class AccountServiceTest {
 	@Test
 	public void testUpdateAccountWithInvalidRequest() {
 		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
-		updateAccountRequest.setAccountNumber("123456789");
+		updateAccountRequest.setAccountNumber("12345678914");
 		updateAccountRequest.setAmount(-200.0);
 		assertFalse(validator.validate(updateAccountRequest).isEmpty());
 	}
@@ -567,6 +575,75 @@ public class AccountServiceTest {
 		assertNotNull(accountsService.findAllAccounts("123"));
 	}
 
+	@Test
+	public void updateAccount_notFound() {
+		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
+		updateAccountRequest.setAccountNumber("12345678914785");
+		updateAccountRequest.setAmount(100.00);
+
+		assertTrue(validator.validate(updateAccountRequest).isEmpty());
+
+		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
+				.thenReturn(Mono.empty());
+
+		assertThrows(Exception.class, () -> {
+			accountsService.updateAccount(updateAccountRequest);
+		});
+	}
+
+	@Test
+	public void updateAccount_Success() {
+		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
+		updateAccountRequest.setAccountNumber("12345678914785");
+		updateAccountRequest.setAmount(100.00);
+		assertTrue(validator.validate(updateAccountRequest).isEmpty());
+		getAccountRepo();
+		saveAccount();
+		accountsService.updateAccount(updateAccountRequest);
+	}
+
+	@Test
+	public void deleteAccount_debitCardPrimary() {
+		existsDebitCard(true);
+
+		assertThrows(Exception.class, () -> {
+			accountsService.deleteAccount("123");
+		});
+	}
+
+	@Test
+	public void deleteAccount_notFound() {
+		existsDebitCard(false);
+
+		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
+				.thenReturn(Mono.empty());
+
+		assertThrows(Exception.class, () -> {
+			accountsService.deleteAccount("123");
+		});
+	}
+
+	@Test
+	public void deleteAccount_Yanki() {
+		existsDebitCard(false);
+		getAccountRepo();
+		existsYanki(true);
+		saveAccount();
+
+		assertThrows(Exception.class, () -> {
+			accountsService.deleteAccount("123");
+		});
+	}
+
+	@Test
+	public void deleteAccount_Success() {
+		existsDebitCard(false);
+		getAccountRepo();
+		existsYanki(false);
+		saveAccount();
+		accountsService.deleteAccount("123");
+	}
+
 	private void validVipOrPyme(Boolean existsCreditCard, Boolean existsCredit) {
 		existsCreditCard(existsCredit);
 		existsCredit(existsCredit);
@@ -601,6 +678,16 @@ public class AccountServiceTest {
 
 	private void existsCreditCard(Boolean exists) {
 		when(creditCardRepository.existsByDocumentNumberAndIsActiveTrue(any(String.class)))
+				.thenReturn(Mono.just(exists));
+	}
+
+	private void existsYanki(Boolean exists) {
+		when(yankiRepository.existsByAccountNumberAndIsActiveTrue(any(String.class)))
+				.thenReturn(Mono.just(exists));
+	}
+
+	private void existsDebitCard(Boolean exists) {
+		when(debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(any(String.class)))
 				.thenReturn(Mono.just(exists));
 	}
 
