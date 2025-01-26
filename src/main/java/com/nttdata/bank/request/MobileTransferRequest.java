@@ -2,7 +2,9 @@ package com.nttdata.bank.request;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -17,9 +19,13 @@ import lombok.Data;
 public class MobileTransferRequest {
 
 	@NotBlank(message = "Mobile number withdraws is mandatory")
+	@Size(max = 9, message = "Mobile number withdraws must have a maximum of 9 digits")
+	@Pattern(regexp = "\\d+", message = "Mobile number must only contain digits")
 	private String mobileNumberWithdraws;
 
 	@NotBlank(message = "Mobile number receive is mandatory")
+	@Size(max = 9, message = "Mobile number receive must have a maximum of 9 digits")
+	@Pattern(regexp = "\\d+", message = "Mobile number must only contain digits")
 	private String mobileNumberReceive;
 
 	@NotBlank(message = "Document number withdraws is mandatory")

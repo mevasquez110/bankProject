@@ -1,8 +1,8 @@
 package com.nttdata.bank.request;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -15,11 +15,12 @@ import lombok.Data;
 @Data
 public class PayCreditCardRequest {
 
-	@NotBlank(message = "Credit card number is mandatory")
+	@Size(min = 16, max = 16, message = "Credit card number must be exactly 16 digits")
 	private String creditCardNumber;
-	
+
+	@Size(min = 14, max = 14, message = "Account number must be exactly 14 digits")
 	private String accountNumber;
-	
+
 	private String documentNumber;
 
 	@NotNull(message = "Amount is mandatory")

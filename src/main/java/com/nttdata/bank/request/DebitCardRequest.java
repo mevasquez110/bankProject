@@ -1,6 +1,8 @@
 package com.nttdata.bank.request;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
 import lombok.Data;
 
 /**
@@ -17,5 +19,6 @@ public class DebitCardRequest {
 	private String documentNumber;
 
 	@NotBlank(message = "Primary account is mandatory")
+	@Size(min = 14, max = 14, message = "Primary account must be exactly 14 digits")
 	private String primaryAccount;
 }

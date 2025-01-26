@@ -3,6 +3,7 @@ package com.nttdata.bank.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -17,6 +18,7 @@ import lombok.Data;
 public class WithdrawalRequest {
 
 	@NotBlank(message = "Debit card number is mandatory")
+	@Size(min = 16, max = 16, message = "Debit card number must be exactly 16 digits")
 	private String debitCardNumber;
 
 	@NotBlank(message = "Document number is mandatory")

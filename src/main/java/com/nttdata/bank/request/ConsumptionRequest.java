@@ -3,6 +3,7 @@ package com.nttdata.bank.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -17,6 +18,7 @@ import lombok.Data;
 public class ConsumptionRequest {
 
 	@NotBlank(message = "Credit card number is mandatory")
+	@Size(min = 16, max = 16, message = "Credit card number must be exactly 16 digits")
 	private String creditCardNumber;
 
 	@NotNull(message = "Amount is mandatory")

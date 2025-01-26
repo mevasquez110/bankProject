@@ -3,6 +3,7 @@ package com.nttdata.bank.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -17,9 +18,11 @@ import lombok.Data;
 public class AccountTransferRequest {
 
 	@NotBlank(message = "Account number withdraws is mandatory")
+	@Size(min = 14, max = 14, message = "Account number Withdraws must be exactly 14 digits")
 	private String accountNumberWithdraws;
 
 	@NotBlank(message = "Account number receive is mandatory")
+	@Size(min = 14, max = 14, message = "Account number Receive must be exactly 14 digits")
 	private String accountNumberReceive;
 
 	@NotBlank(message = "Document number withdraws is mandatory")
