@@ -6,12 +6,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.nttdata.bank.request.AccountRequest;
-import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.BalanceResponse;
@@ -54,17 +52,6 @@ public interface AccountsAPI {
 	 */
 	@GetMapping("/all/{documentNumber}")
 	ApiResponse<List<AccountResponse>> findAllAccounts(@PathVariable String documentNumber);
-
-	/**
-	 * Updates the details of an existing account based on the provided
-	 * UpdateAccountRequest object.
-	 * 
-	 * @param updateAccountRequest - The updated account details provided in the
-	 *                             request body.
-	 * @return ApiResponse containing the updated AccountResponse.
-	 */
-	@PutMapping("/update")
-	ApiResponse<AccountResponse> updateAccount(@RequestBody @Valid UpdateAccountRequest updateAccountRequest);
 
 	/**
 	 * Deletes the specified account based on the account number.

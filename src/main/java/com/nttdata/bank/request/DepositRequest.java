@@ -3,6 +3,7 @@ package com.nttdata.bank.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import com.nttdata.bank.validation.DepositRequestValidator;
 import lombok.Data;
 
 /**
@@ -13,12 +14,11 @@ import lombok.Data;
  */
 
 @Data
+@DepositRequestValidator
 public class DepositRequest {
 
-	@NotBlank(message = "Debit card number is mandatory")
 	private String debitCardNumber;
 
-	@NotBlank(message = "Account number is mandatory")
 	private String accountNumber;
 
 	@NotBlank(message = "Document number is mandatory")

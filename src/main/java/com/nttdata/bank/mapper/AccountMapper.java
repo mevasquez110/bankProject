@@ -32,7 +32,6 @@ public class AccountMapper {
 			accountEntity.setCurrency(Constants.CURRENCY_SOL);
 			accountEntity.setCommissionPending(0.00);
 			accountEntity.setCreateDate(LocalDateTime.now());
-			accountEntity.setIsBlocked(false);
 			accountEntity.setIsActive(true);
 		}
 
@@ -55,7 +54,6 @@ public class AccountMapper {
 			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
 			accountResponse.setAmount(accountEntity.getAmount());
 			accountResponse.setCurrency(accountEntity.getCurrency());
-			accountResponse.setIsBlocked(accountEntity.getIsBlocked());
 		}
 
 		return accountResponse;

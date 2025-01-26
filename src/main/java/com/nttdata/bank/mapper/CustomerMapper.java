@@ -1,5 +1,7 @@
 package com.nttdata.bank.mapper;
 
+import java.time.LocalDateTime;
+
 import com.nttdata.bank.entity.CustomerEntity;
 import com.nttdata.bank.request.CustomerRequest;
 import com.nttdata.bank.response.CustomerResponse;
@@ -31,6 +33,8 @@ public class CustomerMapper {
 			customerEntity.setDocumentType(customerRequest.getDocumentType());
 			customerEntity.setDocumentNumber(customerRequest.getDocumentNumber());
 			customerEntity.setPersonType(customerRequest.getPersonType());
+			customerEntity.setIsActive(true);
+			customerEntity.setCreateDate(LocalDateTime.now());
 		}
 
 		return customerEntity;

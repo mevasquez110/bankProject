@@ -18,10 +18,6 @@ public class PersonTypeValidatorImpl implements ConstraintValidator<PersonTypeVa
 
 	@Override
 	public boolean isValid(CustomerRequest customerRequest, ConstraintValidatorContext context) {
-		if (customerRequest == null) {
-			return true;
-		}
-
 		boolean isValid = true;
 
 		if (Constants.PERSON_TYPE_PERSONAL.equals(customerRequest.getPersonType())) {

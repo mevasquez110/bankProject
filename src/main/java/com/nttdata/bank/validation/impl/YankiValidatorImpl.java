@@ -22,10 +22,6 @@ public class YankiValidatorImpl implements ConstraintValidator<YankiValidator, Y
      */
     @Override
     public boolean isValid(YankiRequest yankiRequest, ConstraintValidatorContext context) {
-        if (yankiRequest == null) {
-            return true;
-        }
-
         boolean isValid = true;
 
         String documentType = yankiRequest.getDocumentType();

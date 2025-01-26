@@ -9,35 +9,33 @@ public class DepositRequestValidatorImpl implements ConstraintValidator<DepositR
 
 	@Override
 	public void initialize(DepositRequestValidator constraintAnnotation) {
-		// No initialization required
 	}
 
 	@Override
 	public boolean isValid(DepositRequest depositRequest, ConstraintValidatorContext context) {
-		if (depositRequest == null) {
-			return true;
+		boolean hasDebitCard = isNotEmpty(depositRequest.getDebitCardNumber());
+		boolean hasAccountNumber = isNotEmpty(depositRequest.getAccountNumber());
+
+		if (hasDebitCard && hasAccountNumber) {
+			addViolation(context, "If either debit card number or account number is provided, the other must be null",
+					"accountNumber");
+			return false;
 		}
 
-		boolean isValid = true;
-
-		if (depositRequest.getDebitCardNumber() != null && depositRequest.getAccountNumber() != null) {
-			isValid = false;
-			addViolation(context, "Account number must be null", "accountNumber");
-		} else if (depositRequest.getDebitCardNumber() == null && depositRequest.getAccountNumber() == null) {
-			isValid = false;
-			addViolation(context, "Debit card number must be null", "debitCardNumber");
+		if (!hasDebitCard && !hasAccountNumber) {
+			addViolation(context, "Either debit card number or account number must be provided", "accountNumber");
+			return false;
 		}
 
-		if (!isValid) {
-			context.disableDefaultConstraintViolation();
-		}
+		return true;
+	}
 
-		return isValid;
+	private boolean isNotEmpty(String value) {
+		return value != null && !value.trim().isEmpty();
 	}
 
 	private void addViolation(ConstraintValidatorContext context, String message, String propertyNode) {
 		context.disableDefaultConstraintViolation();
 		context.buildConstraintViolationWithTemplate(message).addPropertyNode(propertyNode).addConstraintViolation();
 	}
-
 }

@@ -18,7 +18,7 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 
 	private static final List<String> VALID_ACCOUNT_TYPES = Arrays.asList(Constants.ACCOUNT_TYPE_SAVINGS,
 			Constants.ACCOUNT_TYPE_CHECKING, Constants.ACCOUNT_TYPE_FIXED_TERM, Constants.ACCOUNT_TYPE_VIP,
-			Constants.ACCOUNT_TYPE_PYME);
+			Constants.ACCOUNT_TYPE_PYME, Constants.ACCOUNT_TYPE_YANKI);
 
 	@Override
 	public void initialize(AccountRequestValidator constraintAnnotation) {
@@ -33,10 +33,6 @@ public class AccountRequestValidatorImpl implements ConstraintValidator<AccountR
 	 */
 	@Override
 	public boolean isValid(AccountRequest accountRequest, ConstraintValidatorContext context) {
-		if (accountRequest == null) {
-			return true;
-		}
-
 		boolean isValid = true;
 
 		if (accountRequest.getHolderDoc() == null || accountRequest.getHolderDoc().isEmpty()) {

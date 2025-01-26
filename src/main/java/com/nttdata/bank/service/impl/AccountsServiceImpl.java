@@ -18,7 +18,6 @@ import com.nttdata.bank.request.DepositRequest;
 import com.nttdata.bank.request.UpdateAccountRequest;
 import com.nttdata.bank.response.AccountResponse;
 import com.nttdata.bank.response.BalanceResponse;
-import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.AccountsService;
 import com.nttdata.bank.service.OperationService;
 import com.nttdata.bank.util.Constants;
@@ -47,7 +46,7 @@ public class AccountsServiceImpl implements AccountsService {
 	private CustomerRepository customerRepository;
 
 	@Autowired
-	private OperationService transactionService;
+	private OperationService operationService;
 
 	@Autowired
 	private CreditCardRepository creditCardRepository;
@@ -73,9 +72,10 @@ public class AccountsServiceImpl implements AccountsService {
 		logger.debug("Registering account: {}", accountRequest);
 		validateAccountRequest(accountRequest);
 		AccountEntity accountEntity = AccountMapper.mapperToEntity(accountRequest);
-		accountEntity.setAccountNumber(generateUniqueAccountNumber(accountRequest.getAccountType()));
+		accountEntity
+				.setAccountNumber(generateUniqueAccountNumber(accountRequest.getAccountType()));
 		setAccountDetails(accountRequest, accountEntity);
-		accountEntity = accountRepository.save(accountEntity).block();
+		accountEntity = accountRepository.save(accountEntity).toFuture().join();
 		makeFirstDeposit(accountRequest, accountEntity, accountRequest.getHolderDoc().get(0));
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
 		logger.info("Account registered successfully: {}", response);
@@ -93,8 +93,10 @@ public class AccountsServiceImpl implements AccountsService {
 		logger.debug("Checking balance for account: {}", accountNumber);
 
 		AccountEntity accountEntity = Optional
-				.ofNullable(accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).toFuture().join())
-				.orElseThrow(() -> new IllegalArgumentException("Account not found with number: " + accountNumber));
+				.ofNullable(accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
+						.toFuture().join())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Account not found with number: " + accountNumber));
 
 		logger.info("Balance checked successfully");
 		return AccountMapper.mapperToBalanceResponse(accountEntity);
@@ -121,16 +123,19 @@ public class AccountsServiceImpl implements AccountsService {
 	 */
 	@Override
 	public AccountResponse updateAccount(UpdateAccountRequest updateAccountRequest) {
-		return accountRepository.findByAccountNumberAndIsActiveTrue(updateAccountRequest.getAccountNumber())
+		return accountRepository
+				.findByAccountNumberAndIsActiveTrue(updateAccountRequest.getAccountNumber())
 				.flatMap(accountEntity -> {
 					accountEntity.setUpdateDate(LocalDateTime.now());
-					accountEntity.setAmount(accountEntity.getAmount() + updateAccountRequest.getAmount());
+					accountEntity.setAmount(
+							accountEntity.getAmount() + updateAccountRequest.getAmount());
 					return accountRepository.save(accountEntity).map(savedEntity -> {
 						AccountResponse response = AccountMapper.mapperToResponse(savedEntity);
 						logger.info("Account updated successfully: {}", response);
 						return response;
 					});
-				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).toFuture().join();
+				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found"))).toFuture()
+				.join();
 	}
 
 	/**
@@ -142,26 +147,35 @@ public class AccountsServiceImpl implements AccountsService {
 	public void deleteAccount(String accountNumber) {
 		logger.debug("Deleting account with account number: {}", accountNumber);
 
-		Optional.ofNullable(debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(accountNumber).block())
+		Optional.ofNullable(
+				debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(accountNumber).block())
 				.filter(isPrimary -> !isPrimary)
-				.orElseThrow(() -> new IllegalArgumentException("The account with number " + accountNumber
+				.orElseThrow(() -> new IllegalArgumentException("The account with number "
+						+ accountNumber
 						+ " is the primary account of an active debit card and cannot be deleted."));
 
-		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber).flatMap(accountEntity -> {
-			return Mono.just(yankiRepository.existsByAccountNumberAndIsActiveTrue(accountNumber).block())
-					.doOnNext(existsYanki -> {
-						if (existsYanki) {
-							throw new IllegalArgumentException("Cannot delete account with associated Yanki");
-						}
-					}).thenReturn(accountEntity).flatMap(entity -> {
-						entity.setDeleteDate(LocalDateTime.now());
-						entity.setIsActive(false);
-						return accountRepository.save(entity);
-					}).doOnSuccess(savedEntity -> logger.info("Account deleted successfully with account number: {}",
-							savedEntity.getAccountNumber()));
-		}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
+		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
+				.flatMap(accountEntity -> {
+					return Mono
+							.just(yankiRepository
+									.existsByAccountNumberAndIsActiveTrue(accountNumber).block())
+							.doOnNext(existsYanki -> {
+								if (existsYanki) {
+									throw new IllegalArgumentException(
+											"Cannot delete account with associated Yanki");
+								}
+							}).thenReturn(accountEntity).flatMap(entity -> {
+								entity.setDeleteDate(LocalDateTime.now());
+								entity.setIsActive(false);
+								return accountRepository.save(entity);
+							})
+							.doOnSuccess(savedEntity -> logger.info(
+									"Account deleted successfully with account number: {}",
+									savedEntity.getAccountNumber()));
+				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
 				.doOnError(
-						error -> logger.error("Error deleting account with account number: {}", accountNumber, error))
+						error -> logger.error("Error deleting account with account number: {}",
+								accountNumber, error))
 				.toFuture().join();
 	}
 
@@ -169,7 +183,7 @@ public class AccountsServiceImpl implements AccountsService {
 	 * Registers the first deposit transaction for a newly created account.
 	 *
 	 * This method creates a deposit transaction using the provided account request
-	 * and entity, then logs the transaction and returns the transaction response.
+	 * and entity.
 	 *
 	 * @param accountRequest The request object containing account details such as
 	 *                       opening amount.
@@ -177,18 +191,15 @@ public class AccountsServiceImpl implements AccountsService {
 	 *                       the deposit is being made.
 	 * @param documentNumber The document number of the customer creating the
 	 *                       account.
-	 * @return TransactionResponse The response object containing details of the
-	 *         registered transaction.
 	 */
-	private TransactionResponse makeFirstDeposit(AccountRequest accountRequest, AccountEntity accountEntity,
+	private void makeFirstDeposit(AccountRequest accountRequest,
+			AccountEntity accountEntity,
 			String documentNumber) {
 		DepositRequest depositRequest = new DepositRequest();
 		depositRequest.setAccountNumber(accountEntity.getAccountNumber());
 		depositRequest.setDocumentNumber(documentNumber);
 		depositRequest.setAmount(accountRequest.getOpeningAmount());
-		TransactionResponse transactionResponse = transactionService.makeDeposit(depositRequest);
-		logger.info("Transaction registered successfully: {}", transactionResponse);
-		return transactionResponse;
+		operationService.makeDeposit(depositRequest);
 	}
 
 	/**
@@ -197,29 +208,29 @@ public class AccountsServiceImpl implements AccountsService {
 	 * @param accountRequest The account request payload
 	 */
 	private void validateAccountRequest(AccountRequest accountRequest) {
-		if (accountRequest.getHolderDoc() == null || accountRequest.getHolderDoc().isEmpty()) {
-			throw new IllegalArgumentException("Holder doc is mandatory.");
-		}
-
-		Optional.ofNullable(accountRequest.getAuthorizedSignatoryDoc())
-				.filter(signatory -> Constants.PERSON_TYPE_PERSONAL.equals(accountRequest.getHolderDoc().stream()
-						.findFirst().orElseThrow(() -> new IllegalArgumentException("Holder document list is empty."))))
-				.ifPresent(signatory -> {
-					throw new IllegalArgumentException("AuthorizedSignatory must be null for personal accounts.");
-				});
-
 		for (String documentNumber : accountRequest.getHolderDoc()) {
-			validationPymeAndVIP(accountRequest, documentNumber);
+			if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
+					|| Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
+				validationPymeAndVIP(documentNumber);
+			}
 
-			List<AccountEntity> accounts = accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+			List<AccountEntity> accounts = accountRepository
+					.findByHolderDocContainingAndIsActiveTrue(documentNumber)
 					.collectList().toFuture().join();
 
-			String personType = getPersonType(documentNumber);
+			CustomerEntity customer = Optional
+					.ofNullable(customerRepository
+							.findByDocumentNumberAndIsActiveTrue(documentNumber).block())
+					.orElseThrow(() -> new IllegalArgumentException(
+							"Customer not found with document number: " + documentNumber));
+
+			String personType = customer.getPersonType();
+			String documentType = customer.getDocumentType();
 
 			if (Constants.PERSON_TYPE_PERSONAL.equals(personType)) {
-				typePersonalValidation(accountRequest, accounts);
+				typePersonalValidation(accountRequest, accounts, documentType);
 			} else if (Constants.PERSON_TYPE_BUSINESS.equals(personType)) {
-				typeBusinessValidation(accountRequest, documentNumber);
+				typeBusinessValidation(accountRequest, documentNumber, documentType);
 			} else {
 				throw new IllegalArgumentException("Invalid person type.");
 			}
@@ -231,28 +242,23 @@ public class AccountsServiceImpl implements AccountsService {
 	 * criteria.
 	 *
 	 * @param accountRequest the account request containing account details
+	 * @param documentType   the document type
 	 * @param documentNumber the document number
 	 * @throws IllegalArgumentException if any validation rule is violated
 	 */
-	private void typeBusinessValidation(AccountRequest accountRequest, String documentNumber) {
-		Optional.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join())
-				.ifPresentOrElse(customerEntity -> {
-					if (!Constants.DOCUMENT_TYPE_RUC.equals(customerEntity.getDocumentType())) {
-						throw new IllegalArgumentException("The holder is not registered as a business customer.");
-					}
+	private void typeBusinessValidation(AccountRequest accountRequest, String documentNumber,
+			String documentType) {
+		if (!Constants.DOCUMENT_TYPE_RUC.equals(documentType)) {
+			throw new IllegalArgumentException(
+					"The holder is not registered as a business customer.");
+		}
 
-					if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
-							|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
-						throw new IllegalArgumentException(
-								"Business customers cannot have savings or fixed-term accounts.");
-					}
-
-					if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())) {
-						throw new IllegalArgumentException("A business customer cannot have a VIP account.");
-					}
-				}, () -> {
-					throw new IllegalArgumentException("The holder is not registered.");
-				});
+		if (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
+				|| Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
+				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())) {
+			throw new IllegalArgumentException(
+					"Business customers cannot have VIP, savings or fixed-term accounts.");
+		}
 	}
 
 	/**
@@ -260,27 +266,34 @@ public class AccountsServiceImpl implements AccountsService {
 	 * criteria.
 	 *
 	 * @param accountRequest the account request containing account details
+	 * @param documentType   the document type
 	 * @param accounts       the list of existing accounts associated with the
 	 *                       customer's document number
 	 * @throws IllegalArgumentException if any validation rule is violated
 	 */
-	private void typePersonalValidation(AccountRequest accountRequest, List<AccountEntity> accounts) {
+	private void typePersonalValidation(AccountRequest accountRequest, List<AccountEntity> accounts,
+			String documentType) {
 		if (accountRequest.getHolderDoc().size() > 1) {
 			throw new IllegalArgumentException("A personal customer can have only one ID.");
 		}
 
+		if (documentType.contentEquals(Constants.DOCUMENT_TYPE_RUC)) {
+			throw new IllegalArgumentException("The holder must have only CE or DNI.");
+		}
+
+		if (accountRequest.getAuthorizedSignatoryDoc().size() > 0) {
+			throw new IllegalArgumentException(
+					"A personal account does not have authorized signatories.");
+		}
+
 		long personalAccountCount = accounts.stream()
-				.filter(account -> Constants.ACCOUNT_TYPE_SAVINGS.equals(account.getAccountType())
-						|| Constants.ACCOUNT_TYPE_CHECKING.equals(account.getAccountType())
-						|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(account.getAccountType())
-						|| Constants.ACCOUNT_TYPE_VIP.equals(account.getAccountType()))
+				.filter(account -> accountRequest.getAccountType()
+						.equalsIgnoreCase(account.getAccountType()))
 				.count();
 
-		if (personalAccountCount > 0 && (Constants.ACCOUNT_TYPE_SAVINGS.equals(accountRequest.getAccountType())
-				|| Constants.ACCOUNT_TYPE_CHECKING.equals(accountRequest.getAccountType())
-				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType())
-				|| Constants.ACCOUNT_TYPE_FIXED_TERM.equals(accountRequest.getAccountType()))) {
-			throw new IllegalArgumentException("A personal customer can have only one account per type.");
+		if (personalAccountCount > 0) {
+			throw new IllegalArgumentException(
+					"A personal customer can have only one account per type.");
 		}
 
 		if (Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
@@ -292,25 +305,20 @@ public class AccountsServiceImpl implements AccountsService {
 	 * Validates if the given document number is associated with an active credit
 	 * product when attempting to create an account of type VIP or PYME.
 	 *
-	 * @param accountRequest the account request containing account details
 	 * @param documentNumber the document number to validate
 	 * @throws IllegalStateException if no active credit product exists for the
 	 *                               given document number
 	 */
-	private void validationPymeAndVIP(AccountRequest accountRequest, String documentNumber) {
-		if (Constants.ACCOUNT_TYPE_VIP.equals(accountRequest.getAccountType())
-				|| Constants.ACCOUNT_TYPE_PYME.equals(accountRequest.getAccountType())) {
-
-			Mono.zip(creditCardRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber),
-					creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber))
-					.map(tuple -> tuple.getT1() || tuple.getT2()).blockOptional().ifPresentOrElse(hasCreditProduct -> {
-						if (!hasCreditProduct) {
-							throw new IllegalStateException("No credit product found for the given document number");
-						}
-					}, () -> {
-						throw new IllegalStateException("Failed to validate credit product.");
-					});
-		}
+	private void validationPymeAndVIP(String documentNumber) {
+		Mono.zip(creditCardRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber),
+				creditRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber))
+				.map(tuple -> tuple.getT1() || tuple.getT2()).blockOptional()
+				.ifPresent(hasCreditProduct -> {
+					if (!hasCreditProduct) {
+						throw new IllegalStateException(
+								"No credit product found for the given document number");
+					}
+				});
 	}
 
 	/**
@@ -358,25 +366,13 @@ public class AccountsServiceImpl implements AccountsService {
 		case Constants.ACCOUNT_TYPE_YANKI:
 			accountNumber.append(Constants.ACCOUNT_TYPE_CODE_YANKI);
 			break;
-		default:
-			throw new IllegalArgumentException("Invalid account type");
 		}
+
 		for (int i = 0; i < 10; i++) {
 			accountNumber.append(random.nextInt(10));
 		}
-		return accountNumber.toString();
-	}
 
-	/**
-	 * Retrieves the person type based on the customer ID.
-	 *
-	 * @param documentNumber The customer document number
-	 * @return The person type
-	 */
-	private String getPersonType(String documentNumber) {
-		return Optional.ofNullable(customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).block())
-				.map(CustomerEntity::getPersonType).orElseThrow(() -> new IllegalArgumentException(
-						"Customer not found with document number: " + documentNumber));
+		return accountNumber.toString();
 	}
 
 	/**

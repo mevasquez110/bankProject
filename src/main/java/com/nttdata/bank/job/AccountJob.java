@@ -68,7 +68,17 @@ public class AccountJob {
 									&& transaction.getCreateDate().isAfter(oneMonthAgo))
 							.mapToDouble(TransactionEntity::getAmount).average().orElse(0.0);
 
-					accountEntity.setCommissionPending(averageAmount >= 1.00 ? 0.00 : Constants.COMMISSION_ADD);
+					Double commission = averageAmount >= 1.00 ? 0.00
+							: Constants.COMMISSION_ADD + accountEntity.getCommissionPending();
+					
+					double currentAmount = accountEntity.getAmount();
+
+					if (currentAmount >= commission) {
+						accountEntity.setAmount(currentAmount - commission);
+					} else {
+						accountEntity.setCommissionPending(commission);
+					}
+
 					accountRepository.save(accountEntity);
 				});
 	}

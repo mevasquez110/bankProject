@@ -34,6 +34,5 @@ public class AccountEntity {
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
-    private Boolean isBlocked;
     private Boolean isActive;
 }

@@ -36,8 +36,6 @@ public class CustomerServiceImpl implements CustomerService {
 		existsPhoneNumber(customerRequest.getPhoneNumber());
 		existsDocumentNumber(customerRequest.getDocumentNumber());
 		CustomerEntity customerEntity = CustomerMapper.mapperToEntity(customerRequest);
-		customerEntity.setIsActive(true);
-		customerEntity.setCreateDate(LocalDateTime.now());
 		CustomerEntity savedEntity = customerRepository.save(customerEntity).toFuture().join();
 		CustomerResponse response = CustomerMapper.mapperToResponse(savedEntity);
 		logger.info("Customer created successfully: {}", response);
@@ -87,11 +85,11 @@ public class CustomerServiceImpl implements CustomerService {
 	public CustomerResponse getCustomerByDocumentNumber(String documentNumber) {
 		logger.debug("Retrieving customer by document number: {}", documentNumber);
 
-		Mono<CustomerEntity> customerEntityMono = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
-				.switchIfEmpty(Mono
-						.error(new IllegalArgumentException("Customer not found with document: " + documentNumber)));
-
-		CustomerEntity customerEntity = customerEntityMono.toFuture().join();
+		CustomerEntity customerEntity = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
+				.switchIfEmpty(
+						Mono.error(new IllegalArgumentException("Customer not found with document: " + documentNumber)))
+				.toFuture().join();
+		
 		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
 		logger.info("Customer retrieved successfully by document number: {}", documentNumber);
 		return response;
