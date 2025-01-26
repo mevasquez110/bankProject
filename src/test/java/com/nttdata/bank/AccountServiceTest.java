@@ -703,7 +703,7 @@ public class AccountServiceTest {
 
 	private void makeDeposit() {
 		when(operationService.makeDeposit(any(DepositRequest.class)))
-				.thenReturn(new TransactionResponse());
+				.thenReturn(Mono.just(new TransactionResponse()));
 	}
 
 	private CustomerEntity getCustomerEntity(String value, String documentType, String personType) {

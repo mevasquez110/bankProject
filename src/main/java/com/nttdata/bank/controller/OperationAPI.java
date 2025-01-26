@@ -18,6 +18,8 @@ import com.nttdata.bank.response.ApiResponse;
 import com.nttdata.bank.response.ProductResponse;
 import com.nttdata.bank.response.TransactionResponse;
 
+import reactor.core.publisher.Mono;
+
 /**
  * OperationAPI defines the RESTful endpoints for various banking operations.
  * This interface includes methods for making deposits, withdrawals, account
@@ -36,7 +38,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the deposit.
 	 */
 	@PostMapping("/deposit")
-	ApiResponse<TransactionResponse> makeDeposit(@RequestBody @Valid DepositRequest depositRequest);
+	Mono<ApiResponse<TransactionResponse>> makeDeposit(
+			@RequestBody @Valid Mono<DepositRequest> depositRequest);
 
 	/**
 	 * Makes a withdrawal based on the provided WithdrawalRequest object.
@@ -46,7 +49,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the withdrawal.
 	 */
 	@PostMapping("/withdraw")
-	ApiResponse<TransactionResponse> makeWithdrawal(@RequestBody @Valid WithdrawalRequest withdrawalRequest);
+	Mono<ApiResponse<TransactionResponse>> makeWithdrawal(
+			@RequestBody @Valid Mono<WithdrawalRequest> withdrawalRequest);
 
 	/**
 	 * Makes an account transfer based on the provided AccountTransferRequest
@@ -57,8 +61,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the transfer.
 	 */
 	@PostMapping("/account-transfer")
-	ApiResponse<TransactionResponse> makeAccountTransfer(
-			@RequestBody @Valid AccountTransferRequest accountTransferRequest);
+	Mono<ApiResponse<TransactionResponse>> makeAccountTransfer(
+			@RequestBody @Valid Mono<AccountTransferRequest> accountTransferRequest);
 
 	/**
 	 * Makes a mobile transfer based on the provided MobileTransferRequest object.
@@ -68,8 +72,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the transfer.
 	 */
 	@PostMapping("/mobile-transfer")
-	ApiResponse<TransactionResponse> makeMobileTransfer(
-			@RequestBody @Valid MobileTransferRequest mobileTransferRequest);
+	Mono<ApiResponse<TransactionResponse>> makeMobileTransfer(
+			@RequestBody @Valid Mono<MobileTransferRequest> mobileTransferRequest);
 
 	/**
 	 * Pays a credit card bill based on the provided PayCreditCardRequest object.
@@ -79,7 +83,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the payment.
 	 */
 	@PostMapping("/pay-credit-card")
-	ApiResponse<TransactionResponse> payCreditCard(@RequestBody @Valid PayCreditCardRequest payCreditCardRequest);
+	Mono<ApiResponse<TransactionResponse>> payCreditCard(
+			@RequestBody @Valid Mono<PayCreditCardRequest> payCreditCardRequest);
 
 	/**
 	 * Pays a credit bill based on the provided PayCreditRequest object.
@@ -88,7 +93,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing the TransactionResponse of the payment.
 	 */
 	@PostMapping("/pay-credit")
-	ApiResponse<TransactionResponse> payCredit(@RequestBody @Valid PayCreditRequest payCreditRequest);
+	Mono<ApiResponse<TransactionResponse>> payCredit(
+			@RequestBody @Valid Mono<PayCreditRequest> payCreditRequest);
 
 	/**
 	 * Checks all transactions related to the specified document number.
@@ -98,7 +104,8 @@ public interface OperationAPI {
 	 * @return ApiResponse containing a list of TransactionResponse objects.
 	 */
 	@GetMapping("check/{documentNumber}")
-	ApiResponse<List<TransactionResponse>> checkTransactions(@PathVariable String documentNumber);
+	ApiResponse<List<TransactionResponse>> checkTransactions(
+			@PathVariable String documentNumber);
 
 	/**
 	 * Retrieves products linked to the specified document number.

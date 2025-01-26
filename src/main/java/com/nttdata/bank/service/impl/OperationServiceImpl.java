@@ -41,6 +41,7 @@ import com.nttdata.bank.service.AccountsService;
 import com.nttdata.bank.service.CreditService;
 import com.nttdata.bank.service.OperationService;
 import com.nttdata.bank.util.Constants;
+import reactor.core.publisher.Mono;
 
 /**
  * TransactionServiceImpl is the implementation class for the TransactionService
@@ -92,7 +93,7 @@ public class OperationServiceImpl implements OperationService {
 	 * @return TransactionResponse containing the details of the completed deposit
 	 */
 	@Override
-	public TransactionResponse makeDeposit(DepositRequest depositRequest) {
+	public Mono<TransactionResponse> makeDeposit(DepositRequest depositRequest) {
 		LocalDateTime transactionDate = LocalDateTime.now();
 		String accountReceive = getPrimaryAccount(depositRequest);
 		String transactionType = Constants.TRANSACTION_TYPE_DEPOSIT;
@@ -100,12 +101,13 @@ public class OperationServiceImpl implements OperationService {
 
 		TransactionEntity transactionEntity = transactionRepository
 				.save(TransactionMapper.mapperToEntity(transactionDate, commission, transactionType,
-						depositRequest.getAmount() + commission, null, generateUniqueOperationNumber(), null,
+						depositRequest.getAmount() + commission, null,
+						generateUniqueOperationNumber(), null,
 						accountReceive, null, null, getName(depositRequest.getDocumentNumber())))
 				.toFuture().join();
 
 		updateAccount(transactionEntity.getAccountNumberReceive(), transactionEntity.getAmount());
-		return TransactionMapper.mapperToResponse(transactionEntity);
+		return Mono.just(TransactionMapper.mapperToResponse(transactionEntity));
 	}
 
 	/**
@@ -117,10 +119,12 @@ public class OperationServiceImpl implements OperationService {
 	 *         withdrawal
 	 */
 	@Override
-	public TransactionResponse makeWithdrawal(WithdrawalRequest withdrawalRequest) {
+	public Mono<TransactionResponse> makeWithdrawal(WithdrawalRequest withdrawalRequest) {
 		DebitCardEntity debitCardEntity = Optional
 				.ofNullable(debitCardRepository
-						.findByDebitCardNumberAndIsActiveTrue(withdrawalRequest.getDebitCardNumber()).block())
+						.findByDebitCardNumberAndIsActiveTrue(
+								withdrawalRequest.getDebitCardNumber())
+						.toFuture().join())
 				.orElseThrow(() -> new IllegalArgumentException("card does not exist"));
 
 		String transactionType = Constants.TRANSACTION_TYPE_WITHDRAWAL;
@@ -139,8 +143,9 @@ public class OperationServiceImpl implements OperationService {
 			commission = -getCommission(accountWithdraws);
 			balance = -(amount + commission);
 
-			hasBalance = accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(accountWithdraws, balance)
-					.block();
+			hasBalance = accountRepository
+					.existsByAccountNumberAndAmountGreaterThanEqual(accountWithdraws, balance)
+					.toFuture().join();
 
 			i++;
 		} while (!hasBalance && debitCardEntity.getAssociatedAccounts().size() > i);
@@ -153,13 +158,15 @@ public class OperationServiceImpl implements OperationService {
 		String operationNumber = generateUniqueOperationNumber();
 
 		TransactionEntity transactionEntity = transactionRepository
-				.save(TransactionMapper.mapperToEntity(LocalDateTime.now(), commission, transactionType, amount, null,
-						operationNumber, null, accountWithdraws, null, getName(withdrawalRequest.getDocumentNumber()),
+				.save(TransactionMapper.mapperToEntity(LocalDateTime.now(), commission,
+						transactionType, amount, null,
+						operationNumber, null, accountWithdraws, null,
+						getName(withdrawalRequest.getDocumentNumber()),
 						null))
 				.toFuture().join();
 
 		updateAccount(transactionEntity.getAccountNumberWithdraws(), transactionEntity.getAmount());
-		return TransactionMapper.mapperToResponse(transactionEntity);
+		return Mono.just(TransactionMapper.mapperToResponse(transactionEntity));
 	}
 
 	/**
@@ -171,7 +178,8 @@ public class OperationServiceImpl implements OperationService {
 	 *         transfer
 	 */
 	@Override
-	public TransactionResponse makeAccountTransfer(AccountTransferRequest accountTransferRequest) {
+	public Mono<TransactionResponse> makeAccountTransfer(
+			AccountTransferRequest accountTransferRequest) {
 		LocalDateTime transactionDate = LocalDateTime.now();
 		Double commission = 0.00;
 		String transactionType = Constants.TRANSACTION_TYPE_BANK_TRANSFER;
@@ -179,20 +187,26 @@ public class OperationServiceImpl implements OperationService {
 		String accountNumberWithdraws = accountTransferRequest.getAccountNumberWithdraws();
 		String accountNumberReceive = accountTransferRequest.getAccountNumberReceive();
 
-		if (accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(accountNumberWithdraws, amount).block()) {
-			throw new IllegalArgumentException("The account does not have sufficient balance for the transfer.");
+		if (accountRepository
+				.existsByAccountNumberAndAmountGreaterThanEqual(accountNumberWithdraws, amount)
+				.toFuture().join()) {
+			throw new IllegalArgumentException(
+					"The account does not have sufficient balance for the transfer.");
 		}
 
 		TransactionEntity transactionEntity = transactionRepository
-				.save(TransactionMapper.mapperToEntity(transactionDate, commission, transactionType, amount,
-						accountNumberReceive, generateUniqueOperationNumber(), null, accountNumberWithdraws, null,
+				.save(TransactionMapper.mapperToEntity(transactionDate, commission, transactionType,
+						amount,
+						accountNumberReceive, generateUniqueOperationNumber(), null,
+						accountNumberWithdraws, null,
 						getName(accountTransferRequest.getDocumentNumberWithdraws()),
 						getName(accountTransferRequest.getDocumentNumberReceive())))
 				.toFuture().join();
 
-		updateAccount(transactionEntity.getAccountNumberWithdraws(), -transactionEntity.getAmount());
+		updateAccount(transactionEntity.getAccountNumberWithdraws(),
+				-transactionEntity.getAmount());
 		updateAccount(transactionEntity.getAccountNumberReceive(), transactionEntity.getAmount());
-		return TransactionMapper.mapperToResponse(transactionEntity);
+		return Mono.just(TransactionMapper.mapperToResponse(transactionEntity));
 	}
 
 	/**
@@ -204,22 +218,28 @@ public class OperationServiceImpl implements OperationService {
 	 *         transfer
 	 */
 	@Override
-	public TransactionResponse makeMobileTransfer(MobileTransferRequest mobileTransferRequest) {
+	public Mono<TransactionResponse> makeMobileTransfer(
+			MobileTransferRequest mobileTransferRequest) {
 		YankiEntity yankiWithdraws = Optional.ofNullable(yankiRepository
-				.findByPhoneNumberAndIsActiveTrue(mobileTransferRequest.getMobileNumberWithdraws()).toFuture().join())
+				.findByPhoneNumberAndIsActiveTrue(mobileTransferRequest.getMobileNumberWithdraws())
+				.toFuture().join())
 				.orElseThrow(() -> new IllegalArgumentException("yanki Withdraws does not exist"));
 
 		YankiEntity yankiReceive = Optional
 				.ofNullable(
-						yankiRepository.findByPhoneNumberAndIsActiveTrue(mobileTransferRequest.getMobileNumberReceive())
+						yankiRepository
+								.findByPhoneNumberAndIsActiveTrue(
+										mobileTransferRequest.getMobileNumberReceive())
 								.toFuture().join())
 				.orElseThrow(() -> new IllegalArgumentException("yanki Receive does not exist"));
 
 		AccountTransferRequest accountTransferRequest = new AccountTransferRequest();
 		accountTransferRequest.setAccountNumberWithdraws(yankiWithdraws.getAccountNumber());
 		accountTransferRequest.setAccountNumberReceive(yankiReceive.getAccountNumber());
-		accountTransferRequest.setAccountNumberWithdraws(mobileTransferRequest.getDocumentNumberWithdraws());
-		accountTransferRequest.setAccountNumberReceive(mobileTransferRequest.getDocumentNumberReceive());
+		accountTransferRequest
+				.setAccountNumberWithdraws(mobileTransferRequest.getDocumentNumberWithdraws());
+		accountTransferRequest
+				.setAccountNumberReceive(mobileTransferRequest.getDocumentNumberReceive());
 		accountTransferRequest.setAmount(mobileTransferRequest.getAmount());
 		return makeAccountTransfer(accountTransferRequest);
 	}
@@ -233,48 +253,61 @@ public class OperationServiceImpl implements OperationService {
 	 *         payment
 	 */
 	@Override
-	public TransactionResponse payCredit(PayCreditRequest payCreditRequest) {
+	public Mono<TransactionResponse> payCredit(PayCreditRequest payCreditRequest) {
 		LocalDateTime transactionDate = LocalDateTime.now();
 
-		if (creditRepository.existsByIdAndIsActiveTrue(payCreditRequest.getCreditId()).block()) {
+		if (creditRepository.existsByIdAndIsActiveTrue(payCreditRequest.getCreditId()).toFuture()
+				.join()) {
 			throw new IllegalArgumentException("credit does not exist or does not active");
 		}
 
-		if (accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(payCreditRequest.getAccountNumber(),
-				payCreditRequest.getAmount()).block()) {
+		if (accountRepository
+				.existsByAccountNumberAndAmountGreaterThanEqual(payCreditRequest.getAccountNumber(),
+						payCreditRequest.getAmount())
+				.toFuture().join()) {
 			throw new IllegalArgumentException("The account has no balance for this transaction");
 		}
 
 		updateAccount(payCreditRequest.getAccountNumber(), -payCreditRequest.getAmount());
 
 		List<CreditScheduleEntity> overduePaymentSchedule = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(payCreditRequest.getCreditId(), transactionDate)
-				.collectList().block().stream().sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
+				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(
+						payCreditRequest.getCreditId(), transactionDate)
+				.collectList().toFuture().join().stream()
+				.sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
 				.collect(Collectors.toList());
 
-		Double share = overduePaymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
+		Double share = overduePaymentSchedule.stream()
+				.mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
 
 		List<CreditScheduleEntity> upcomingPaymentSchedule = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateAfter(payCreditRequest.getCreditId(), transactionDate)
-				.collectList().block().stream().sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
+				.findByCreditIdAndPaidFalseAndPaymentDateAfter(payCreditRequest.getCreditId(),
+						transactionDate)
+				.collectList().toFuture().join().stream()
+				.sorted(Comparator.comparing(CreditScheduleEntity::getPaymentDate))
 				.collect(Collectors.toList());
 
-		Double totalDebt = upcomingPaymentSchedule.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum()
+		Double totalDebt = upcomingPaymentSchedule.stream()
+				.mapToDouble(CreditScheduleEntity::getCurrentDebt).sum()
 				+ share;
 
-		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionDate, 0.00,
+		TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionDate,
+				0.00,
 				Constants.TRANSACTION_TYPE_PAY_CREDIT, payCreditRequest.getAmount(), null,
-				generateUniqueOperationNumber(), payCreditRequest.getCreditId(), payCreditRequest.getAccountNumber(),
+				generateUniqueOperationNumber(), payCreditRequest.getCreditId(),
+				payCreditRequest.getAccountNumber(),
 				null, getName(payCreditRequest.getDocumentNumber()), null);
 
-		transactionEntity = transactionRepository.save(transactionEntity).block();
-		payCreditDebt(payCreditRequest.getAmount(), overduePaymentSchedule, share, upcomingPaymentSchedule, totalDebt);
+		transactionEntity = transactionRepository.save(transactionEntity).toFuture().join();
+		payCreditDebt(payCreditRequest.getAmount(), overduePaymentSchedule, share,
+				upcomingPaymentSchedule, totalDebt);
 
-		if (!creditScheduleRepository.existsByIdAndPaidFalse(payCreditRequest.getCreditId()).block()) {
+		if (!creditScheduleRepository.existsByIdAndPaidFalse(payCreditRequest.getCreditId())
+				.toFuture().join()) {
 			creditService.desactivateCredit(payCreditRequest.getCreditId());
 		}
 
-		return TransactionMapper.mapperToResponse(transactionEntity);
+		return Mono.just(TransactionMapper.mapperToResponse(transactionEntity));
 	}
 
 	/**
@@ -289,7 +322,8 @@ public class OperationServiceImpl implements OperationService {
 		List<ProductResponse> products = new ArrayList<>();
 
 		Optional.ofNullable(
-				creditRepository.findAllByDocumentNumberAndIsActiveTrue(documentNumber).collectList().block())
+				creditRepository.findAllByDocumentNumberAndIsActiveTrue(documentNumber)
+						.collectList().block())
 				.ifPresent(credits -> credits.forEach(creditEntity -> {
 					ProductResponse product = new ProductResponse();
 					product.setCreditId(creditEntity.getId());
@@ -298,7 +332,8 @@ public class OperationServiceImpl implements OperationService {
 				}));
 
 		Optional.ofNullable(
-				creditCardRepository.findAllByDocumentNumberAndIsActiveTrue(documentNumber).collectList().block())
+				creditCardRepository.findAllByDocumentNumberAndIsActiveTrue(documentNumber)
+						.collectList().block())
 				.ifPresent(creditCards -> creditCards.forEach(creditCardEntity -> {
 					ProductResponse product = new ProductResponse();
 					product.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
@@ -307,7 +342,8 @@ public class OperationServiceImpl implements OperationService {
 				}));
 
 		Optional.ofNullable(
-				accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber).collectList().block())
+				accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+						.collectList().block())
 				.ifPresent(accounts -> accounts.forEach(accountEntity -> {
 					ProductResponse product = new ProductResponse();
 					product.setAccountNumber(accountEntity.getAccountNumber());
@@ -327,8 +363,10 @@ public class OperationServiceImpl implements OperationService {
 	 */
 	@Override
 	public List<TransactionResponse> checkTransactions(String documentNumber) {
-		return accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber).collectList().block().stream()
-				.flatMap(account -> transactionRepository.findAllByIsActiveTrue().collectList().block().stream()
+		return accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
+				.collectList().block().stream()
+				.flatMap(account -> transactionRepository.findAllByIsActiveTrue().collectList()
+						.block().stream()
 						.filter(transaction -> transaction.getAccountNumberReceive()
 								.equalsIgnoreCase(account.getAccountNumber())
 								|| transaction.getAccountNumberWithdraws()
@@ -346,33 +384,38 @@ public class OperationServiceImpl implements OperationService {
 	 *         card payment
 	 */
 	@Override
-	public TransactionResponse payCreditCard(PayCreditCardRequest payCreditCardRequest) {
+	public Mono<TransactionResponse> payCreditCard(PayCreditCardRequest payCreditCardRequest) {
 		TransactionResponse transactionResponse = new TransactionResponse();
 		LocalDateTime transactionDate = LocalDateTime.now();
 
-		if (creditCardRepository.existsByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
-				.block()) {
+		if (creditCardRepository
+				.existsByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
+				.toFuture().join()) {
 			throw new IllegalArgumentException("credit card does not exist or does not active");
 		}
 
-		if (accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(payCreditCardRequest.getAccountNumber(),
-				payCreditCardRequest.getAmount()).block()) {
+		if (accountRepository.existsByAccountNumberAndAmountGreaterThanEqual(
+				payCreditCardRequest.getAccountNumber(),
+				payCreditCardRequest.getAmount()).toFuture().join()) {
 			throw new IllegalArgumentException("The account has no balance for this transaction");
 		}
 
 		List<CreditCardScheduleEntity> overduePaymentSchedule = creditCardScheduleRepository
 				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(
 						payCreditCardRequest.getCreditCardNumber(), LocalDate.now())
-				.collectList().block();
+				.collectList().toFuture().join();
 
-		Double share = overduePaymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+		Double share = overduePaymentSchedule.stream()
+				.mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
 		List<CreditCardScheduleEntity> upcomingPaymentSchedule = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(payCreditCardRequest.getCreditCardNumber(),
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(
+						payCreditCardRequest.getCreditCardNumber(),
 						LocalDateTime.now())
-				.collectList().block();
+				.collectList().toFuture().join();
 
-		Double totalDebt = upcomingPaymentSchedule.stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum()
+		Double totalDebt = upcomingPaymentSchedule.stream()
+				.mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum()
 				+ share;
 
 		if (payCreditCardRequest.getAccountNumber() != null) {
@@ -380,27 +423,33 @@ public class OperationServiceImpl implements OperationService {
 				throw new IllegalArgumentException("The document number is null");
 			}
 
-			updateAccount(payCreditCardRequest.getAccountNumber(), -payCreditCardRequest.getAmount());
+			updateAccount(payCreditCardRequest.getAccountNumber(),
+					-payCreditCardRequest.getAmount());
 
-			TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionDate, 0.00,
-					Constants.TRANSACTION_TYPE_PAY_CREDIT_CARD, payCreditCardRequest.getAmount(), null,
+			TransactionEntity transactionEntity = TransactionMapper.mapperToEntity(transactionDate,
+					0.00,
+					Constants.TRANSACTION_TYPE_PAY_CREDIT_CARD, payCreditCardRequest.getAmount(),
+					null,
 					generateUniqueOperationNumber(), null, payCreditCardRequest.getAccountNumber(),
-					payCreditCardRequest.getCreditCardNumber(), getName(payCreditCardRequest.getDocumentNumber()),
+					payCreditCardRequest.getCreditCardNumber(),
+					getName(payCreditCardRequest.getDocumentNumber()),
 					null);
 
-			transactionEntity = transactionRepository.save(transactionEntity).block();
+			transactionEntity = transactionRepository.save(transactionEntity).toFuture().join();
 			transactionResponse = TransactionMapper.mapperToResponse(transactionEntity);
 		}
 
-		Double balanceReturned = payCreditCardDebt(payCreditCardRequest.getAmount(), overduePaymentSchedule, share,
+		Double balanceReturned = payCreditCardDebt(payCreditCardRequest.getAmount(),
+				overduePaymentSchedule, share,
 				upcomingPaymentSchedule, totalDebt);
 
 		CreditCardEntity entity = creditCardRepository
-				.findByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber()).block();
+				.findByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
+				.toFuture().join();
 
 		entity.setAvailableCredit(entity.getAvailableCredit() + balanceReturned);
 		creditCardRepository.save(entity);
-		return transactionResponse;
+		return Mono.just(transactionResponse);
 	}
 
 	/**
@@ -412,7 +461,7 @@ public class OperationServiceImpl implements OperationService {
 		return transactionRepository.findFirstByOrderByOperationNumberDesc().map(transaction -> {
 			int newOperationNumber = Integer.parseInt(transaction.getOperationNumber()) + 1;
 			return String.format("%012d", newOperationNumber);
-		}).defaultIfEmpty(String.format("%012d", 1)).block();
+		}).defaultIfEmpty(String.format("%012d", 1)).toFuture().join();
 	}
 
 	/**
@@ -424,7 +473,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @throws IllegalArgumentException if the customer does not exist
 	 */
 	private String getName(String documentNumber) {
-		CustomerEntity customer = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture()
+		CustomerEntity customer = customerRepository
+				.findByDocumentNumberAndIsActiveTrue(documentNumber).toFuture()
 				.join();
 
 		if (customer != null) {
@@ -449,16 +499,21 @@ public class OperationServiceImpl implements OperationService {
 		Double commission = 0.00;
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime startOfMonth = now.withDayOfMonth(1).with(LocalTime.MIN);
-		LocalDateTime endOfMonth = now.withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
+		LocalDateTime endOfMonth = now
+				.withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
 				.with(LocalTime.MAX);
 
-		List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue().toStream()
-				.filter(transaction -> (transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_WITHDRAWAL)
-						|| transaction.getTransactionType().equals(Constants.TRANSACTION_TYPE_DEPOSIT))
+		List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue()
+				.toStream()
+				.filter(transaction -> (transaction.getTransactionType()
+						.equals(Constants.TRANSACTION_TYPE_WITHDRAWAL)
+						|| transaction.getTransactionType()
+								.equals(Constants.TRANSACTION_TYPE_DEPOSIT))
 						&& !transaction.getCreateDate().isBefore(startOfMonth)
 						&& !transaction.getCreateDate().isAfter(endOfMonth)
 						&& (transaction.getAccountNumberReceive().equalsIgnoreCase(accountNumber)
-								|| transaction.getAccountNumberWithdraws().equalsIgnoreCase(accountNumber)))
+								|| transaction.getAccountNumberWithdraws()
+										.equalsIgnoreCase(accountNumber)))
 				.collect(Collectors.toList());
 
 		boolean isExceeded = transactions.size() > 10;
@@ -481,7 +536,9 @@ public class OperationServiceImpl implements OperationService {
 	private String getPrimaryAccount(DepositRequest depositRequest) {
 		return Optional.ofNullable(depositRequest.getDebitCardNumber()).map(debitCardNumber -> {
 			DebitCardEntity debitCardEntity = Optional
-					.ofNullable(debitCardRepository.findByDebitCardNumberAndIsActiveTrue(debitCardNumber).block())
+					.ofNullable(debitCardRepository
+							.findByDebitCardNumberAndIsActiveTrue(debitCardNumber).toFuture()
+							.join())
 					.orElseThrow(() -> new IllegalArgumentException("card does not exist"));
 			return debitCardEntity.getPrimaryAccount();
 		}).orElse(null);
@@ -500,7 +557,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @param totalDebt               the total amount of debt to be paid
 	 * @throws IllegalArgumentException if the payment amount exceeds the total debt
 	 */
-	private void payCreditDebt(Double amount, List<CreditScheduleEntity> overduePaymentSchedule, Double share,
+	private void payCreditDebt(Double amount, List<CreditScheduleEntity> overduePaymentSchedule,
+			Double share,
 			List<CreditScheduleEntity> upcomingPaymentSchedule, Double totalDebt) {
 		List<CreditScheduleEntity> combinedSchedule = new ArrayList<>();
 		combinedSchedule.addAll(overduePaymentSchedule);
@@ -533,7 +591,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @return balance returned.
 	 * @throws IllegalArgumentException if the payment amount exceeds the total debt
 	 */
-	private Double payCreditCardDebt(Double amount, List<CreditCardScheduleEntity> overduePaymentSchedule, Double share,
+	private Double payCreditCardDebt(Double amount,
+			List<CreditCardScheduleEntity> overduePaymentSchedule, Double share,
 			List<CreditCardScheduleEntity> upcomingPaymentSchedule, Double totalDebt) {
 		Double balanceReturned = 0.00;
 
@@ -566,10 +625,12 @@ public class OperationServiceImpl implements OperationService {
 	 *                                credit card.
 	 * @param amount                  Available amount to pay the consumptions.
 	 */
-	private void payConsumptionCreditCard(List<CreditCardScheduleEntity> upcomingPaymentSchedule, Double amount) {
+	private void payConsumptionCreditCard(List<CreditCardScheduleEntity> upcomingPaymentSchedule,
+			Double amount) {
 		for (CreditCardScheduleEntity creditCardScheduleEntity : upcomingPaymentSchedule) {
 			List<Consumption> consumptions = creditCardScheduleEntity.getConsumptionQuota();
-			consumptions.sort(Comparator.comparing(Consumption::getNumberOfInstallments).reversed());
+			consumptions
+					.sort(Comparator.comparing(Consumption::getNumberOfInstallments).reversed());
 
 			for (Consumption consumption : consumptions) {
 				if (amount <= 0) {
@@ -595,7 +656,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @param listSchedule the list of credit schedules to be paid
 	 * @param amount       the amount available for payment
 	 */
-	private void payCreditCurrentInstallments(List<CreditScheduleEntity> listSchedule, Double amount) {
+	private void payCreditCurrentInstallments(List<CreditScheduleEntity> listSchedule,
+			Double amount) {
 		for (CreditScheduleEntity creditScheduleEntity : listSchedule) {
 			if (creditScheduleEntity.getCurrentDebt() > amount) {
 				processCreditPayment(creditScheduleEntity, amount);
@@ -618,7 +680,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @param amount       the amount available for payment
 	 * @return balance returned.
 	 */
-	private Double payCreditCardCurrentInstallments(List<CreditCardScheduleEntity> listSchedule, Double amount) {
+	private Double payCreditCardCurrentInstallments(List<CreditCardScheduleEntity> listSchedule,
+			Double amount) {
 		Double balanceReturned = 0.00;
 
 		for (CreditCardScheduleEntity creditCardScheduleEntity : listSchedule) {
@@ -626,9 +689,11 @@ public class OperationServiceImpl implements OperationService {
 				balanceReturned += processCreditCardPayment(creditCardScheduleEntity, amount);
 				continue;
 			} else if (creditCardScheduleEntity.getCurrentDebt() < amount) {
-				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
+						true);
 			} else if (creditCardScheduleEntity.getCurrentDebt() == amount) {
-				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
+						true);
 				continue;
 			}
 
@@ -670,14 +735,17 @@ public class OperationServiceImpl implements OperationService {
 	 * @param amount                   the amount available for payment
 	 * @return balance returned.
 	 */
-	private Double processCreditCardPayment(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
+	private Double processCreditCardPayment(CreditCardScheduleEntity creditCardScheduleEntity,
+			Double amount) {
 		Double balanceReturned = 0.00;
 
 		if (creditCardScheduleEntity.getPrincipalAmount() > amount) {
 			Double principalAmount = creditCardScheduleEntity.getPrincipalAmount() - amount;
-			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, principalAmount, null, null, null);
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, principalAmount, null,
+					null, null);
 		} else if (creditCardScheduleEntity.getPrincipalAmount() < amount) {
-			balanceReturned += processCreditCardInterestAndLateAmount(creditCardScheduleEntity, amount);
+			balanceReturned += processCreditCardInterestAndLateAmount(creditCardScheduleEntity,
+					amount);
 		} else if (creditCardScheduleEntity.getPrincipalAmount() == amount) {
 			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, null, null, null);
 		}
@@ -693,7 +761,8 @@ public class OperationServiceImpl implements OperationService {
 	 *                             interest and late amount for
 	 * @param amount               the amount available for payment
 	 */
-	private void processCreditInterestAndLateAmount(CreditScheduleEntity creditScheduleEntity, Double amount) {
+	private void processCreditInterestAndLateAmount(CreditScheduleEntity creditScheduleEntity,
+			Double amount) {
 		amount -= creditScheduleEntity.getPrincipalAmount();
 
 		if (creditScheduleEntity.getInterestAmount() > amount) {
@@ -716,7 +785,8 @@ public class OperationServiceImpl implements OperationService {
 	 * @param amount                   the amount available for payment
 	 * @return balance returned.
 	 */
-	private Double processCreditCardInterestAndLateAmount(CreditCardScheduleEntity creditCardScheduleEntity,
+	private Double processCreditCardInterestAndLateAmount(
+			CreditCardScheduleEntity creditCardScheduleEntity,
 			Double amount) {
 		Double balanceReturned = 0.00;
 
@@ -724,7 +794,8 @@ public class OperationServiceImpl implements OperationService {
 
 		if (creditCardScheduleEntity.getInterestAmount() > amount) {
 			Double interestAmount = creditCardScheduleEntity.getInterestAmount() - amount;
-			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, interestAmount, null, null);
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, interestAmount,
+					null, null);
 		} else if (creditCardScheduleEntity.getInterestAmount() < amount) {
 			amount -= creditCardScheduleEntity.getInterestAmount();
 			balanceReturned += processCrediCardLateAmount(creditCardScheduleEntity, amount);
@@ -767,17 +838,21 @@ public class OperationServiceImpl implements OperationService {
 	 * @param amount                   the amount available for payment
 	 * @return balance returned.
 	 */
-	private Double processCrediCardLateAmount(CreditCardScheduleEntity creditCardScheduleEntity, Double amount) {
+	private Double processCrediCardLateAmount(CreditCardScheduleEntity creditCardScheduleEntity,
+			Double amount) {
 		Double balanceReturned = 0.00;
 
 		if (creditCardScheduleEntity.getLateAmount() > 0) {
 			if (creditCardScheduleEntity.getLateAmount() > amount) {
 				Double lateAmount = creditCardScheduleEntity.getLateAmount() - amount;
-				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, lateAmount, null);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00,
+						lateAmount, null);
 			} else if (creditCardScheduleEntity.getLateAmount() < amount) {
-				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
+						true);
 			} else if (creditCardScheduleEntity.getLateAmount() == amount) {
-				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, true);
+				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
+						true);
 			}
 		} else {
 			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00, null);
@@ -803,13 +878,16 @@ public class OperationServiceImpl implements OperationService {
 	private void paidCreditDebt(CreditScheduleEntity creditScheduleEntity, Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {
 		creditScheduleEntity.setPaid(paid != null ? paid : creditScheduleEntity.getPaid());
-		creditScheduleEntity.setLateAmount(lateAmount != null ? lateAmount : creditScheduleEntity.getLateAmount());
+		creditScheduleEntity.setLateAmount(
+				lateAmount != null ? lateAmount : creditScheduleEntity.getLateAmount());
 
 		creditScheduleEntity
-				.setInterestAmount(interestAmount != null ? interestAmount : creditScheduleEntity.getInterestAmount());
+				.setInterestAmount(interestAmount != null ? interestAmount
+						: creditScheduleEntity.getInterestAmount());
 
 		creditScheduleEntity.setPrincipalAmount(
-				principalAmount != null ? principalAmount : creditScheduleEntity.getPrincipalAmount());
+				principalAmount != null ? principalAmount
+						: creditScheduleEntity.getPrincipalAmount());
 
 		creditScheduleRepository.save(creditScheduleEntity);
 	}
@@ -829,19 +907,23 @@ public class OperationServiceImpl implements OperationService {
 	 *                                 payment status if null
 	 * @return balance returned.
 	 */
-	private Double paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity, Double principalAmount,
+	private Double paidCreditCardDebt(CreditCardScheduleEntity creditCardScheduleEntity,
+			Double principalAmount,
 			Double interestAmount, Double lateAmount, Boolean paid) {
 		Double balanceReturned = creditCardScheduleEntity.getPrincipalAmount();
 		creditCardScheduleEntity.setPaid(paid != null ? paid : creditCardScheduleEntity.getPaid());
 
 		creditCardScheduleEntity
-				.setLateAmount(lateAmount != null ? lateAmount : creditCardScheduleEntity.getLateAmount());
+				.setLateAmount(
+						lateAmount != null ? lateAmount : creditCardScheduleEntity.getLateAmount());
 
 		creditCardScheduleEntity.setInterestAmount(
-				interestAmount != null ? interestAmount : creditCardScheduleEntity.getInterestAmount());
+				interestAmount != null ? interestAmount
+						: creditCardScheduleEntity.getInterestAmount());
 
 		creditCardScheduleEntity.setPrincipalAmount(
-				principalAmount != null ? principalAmount : creditCardScheduleEntity.getPrincipalAmount());
+				principalAmount != null ? principalAmount
+						: creditCardScheduleEntity.getPrincipalAmount());
 
 		creditCardScheduleRepository.save(creditCardScheduleEntity);
 		return balanceReturned;

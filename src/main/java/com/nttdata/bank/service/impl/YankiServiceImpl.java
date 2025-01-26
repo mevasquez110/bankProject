@@ -74,7 +74,7 @@ public class YankiServiceImpl implements YankiService {
 
 		CompletableFuture<YankiEntity> yankiFuture = CompletableFuture.supplyAsync(() -> {
 			Optional<CustomerEntity> customerOptional = Optional.ofNullable(customerRepository
-					.findByDocumentNumberAndIsActiveTrue(yankiRequest.getDocumentNumber()).toFuture().join());
+					.findByDocumentNumberAndIsActiveTrue(yankiRequest.getDocumentNumber()).block());
 
 			customerOptional.ifPresentOrElse(customer -> {
 				if (!customer.getPhoneNumber().equalsIgnoreCase(yankiRequest.getPhoneNumber())) {
@@ -83,7 +83,7 @@ public class YankiServiceImpl implements YankiService {
 							.findByHolderDocContainingAndIsActiveTrue(yankiRequest.getDocumentNumber())
 							.filter(account -> account.getAccountType()
 									.equalsIgnoreCase(Constants.ACCOUNT_TYPE_CODE_SAVINGS))
-							.collectList().toFuture().join();
+							.collectList().block();
 
 					if (!accounts.isEmpty()) {
 						yankiEntity.setAccountNumber(accounts.get(0).getAccountNumber());
@@ -103,7 +103,7 @@ public class YankiServiceImpl implements YankiService {
 		logger.debug("Registering yanki sucessfully: {}", yankiRequest);
 
 		return YankiMapper.mapperToResponse(
-				yankiFuture.thenApply(entity -> yankiRepository.save(entity).toFuture().join()).join());
+				yankiFuture.thenApply(entity -> yankiRepository.save(entity).block()).join());
 	}
 
 	/**
@@ -157,7 +157,7 @@ public class YankiServiceImpl implements YankiService {
 	public List<YankiResponse> findAllYanki() {
 		logger.debug("Finding all accounts");
 
-		List<YankiEntity> yankis = yankiRepository.findAllByIsActiveTrue().collectList().toFuture().join();
+		List<YankiEntity> yankis = yankiRepository.findAllByIsActiveTrue().collectList().block();
 		List<YankiResponse> response = yankis.stream().map(entity -> {
 			YankiResponse yankiResponse = new YankiResponse();
 			yankiResponse.setName(entity.getName());
@@ -182,20 +182,20 @@ public class YankiServiceImpl implements YankiService {
 	@Override
 	public YankiResponse updateYanki(String phoneNumber, YankiUpdateRequest yankiUpdateRequest) {
 		YankiEntity yankiEntity = Optional
-				.ofNullable(yankiRepository.findByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture().join())
+				.ofNullable(yankiRepository.findByPhoneNumberAndIsActiveTrue(phoneNumber).block())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"YankiEntity with phone number " + phoneNumber + " does not exist."));
 
 		yankiEntity.setUpdateDate(LocalDateTime.now());
 
 		Optional.of(accountRepository.findByHolderDocContainingAndIsActiveTrue(yankiEntity.getDocumentNumber())
-				.collectList().toFuture().join().stream().findAny().isPresent()).filter(Boolean::booleanValue)
+				.collectList().block().stream().findAny().isPresent()).filter(Boolean::booleanValue)
 				.ifPresentOrElse(exists -> yankiEntity.setAccountNumber(yankiUpdateRequest.getAccountNumber()), () -> {
 					throw new IllegalArgumentException(
 							"YankiEntity with phone number " + phoneNumber + " does not exist.");
 				});
 
-		YankiEntity savedEntity = yankiRepository.save(yankiEntity).toFuture().join();
+		YankiEntity savedEntity = yankiRepository.save(yankiEntity).block();
 		YankiResponse yankiResponse = new YankiResponse();
 		yankiResponse.setName(savedEntity.getName());
 		yankiResponse.setPhoneNumber(savedEntity.getPhoneNumber());
@@ -211,7 +211,7 @@ public class YankiServiceImpl implements YankiService {
 	public void deleteYanki(String phoneNumber) {
 		logger.debug("Deleting yanki: ", phoneNumber);
 
-		Optional.ofNullable(yankiRepository.findByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture().join())
+		Optional.ofNullable(yankiRepository.findByPhoneNumberAndIsActiveTrue(phoneNumber).block())
 				.ifPresentOrElse(entity -> {
 					entity.setDeleteDate(LocalDateTime.now());
 					entity.setIsActive(false);

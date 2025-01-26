@@ -54,7 +54,7 @@ public class CreditServiceImpl implements CreditService {
 	private AccountsService accountService;
 
 	@Autowired
-	private OperationService transactionService;
+	private OperationService operationService;
 
 	/**
 	 * Grants credit based on the provided credit request. This method handles
@@ -77,7 +77,7 @@ public class CreditServiceImpl implements CreditService {
 		DepositRequest depositRequest = new DepositRequest();
 		depositRequest.setAccountNumber(creditRequest.getAccountNumber());
 		depositRequest.setAmount(creditRequest.getAmount());
-		transactionService.makeDeposit(depositRequest);
+		operationService.makeDeposit(depositRequest);
 		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
 		updateAccountRequest.setAccountNumber(creditRequest.getAccountNumber());
 		updateAccountRequest.setAmount(creditEntity.getAmount());
@@ -211,7 +211,7 @@ public class CreditServiceImpl implements CreditService {
 	 */
 	@Override
 	public void desactivateCredit(String creditId) {
-		Optional.ofNullable(creditRepository.findByIdAndIsActiveTrue(creditId).toFuture().join())
+		Optional.ofNullable(creditRepository.findByIdAndIsActiveTrue(creditId).block())
 				.ifPresentOrElse(entity -> {
 					entity.setDeleteDate(LocalDateTime.now());
 					entity.setIsActive(false);

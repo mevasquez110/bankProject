@@ -20,6 +20,7 @@ import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.OperationService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import reactor.core.publisher.Mono;
 
 /**
  * OperationController is a REST controller that implements the OperationAPI
@@ -50,15 +51,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackMakeDeposit")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> makeDeposit(@Valid DepositRequest depositRequest) {
+	public Mono<ApiResponse<TransactionResponse>> makeDeposit(
+			@Valid Mono<DepositRequest> depositRequest) {
 		logger.debug("Received request to make a deposit: {}", depositRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.makeDeposit(depositRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Deposit made successfully");
-		response.setData(transactionResponse);
-		logger.info("Deposit made successfully: {}", transactionResponse);
-		return response;
+		return depositRequest
+				.flatMap(request -> transactionService.makeDeposit(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Deposit made successfully");
+					response.setData(transactionResponse);
+					logger.info("Deposit made successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -71,15 +76,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackMakeWithdrawal")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> makeWithdrawal(@Valid WithdrawalRequest withdrawalRequest) {
+	public Mono<ApiResponse<TransactionResponse>> makeWithdrawal(
+			@Valid Mono<WithdrawalRequest> withdrawalRequest) {
 		logger.debug("Received request to make a withdrawal: {}", withdrawalRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.makeWithdrawal(withdrawalRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Withdrawal made successfully");
-		response.setData(transactionResponse);
-		logger.info("Withdrawal made successfully: {}", transactionResponse);
-		return response;
+		return withdrawalRequest
+				.flatMap(request -> transactionService.makeWithdrawal(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Withdrawal made successfully");
+					response.setData(transactionResponse);
+					logger.info("Withdrawal made successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -92,15 +101,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackMakeAccountTransfer")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> makeAccountTransfer(@Valid AccountTransferRequest accountTransferRequest) {
+	public Mono<ApiResponse<TransactionResponse>> makeAccountTransfer(
+			@Valid Mono<AccountTransferRequest> accountTransferRequest) {
 		logger.debug("Received request to make an account transfer: {}", accountTransferRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.makeAccountTransfer(accountTransferRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Account transfer made successfully");
-		response.setData(transactionResponse);
-		logger.info("Account transfer made successfully: {}", transactionResponse);
-		return response;
+		return accountTransferRequest
+				.flatMap(request -> transactionService.makeAccountTransfer(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Account transfer made successfully");
+					response.setData(transactionResponse);
+					logger.info("Account transfer made successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -113,15 +126,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackMakeMobileTransfer")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> makeMobileTransfer(@Valid MobileTransferRequest mobileTransferRequest) {
+	public Mono<ApiResponse<TransactionResponse>> makeMobileTransfer(
+			@Valid Mono<MobileTransferRequest> mobileTransferRequest) {
 		logger.debug("Received request to make a mobile transfer: {}", mobileTransferRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.makeMobileTransfer(mobileTransferRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Mobile transfer made successfully");
-		response.setData(transactionResponse);
-		logger.info("Mobile transfer made successfully: {}", transactionResponse);
-		return response;
+		return mobileTransferRequest
+				.flatMap(request -> transactionService.makeMobileTransfer(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Mobile transfer made successfully");
+					response.setData(transactionResponse);
+					logger.info("Mobile transfer made successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -134,15 +151,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackPayCreditCard")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> payCreditCard(@Valid PayCreditCardRequest payCreditCardRequest) {
+	public Mono<ApiResponse<TransactionResponse>> payCreditCard(
+			@Valid Mono<PayCreditCardRequest> payCreditCardRequest) {
 		logger.debug("Received request to pay credit card: {}", payCreditCardRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.payCreditCard(payCreditCardRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Credit card paid successfully");
-		response.setData(transactionResponse);
-		logger.info("Credit card paid successfully: {}", transactionResponse);
-		return response;
+		return payCreditCardRequest
+				.flatMap(request -> transactionService.payCreditCard(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Credit card paid successfully");
+					response.setData(transactionResponse);
+					logger.info("Credit card paid successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -155,15 +176,19 @@ public class OperationController implements OperationAPI {
 	@Override
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackPayCredit")
 	@TimeLimiter(name = "operationService")
-	public ApiResponse<TransactionResponse> payCredit(@Valid PayCreditRequest payCreditRequest) {
+	public Mono<ApiResponse<TransactionResponse>> payCredit(
+			@Valid Mono<PayCreditRequest> payCreditRequest) {
 		logger.debug("Received request to pay credit: {}", payCreditRequest);
-		ApiResponse<TransactionResponse> response = new ApiResponse<>();
-		TransactionResponse transactionResponse = transactionService.payCredit(payCreditRequest);
-		response.setStatusCode(HttpStatus.OK.value());
-		response.setMessage("Credit installment paid successfully");
-		response.setData(transactionResponse);
-		logger.info("Credit installment paid successfully: {}", transactionResponse);
-		return response;
+		return payCreditRequest
+				.flatMap(request -> transactionService.payCredit(request))
+				.map(transactionResponse -> {
+					ApiResponse<TransactionResponse> response = new ApiResponse<>();
+					response.setStatusCode(HttpStatus.OK.value());
+					response.setMessage("Credit installment paid successfully");
+					response.setData(transactionResponse);
+					logger.info("Credit installment paid successfully: {}", transactionResponse);
+					return response;
+				});
 	}
 
 	/**
@@ -177,9 +202,11 @@ public class OperationController implements OperationAPI {
 	@CircuitBreaker(name = "operationService", fallbackMethod = "fallbackCheckTransactions")
 	@TimeLimiter(name = "operationService")
 	public ApiResponse<List<TransactionResponse>> checkTransactions(String documentNumber) {
-		logger.debug("Received request to check transactions for document number: {}", documentNumber);
+		logger.debug("Received request to check transactions for document number: {}",
+				documentNumber);
 		ApiResponse<List<TransactionResponse>> response = new ApiResponse<>();
-		List<TransactionResponse> transactions = transactionService.checkTransactions(documentNumber);
+		List<TransactionResponse> transactions = transactionService
+				.checkTransactions(documentNumber);
 		response.setStatusCode(HttpStatus.OK.value());
 		response.setMessage("Transactions retrieved successfully");
 		response.setData(transactions);
@@ -216,12 +243,13 @@ public class OperationController implements OperationAPI {
 	 *                       triggered.
 	 * @return ApiResponse indicating failure to make deposit.
 	 */
-	public ApiResponse<TransactionResponse> fallbackMakeDeposit(DepositRequest depositRequest, Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackMakeDeposit(
+			Mono<DepositRequest> depositRequest, Throwable throwable) {
 		logger.error("Fallback method for makeDeposit due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		response.setMessage("Unable to make deposit at the moment. Please try again later.");
-		return response;
+		return Mono.just(response);
 	}
 
 	/**
@@ -232,13 +260,13 @@ public class OperationController implements OperationAPI {
 	 *                          triggered.
 	 * @return ApiResponse indicating failure to make withdrawal.
 	 */
-	public ApiResponse<TransactionResponse> fallbackMakeWithdrawal(WithdrawalRequest withdrawalRequest,
-			Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackMakeWithdrawal(
+			Mono<WithdrawalRequest> withdrawalRequest, Throwable throwable) {
 		logger.error("Fallback method for makeWithdrawal due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		response.setMessage("Unable to make withdrawal at the moment. Please try again later.");
-		return response;
+		return Mono.just(response);
 	}
 
 	/**
@@ -249,13 +277,14 @@ public class OperationController implements OperationAPI {
 	 *                               triggered.
 	 * @return ApiResponse indicating failure to make account transfer.
 	 */
-	public ApiResponse<TransactionResponse> fallbackMakeAccountTransfer(AccountTransferRequest accountTransferRequest,
-			Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackMakeAccountTransfer(
+			Mono<AccountTransferRequest> accountTransferRequest, Throwable throwable) {
 		logger.error("Fallback method for makeAccountTransfer due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-		response.setMessage("Unable to make account transfer at the moment. Please try again later.");
-		return response;
+		response.setMessage(
+				"Unable to make account transfer at the moment. Please try again later.");
+		return Mono.just(response);
 	}
 
 	/**
@@ -266,13 +295,14 @@ public class OperationController implements OperationAPI {
 	 *                              triggered.
 	 * @return ApiResponse indicating failure to make mobile transfer.
 	 */
-	public ApiResponse<TransactionResponse> fallbackMakeMobileTransfer(MobileTransferRequest mobileTransferRequest,
-			Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackMakeMobileTransfer(
+			Mono<MobileTransferRequest> mobileTransferRequest, Throwable throwable) {
 		logger.error("Fallback method for makeMobileTransfer due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-		response.setMessage("Unable to make mobile transfer at the moment. Please try again later.");
-		return response;
+		response.setMessage(
+				"Unable to make mobile transfer at the moment. Please try again later.");
+		return Mono.just(response);
 	}
 
 	/**
@@ -283,13 +313,13 @@ public class OperationController implements OperationAPI {
 	 *                             triggered.
 	 * @return ApiResponse indicating failure to pay credit card.
 	 */
-	public ApiResponse<TransactionResponse> fallbackPayCreditCard(PayCreditCardRequest payCreditCardRequest,
-			Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackPayCreditCard(
+			Mono<PayCreditCardRequest> payCreditCardRequest, Throwable throwable) {
 		logger.error("Fallback method for payCreditCard due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		response.setMessage("Unable to pay credit card at the moment. Please try again later.");
-		return response;
+		return Mono.just(response);
 	}
 
 	/**
@@ -300,12 +330,13 @@ public class OperationController implements OperationAPI {
 	 *                         triggered.
 	 * @return ApiResponse indicating failure to pay credit.
 	 */
-	public ApiResponse<TransactionResponse> fallbackPayCredit(PayCreditRequest payCreditRequest, Throwable throwable) {
+	public Mono<ApiResponse<TransactionResponse>> fallbackPayCredit(
+			Mono<PayCreditRequest> payCreditRequest, Throwable throwable) {
 		logger.error("Fallback method for payCredit due to: {}", throwable.getMessage());
 		ApiResponse<TransactionResponse> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		response.setMessage("Unable to pay credit at the moment. Please try again later.");
-		return response;
+		return Mono.just(response);
 	}
 
 	/**
@@ -317,7 +348,8 @@ public class OperationController implements OperationAPI {
 	 *                       triggered.
 	 * @return ApiResponse indicating failure to check transactions.
 	 */
-	public ApiResponse<List<TransactionResponse>> fallbackCheckTransactions(String documentNumber,
+	public ApiResponse<List<TransactionResponse>> fallbackCheckTransactions(
+			String documentNumber,
 			Throwable throwable) {
 		logger.error("Fallback method for checkTransactions due to: {}", throwable.getMessage());
 		ApiResponse<List<TransactionResponse>> response = new ApiResponse<>();
@@ -334,7 +366,8 @@ public class OperationController implements OperationAPI {
 	 *                       triggered.
 	 * @return ApiResponse indicating failure to get products.
 	 */
-	public ApiResponse<List<ProductResponse>> fallbackGetProducts(String documentNumber, Throwable throwable) {
+	public ApiResponse<List<ProductResponse>> fallbackGetProducts(String documentNumber,
+			Throwable throwable) {
 		logger.error("Fallback method for getProducts due to: {}", throwable.getMessage());
 		ApiResponse<List<ProductResponse>> response = new ApiResponse<>();
 		response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());

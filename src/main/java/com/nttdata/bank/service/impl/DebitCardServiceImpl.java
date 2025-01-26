@@ -57,7 +57,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 					entity.setIsBlocked(false);
 					entity.setIsActive(true);
 					return entity;
-				}).map(debitCardRepository::save).map(future -> future.toFuture().join()).orElseThrow();
+				}).map(debitCardRepository::save).map(future -> future.block()).orElseThrow();
 
 		return Optional.of(debitCardEntity).map(DebitCardMapper::mapperToResponse).orElseThrow();
 	}
@@ -94,7 +94,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 			debitCardNumber = Constants.DEBIT_TYPE + Constants.BANK_CODE + documentNumber
 					+ Utility.generateRandomNumber();
 
-			exists = debitCardRepository.existsByDebitCardNumber(debitCardNumber).toFuture().join();
+			exists = debitCardRepository.existsByDebitCardNumber(debitCardNumber).block();
 		} while (exists);
 		return debitCardNumber;
 	}

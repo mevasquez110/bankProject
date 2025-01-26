@@ -10,6 +10,7 @@ import com.nttdata.bank.request.PayCreditRequest;
 import com.nttdata.bank.request.WithdrawalRequest;
 import com.nttdata.bank.response.ProductResponse;
 import com.nttdata.bank.response.TransactionResponse;
+import reactor.core.publisher.Mono;
 
 /**
  * TransactionService is the interface that provides methods for handling
@@ -26,7 +27,7 @@ public interface OperationService {
 	 *                       deposit
 	 * @return TransactionResponse containing the details of the completed deposit
 	 */
-	TransactionResponse makeDeposit(DepositRequest depositRequest);
+	Mono<TransactionResponse> makeDeposit(DepositRequest depositRequest);
 
 	/**
 	 * Makes a withdrawal based on the provided withdrawal request.
@@ -36,7 +37,7 @@ public interface OperationService {
 	 * @return TransactionResponse containing the details of the completed
 	 *         withdrawal
 	 */
-	TransactionResponse makeWithdrawal(WithdrawalRequest withdrawalRequest);
+	Mono<TransactionResponse> makeWithdrawal(WithdrawalRequest withdrawalRequest);
 
 	/**
 	 * Makes an account transfer based on the provided account transfer request.
@@ -46,7 +47,7 @@ public interface OperationService {
 	 * @return TransactionResponse containing the details of the completed account
 	 *         transfer
 	 */
-	TransactionResponse makeAccountTransfer(AccountTransferRequest accountTransferRequest);
+	Mono<TransactionResponse> makeAccountTransfer(AccountTransferRequest accountTransferRequest);
 
 	/**
 	 * Makes a mobile transfer based on the provided mobile transfer request.
@@ -56,7 +57,7 @@ public interface OperationService {
 	 * @return TransactionResponse containing the details of the completed mobile
 	 *         transfer
 	 */
-	TransactionResponse makeMobileTransfer(MobileTransferRequest mobileTransferRequest);
+	Mono<TransactionResponse> makeMobileTransfer(MobileTransferRequest mobileTransferRequest);
 
 	/**
 	 * Pays a credit card based on the provided pay credit card request.
@@ -66,7 +67,7 @@ public interface OperationService {
 	 * @return TransactionResponse containing the details of the completed credit
 	 *         card payment
 	 */
-	TransactionResponse payCreditCard(PayCreditCardRequest payCreditCardRequest);
+	Mono<TransactionResponse> payCreditCard(PayCreditCardRequest payCreditCardRequest);
 
 	/**
 	 * Pays a credit based on the provided pay credit request.
@@ -76,7 +77,7 @@ public interface OperationService {
 	 * @return TransactionResponse containing the details of the completed credit
 	 *         payment
 	 */
-	TransactionResponse payCredit(PayCreditRequest payCreditRequest);
+	Mono<TransactionResponse> payCredit(PayCreditRequest payCreditRequest);
 
 	/**
 	 * Retrieves transactions for a customer based on their document number.

@@ -75,7 +75,7 @@ public class AccountsServiceImpl implements AccountsService {
 		accountEntity
 				.setAccountNumber(generateUniqueAccountNumber(accountRequest.getAccountType()));
 		setAccountDetails(accountRequest, accountEntity);
-		accountEntity = accountRepository.save(accountEntity).toFuture().join();
+		accountEntity = accountRepository.save(accountEntity).block();
 		makeFirstDeposit(accountRequest, accountEntity, accountRequest.getHolderDoc().get(0));
 		AccountResponse response = AccountMapper.mapperToResponse(accountEntity);
 		logger.info("Account registered successfully: {}", response);
@@ -94,7 +94,7 @@ public class AccountsServiceImpl implements AccountsService {
 
 		AccountEntity accountEntity = Optional
 				.ofNullable(accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
-						.toFuture().join())
+						.block())
 				.orElseThrow(() -> new IllegalArgumentException(
 						"Account not found with number: " + accountNumber));
 
@@ -112,7 +112,7 @@ public class AccountsServiceImpl implements AccountsService {
 	public List<AccountResponse> findAllAccounts(String documentNumber) {
 		logger.info("All accounts retrieved successfully");
 		return accountRepository.findByHolderDocContainingAndIsActiveTrue(documentNumber)
-				.map(AccountMapper::mapperToResponse).collectList().toFuture().join();
+				.map(AccountMapper::mapperToResponse).collectList().block();
 	}
 
 	/**
@@ -170,7 +170,7 @@ public class AccountsServiceImpl implements AccountsService {
 								return accountRepository.save(entity);
 							});
 				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
-				.toFuture().join();
+				.block();
 	}
 
 	/**
@@ -210,7 +210,7 @@ public class AccountsServiceImpl implements AccountsService {
 
 			List<AccountEntity> accounts = accountRepository
 					.findByHolderDocContainingAndIsActiveTrue(documentNumber)
-					.collectList().toFuture().join();
+					.collectList().block();
 
 			CustomerEntity customer = Optional
 					.ofNullable(customerRepository
@@ -326,7 +326,7 @@ public class AccountsServiceImpl implements AccountsService {
 		boolean exists;
 		do {
 			accountNumber = generateAccountNumber(accountType);
-			exists = accountRepository.existsByAccountNumber(accountNumber).toFuture().join();
+			exists = accountRepository.existsByAccountNumber(accountNumber).block();
 		} while (exists);
 		return accountNumber;
 	}

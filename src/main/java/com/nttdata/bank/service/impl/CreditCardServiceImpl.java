@@ -231,7 +231,7 @@ public class CreditCardServiceImpl implements CreditCardService {
 	public ConsumptionResponse chargeConsumption(@Valid ConsumptionRequest consumptionRequest) {
 		CreditCardEntity creditCardEntity = creditCardRepository
 				.findByCreditCardNumberAndIsActiveTrue(consumptionRequest.getCreditCardNumber())
-				.toFuture().join();
+				.block();
 
 		if (!creditCardEntity.getAllowConsumption()) {
 			throw new RuntimeException("Consumption is not allowed.");

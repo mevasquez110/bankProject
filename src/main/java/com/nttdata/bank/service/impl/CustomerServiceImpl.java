@@ -36,7 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
 		existsPhoneNumber(customerRequest.getPhoneNumber());
 		existsDocumentNumber(customerRequest.getDocumentNumber());
 		CustomerEntity customerEntity = CustomerMapper.mapperToEntity(customerRequest);
-		CustomerEntity savedEntity = customerRepository.save(customerEntity).toFuture().join();
+		CustomerEntity savedEntity = customerRepository.save(customerEntity).block();
 		CustomerResponse response = CustomerMapper.mapperToResponse(savedEntity);
 		logger.info("Customer created successfully: {}", response);
 		return response;
@@ -51,7 +51,7 @@ public class CustomerServiceImpl implements CustomerService {
 	 * @throws IllegalArgumentException if the document number is already registered
 	 */
 	private void existsDocumentNumber(String documentNumber) {
-		Optional.ofNullable(customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber).toFuture().join())
+		Optional.ofNullable(customerRepository.existsByDocumentNumberAndIsActiveTrue(documentNumber).block())
 				.filter(Boolean::booleanValue).ifPresent(exists -> {
 					logger.warn("The document is already registered: {}", documentNumber);
 					throw new IllegalArgumentException("The document is already registered");
@@ -67,7 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
 	 * @throws IllegalArgumentException if the phone number is already registered
 	 */
 	private void existsPhoneNumber(String phoneNumber) {
-		Optional.ofNullable(customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber).toFuture().join())
+		Optional.ofNullable(customerRepository.existsByPhoneNumberAndIsActiveTrue(phoneNumber).block())
 				.filter(Boolean::booleanValue).ifPresent(exists -> {
 					logger.warn("The phone is already registered: {}", phoneNumber);
 					throw new IllegalArgumentException("The phone number is already registered");
@@ -88,7 +88,7 @@ public class CustomerServiceImpl implements CustomerService {
 		CustomerEntity customerEntity = customerRepository.findByDocumentNumberAndIsActiveTrue(documentNumber)
 				.switchIfEmpty(
 						Mono.error(new IllegalArgumentException("Customer not found with document: " + documentNumber)))
-				.toFuture().join();
+				.block();
 		
 		CustomerResponse response = CustomerMapper.mapperToResponse(customerEntity);
 		logger.info("Customer retrieved successfully by document number: {}", documentNumber);
@@ -127,7 +127,7 @@ public class CustomerServiceImpl implements CustomerService {
 					customerEntity.setUpdateDate(LocalDateTime.now());
 					return customerEntity;
 				}).flatMap(customerRepository::save).map(CustomerMapper::mapperToResponse)
-				.doOnSuccess(response -> logger.info("Customer updated successfully: {}", response)).toFuture().join();
+				.doOnSuccess(response -> logger.info("Customer updated successfully: {}", response)).block();
 	}
 
 	/**
@@ -145,6 +145,6 @@ public class CustomerServiceImpl implements CustomerService {
 					return customerEntity;
 				}).flatMap(customerRepository::save).doOnSuccess(customerEntity -> logger
 						.info("Customer deleted successfully with document number: {}", documentNumber))
-				.toFuture().join();
+				.block();
 	}
 }
