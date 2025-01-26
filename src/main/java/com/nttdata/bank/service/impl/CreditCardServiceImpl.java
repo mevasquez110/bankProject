@@ -64,7 +64,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 		logger.debug("Requesting credit card: {}", creditCardRequest);
 		validateCreditCard(creditCardRequest);
 		CreditCardEntity creditCardEntity = CreditCardMapper.mapperToEntity(creditCardRequest);
-		creditCardEntity.setCreditCardNumber(generateUniqueCreditCardNumber(creditCardRequest.getDocumentNumber()));
+		creditCardEntity.setCreditCardNumber(
+				generateUniqueCreditCardNumber(creditCardRequest.getDocumentNumber()));
 		creditCardEntity.setCreateDate(LocalDateTime.now());
 		creditCardEntity.setIsActive(true);
 		creditCardEntity.setAllowConsumption(true);
@@ -86,20 +87,22 @@ public class CreditCardServiceImpl implements CreditCardService {
 	 */
 	private void validateCreditCard(CreditCardRequest creditCardRequest) {
 		Optional.ofNullable(creditCardRepository
-				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
+				.existsByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber())
+				.block())
 				.filter(Boolean::booleanValue).ifPresent(exists -> {
 					throw new RuntimeException("The customer already has a credit card");
 				});
 
-		Optional.ofNullable(
-				creditRepository.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
-				.ifPresent(creditEntity -> {
-					Optional.ofNullable(creditScheduleRepository
-							.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditEntity.getId(),
-									LocalDateTime.now())
-							.collectList().block()).filter(schedule -> !schedule.isEmpty())
-							.orElseThrow(() -> new RuntimeException("The client has active debt"));
-				});
+		Optional.ofNullable(creditRepository
+				.findByDocumentNumberAndIsActiveTrue(creditCardRequest.getDocumentNumber()).block())
+				.ifPresent(creditEntity -> Optional.ofNullable(creditScheduleRepository
+						.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(
+								creditEntity.getId(), LocalDateTime.now())
+						.collectList().block())
+						.filter(scheduleList -> !scheduleList.isEmpty())
+						.ifPresent(scheduleList -> {
+							throw new RuntimeException("The client has active debt");
+						}));
 	}
 
 	/**
@@ -112,19 +115,24 @@ public class CreditCardServiceImpl implements CreditCardService {
 	public CreditCardDebtResponse checkDebtCreditCard(String creditCardNumber) {
 		logger.debug("Checking debt for credit card: {}", creditCardNumber);
 
-		CreditCardEntity creditCard = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+		CreditCardEntity creditCard = creditCardRepository
+				.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
 					return new RuntimeException("Credit card not found");
 				});
 
 		Double share = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
-				.collectList().block().stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber,
+						LocalDate.now())
+				.collectList().block().stream()
+				.mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
 		Double totalDebt = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
-				.collectList().block().stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber,
+						LocalDateTime.now())
+				.collectList().block().stream()
+				.flatMap(schedule -> schedule.getConsumptionQuota().stream())
 				.mapToDouble(Consumption::getAmount).sum() + share;
 
 		CreditCardDebtResponse response = new CreditCardDebtResponse();
@@ -144,7 +152,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public List<CreditCardResponse> findAllCreditCards() {
 		logger.info("All credit cards retrieved successfully");
-		return creditCardRepository.findByIsActiveTrue().map(CreditCardMapper::mapperToResponse).collectList().block();
+		return creditCardRepository.findByIsActiveTrue().map(CreditCardMapper::mapperToResponse)
+				.collectList().block();
 	}
 
 	/**
@@ -157,7 +166,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 	public CreditCardResponse updateCreditCard(String creditCardNumber) {
 		logger.debug("Updating credit card with ID: {}", creditCardNumber);
 
-		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+		CreditCardEntity creditCardEntity = creditCardRepository
+				.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
 					return new RuntimeException("Credit card not found");
@@ -180,19 +190,24 @@ public class CreditCardServiceImpl implements CreditCardService {
 	public void deleteCreditCard(String creditCardNumber) {
 		logger.debug("Deleting credit card with ID: {}", creditCardNumber);
 
-		CreditCardEntity creditCardEntity = creditCardRepository.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+		CreditCardEntity creditCardEntity = creditCardRepository
+				.findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
 				.blockOptional().orElseThrow(() -> {
 					logger.error("Credit card not found: {}", creditCardNumber);
 					return new RuntimeException("Credit card not found");
 				});
 
 		Double share = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber, LocalDate.now())
-				.collectList().block().stream().mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(creditCardNumber,
+						LocalDate.now())
+				.collectList().block().stream()
+				.mapToDouble(CreditCardScheduleEntity::getCurrentDebt).sum();
 
 		Double totalDebt = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber, LocalDateTime.now())
-				.collectList().block().stream().flatMap(schedule -> schedule.getConsumptionQuota().stream())
+				.findByCreditCardNumberAndPaidFalseAndPaymentDateAfter(creditCardNumber,
+						LocalDateTime.now())
+				.collectList().block().stream()
+				.flatMap(schedule -> schedule.getConsumptionQuota().stream())
 				.mapToDouble(Consumption::getAmount).sum() + share;
 
 		if (totalDebt > 0) {
@@ -215,7 +230,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 	@Override
 	public ConsumptionResponse chargeConsumption(@Valid ConsumptionRequest consumptionRequest) {
 		CreditCardEntity creditCardEntity = creditCardRepository
-				.findByCreditCardNumberAndIsActiveTrue(consumptionRequest.getCreditCardNumber()).toFuture().join();
+				.findByCreditCardNumberAndIsActiveTrue(consumptionRequest.getCreditCardNumber())
+				.toFuture().join();
 
 		if (!creditCardEntity.getAllowConsumption()) {
 			throw new RuntimeException("Consumption is not allowed.");
@@ -239,7 +255,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 		}
 
 		CreditCardScheduleEntity schedule = creditCardScheduleRepository
-				.findByCreditCardNumberAndPaymentDate(creditCardEntity.getCreditCardNumber(), paymentDate)
+				.findByCreditCardNumberAndPaymentDate(creditCardEntity.getCreditCardNumber(),
+						paymentDate)
 				.switchIfEmpty(Mono.defer(() -> {
 					CreditCardScheduleEntity newSchedule = new CreditCardScheduleEntity();
 					newSchedule.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
@@ -283,7 +300,8 @@ public class CreditCardServiceImpl implements CreditCardService {
 			creditCardNumber = Constants.CREDIT_TYPE + Constants.BANK_CODE + documentNumber
 					+ Utility.generateRandomNumber();
 
-			exists = creditCardRepository.existsByCreditCardNumber(creditCardNumber).toFuture().join();
+			exists = creditCardRepository.existsByCreditCardNumber(creditCardNumber).toFuture()
+					.join();
 		} while (exists);
 		return creditCardNumber;
 	}
