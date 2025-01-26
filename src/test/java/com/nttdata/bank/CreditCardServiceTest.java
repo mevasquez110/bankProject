@@ -64,4 +64,14 @@ public class CreditCardServiceTest {
 		consumptionRequest.setProductOrServiceName("Laptop");
 		assertFalse(validator.validate(consumptionRequest).isEmpty());
 	}
+	
+	@Test
+	public void testInvalidConsumptionRequestSizeCreditCard() {
+		ConsumptionRequest consumptionRequest = new ConsumptionRequest();
+		consumptionRequest.setCreditCardNumber("123");
+		consumptionRequest.setAmount(100.0);
+		consumptionRequest.setNumberOfInstallments(12);
+		consumptionRequest.setProductOrServiceName("Laptop");
+		assertFalse(validator.validate(consumptionRequest).isEmpty());
+	}
 }

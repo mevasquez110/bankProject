@@ -21,17 +21,13 @@ public class CreditMapper {
 	 */
 	public static CreditEntity mapperToEntity(CreditRequest creditRequest) {
 		CreditEntity creditEntity = new CreditEntity();
-
-		if (creditRequest != null) {
-			creditEntity.setDocumentNumber(creditRequest.getDocumentNumber());
-			creditEntity.setAmount(creditRequest.getAmount());
-			creditEntity.setAccountNumber(creditRequest.getAccountNumber());
-			creditEntity.setAnnualInterestRate(creditRequest.getAnnualInterestRate());
-			creditEntity.setNumberOfInstallments(creditRequest.getNumberOfInstallments());
-			creditEntity.setPaymentDay(creditRequest.getPaymentDay());
-			creditEntity.setAnnualLateInterestRate(creditRequest.getAnnualLateInterestRate());
-		}
-
+		creditEntity.setDocumentNumber(creditRequest.getDocumentNumber());
+		creditEntity.setAmount(creditRequest.getAmount());
+		creditEntity.setAccountNumber(creditRequest.getAccountNumber());
+		creditEntity.setAnnualInterestRate(creditRequest.getAnnualInterestRate());
+		creditEntity.setNumberOfInstallments(creditRequest.getNumberOfInstallments());
+		creditEntity.setPaymentDay(creditRequest.getPaymentDay());
+		creditEntity.setAnnualLateInterestRate(creditRequest.getAnnualLateInterestRate());
 		return creditEntity;
 	}
 
@@ -43,16 +39,12 @@ public class CreditMapper {
 	 */
 	public static CreditResponse mapperToResponse(CreditEntity creditEntity) {
 		CreditResponse creditResponse = new CreditResponse();
-
-		if (creditEntity != null) {
-			creditResponse.setCreditId(creditEntity.getId());
-			creditResponse.setAmount(creditEntity.getAmount());
-			creditResponse.setAnnualInterestRate(creditEntity.getAnnualInterestRate());
-			creditResponse.setNumberOfInstallments(creditEntity.getNumberOfInstallments());
-			creditResponse.setPaymentDay(creditEntity.getPaymentDay());
-			creditResponse.setAnnualInterestRate(creditEntity.getAnnualLateInterestRate());
-		}
-
+		creditResponse.setCreditId(creditEntity.getId());
+		creditResponse.setAmount(creditEntity.getAmount());
+		creditResponse.setAnnualInterestRate(creditEntity.getAnnualInterestRate());
+		creditResponse.setNumberOfInstallments(creditEntity.getNumberOfInstallments());
+		creditResponse.setPaymentDay(creditEntity.getPaymentDay());
+		creditResponse.setAnnualInterestRate(creditEntity.getAnnualLateInterestRate());
 		return creditResponse;
 	}
 }

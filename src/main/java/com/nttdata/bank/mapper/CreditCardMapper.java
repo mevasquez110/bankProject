@@ -21,15 +21,11 @@ public class CreditCardMapper {
 	 */
 	public static CreditCardEntity mapperToEntity(CreditCardRequest creditCardRequest) {
 		CreditCardEntity creditCardEntity = new CreditCardEntity();
-
-		if (creditCardRequest != null) {
-			creditCardEntity.setDocumentNumber(creditCardRequest.getDocumentNumber());
-			creditCardEntity.setAvailableCredit(creditCardRequest.getAvailableCredit());
-			creditCardEntity.setAnnualInterestRate(creditCardRequest.getAnnualInterestRate());
-			creditCardEntity.setAnnualLateInterestRate(creditCardRequest.getAnnualLateInterestRate());
-			creditCardEntity.setPaymentDay(creditCardRequest.getPaymentDay());
-		}
-
+		creditCardEntity.setDocumentNumber(creditCardRequest.getDocumentNumber());
+		creditCardEntity.setAvailableCredit(creditCardRequest.getAvailableCredit());
+		creditCardEntity.setAnnualInterestRate(creditCardRequest.getAnnualInterestRate());
+		creditCardEntity.setAnnualLateInterestRate(creditCardRequest.getAnnualLateInterestRate());
+		creditCardEntity.setPaymentDay(creditCardRequest.getPaymentDay());
 		return creditCardEntity;
 	}
 
@@ -41,16 +37,15 @@ public class CreditCardMapper {
 	 */
 	public static CreditCardResponse mapperToResponse(CreditCardEntity creditCardEntity) {
 		CreditCardResponse creditCardResponse = new CreditCardResponse();
-
-		if (creditCardEntity != null) {
-			creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
-			creditCardResponse.setAvailableCredit(creditCardEntity.getAvailableCredit());
-			creditCardResponse.setAnnualInterestRate(creditCardEntity.getAnnualInterestRate());
-			creditCardResponse.setAnnualLateInterestRate(creditCardEntity.getAnnualLateInterestRate());
-			creditCardResponse.setPaymentDay(creditCardEntity.getPaymentDay());
-			creditCardResponse.setAllowConsumption(creditCardEntity.getAllowConsumption());
-		}
-
+		creditCardResponse.setCreditCardNumber(creditCardEntity.getCreditCardNumber());
+		creditCardResponse.setAvailableCredit(creditCardEntity.getAvailableCredit());
+		creditCardResponse.setAnnualInterestRate(creditCardEntity.getAnnualInterestRate());
+		
+		creditCardResponse
+				.setAnnualLateInterestRate(creditCardEntity.getAnnualLateInterestRate());
+		
+		creditCardResponse.setPaymentDay(creditCardEntity.getPaymentDay());
+		creditCardResponse.setAllowConsumption(creditCardEntity.getAllowConsumption());
 		return creditCardResponse;
 	}
 }

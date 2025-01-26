@@ -21,12 +21,8 @@ public class DebitCardMapper {
 	 */
 	public static DebitCardEntity mapperToEntity(DebitCardRequest debitCardRequest) {
 		DebitCardEntity debitCardEntity = new DebitCardEntity();
-
-		if (debitCardRequest != null) {
-			debitCardEntity.setDocumentNumber(debitCardRequest.getDocumentNumber());
-			debitCardEntity.setPrimaryAccount(debitCardRequest.getPrimaryAccount());
-		}
-
+		debitCardEntity.setDocumentNumber(debitCardRequest.getDocumentNumber());
+		debitCardEntity.setPrimaryAccount(debitCardRequest.getPrimaryAccount());
 		return debitCardEntity;
 	}
 
@@ -38,15 +34,11 @@ public class DebitCardMapper {
 	 */
 	public static DebitCardResponse mapperToResponse(DebitCardEntity debitCardEntity) {
 		DebitCardResponse debitCardResponse = new DebitCardResponse();
-
-		if (debitCardEntity != null) {
-			debitCardResponse.setDebitCardNumber(debitCardEntity.getDebitCardNumber());
-			debitCardResponse.setAssociatedAccounts(debitCardEntity.getAssociatedAccounts());
-			debitCardResponse.setPrimaryAccount(debitCardEntity.getPrimaryAccount());
-			debitCardResponse.setIsBlocked(debitCardEntity.getIsBlocked());
-			debitCardResponse.setIsActive(debitCardEntity.getIsActive());
-		}
-
+		debitCardResponse.setDebitCardNumber(debitCardEntity.getDebitCardNumber());
+		debitCardResponse.setAssociatedAccounts(debitCardEntity.getAssociatedAccounts());
+		debitCardResponse.setPrimaryAccount(debitCardEntity.getPrimaryAccount());
+		debitCardResponse.setIsBlocked(debitCardEntity.getIsBlocked());
+		debitCardResponse.setIsActive(debitCardEntity.getIsActive());
 		return debitCardResponse;
 	}
 }

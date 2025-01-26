@@ -20,13 +20,9 @@ public class YankiMapper {
 	 */
 	public static YankiEntity mapperToEntity(YankiRequest yankiRequest) {
 		YankiEntity yankiEntity = new YankiEntity();
-
-		if (yankiRequest != null) {
-			yankiEntity.setName(yankiRequest.getName());
-			yankiEntity.setPhoneNumber(yankiRequest.getPhoneNumber());
-			yankiEntity.setDocumentNumber(yankiRequest.getDocumentNumber());
-		}
-
+		yankiEntity.setName(yankiRequest.getName());
+		yankiEntity.setPhoneNumber(yankiRequest.getPhoneNumber());
+		yankiEntity.setDocumentNumber(yankiRequest.getDocumentNumber());
 		return yankiEntity;
 	}
 
@@ -38,12 +34,8 @@ public class YankiMapper {
 	 */
 	public static YankiResponse mapperToResponse(YankiEntity yankiEntity) {
 		YankiResponse yankiResponse = new YankiResponse();
-
-		if (yankiEntity != null) {
-			yankiResponse.setName(yankiEntity.getName());
-			yankiResponse.setPhoneNumber(yankiEntity.getPhoneNumber());
-		}
-
+		yankiResponse.setName(yankiEntity.getName());
+		yankiResponse.setPhoneNumber(yankiEntity.getPhoneNumber());
 		return yankiResponse;
 	}
 }

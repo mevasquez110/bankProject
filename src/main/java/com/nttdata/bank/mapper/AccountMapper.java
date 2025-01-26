@@ -24,17 +24,13 @@ public class AccountMapper {
 	 */
 	public static AccountEntity mapperToEntity(AccountRequest accountRequest) {
 		AccountEntity accountEntity = new AccountEntity();
-
-		if (accountRequest != null) {
-			accountEntity.setHolderDoc(accountRequest.getHolderDoc());
-			accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
-			accountEntity.setAccountType(accountRequest.getAccountType());
-			accountEntity.setCurrency(Constants.CURRENCY_SOL);
-			accountEntity.setCommissionPending(0.00);
-			accountEntity.setCreateDate(LocalDateTime.now());
-			accountEntity.setIsActive(true);
-		}
-
+		accountEntity.setHolderDoc(accountRequest.getHolderDoc());
+		accountEntity.setAuthorizedSignatoryDoc(accountRequest.getAuthorizedSignatoryDoc());
+		accountEntity.setAccountType(accountRequest.getAccountType());
+		accountEntity.setCurrency(Constants.CURRENCY_SOL);
+		accountEntity.setCommissionPending(0.00);
+		accountEntity.setCreateDate(LocalDateTime.now());
+		accountEntity.setIsActive(true);
 		return accountEntity;
 	}
 
@@ -46,16 +42,12 @@ public class AccountMapper {
 	 */
 	public static AccountResponse mapperToResponse(AccountEntity accountEntity) {
 		AccountResponse accountResponse = new AccountResponse();
-
-		if (accountEntity != null) {
-			accountResponse.setAccountNumber(accountEntity.getAccountNumber());
-			accountResponse.setMonthlyTransactionLimit(accountEntity.getMonthlyTransactionLimit());
-			accountResponse.setMaintenanceCommission(accountEntity.getMaintenanceCommission());
-			accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
-			accountResponse.setAmount(accountEntity.getAmount());
-			accountResponse.setCurrency(accountEntity.getCurrency());
-		}
-
+		accountResponse.setAccountNumber(accountEntity.getAccountNumber());
+		accountResponse.setMonthlyTransactionLimit(accountEntity.getMonthlyTransactionLimit());
+		accountResponse.setMaintenanceCommission(accountEntity.getMaintenanceCommission());
+		accountResponse.setWithdrawalDepositDate(accountEntity.getWithdrawalDepositDate());
+		accountResponse.setAmount(accountEntity.getAmount());
+		accountResponse.setCurrency(accountEntity.getCurrency());
 		return accountResponse;
 	}
 

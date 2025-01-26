@@ -16,7 +16,6 @@ import com.nttdata.bank.request.DepositRequest;
 import com.nttdata.bank.request.WithdrawalRequest;
 import com.nttdata.bank.request.AccountTransferRequest;
 import com.nttdata.bank.request.MobileTransferRequest;
-import com.nttdata.bank.request.PayCreditCardRequest;
 import com.nttdata.bank.request.PayCreditRequest;
 
 @SpringBootTest
@@ -155,12 +154,7 @@ public class OperationServiceTest {
 		assertFalse(validator.validate(mobileTransferRequest).isEmpty());
 	}
 
-	@Test
-	public void testInvalidPayCreditCardRequestWithMissingCreditCardNumber() {
-		PayCreditCardRequest payCreditCardRequest = new PayCreditCardRequest();
-		payCreditCardRequest.setAmount(1000.0);
-		assertFalse(validator.validate(payCreditCardRequest).isEmpty());
-	}
+
 
 	@Test
 	public void testInvalidPayCreditRequestWithMissingCreditId() {

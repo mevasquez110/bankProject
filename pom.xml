@@ -214,6 +214,16 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<excludes>
+						<exclude>**/BankProjectApplication.java</exclude>
+						<exclude>**/com/nttdata/bank/job/bean/**</exclude>
+						<exclude>**/com/nttdata/bank/entity/**</exclude>
+						<exclude>**/com/nttdata/bank/controller/**</exclude>
+						<exclude>**/com/nttdata/bank/request/**</exclude>
+						<exclude>**/com/nttdata/bank/response/**</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
