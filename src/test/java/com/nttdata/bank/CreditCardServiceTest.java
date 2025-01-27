@@ -273,6 +273,22 @@ public class CreditCardServiceTest {
 		creditCardService.chargeConsumption(consumptionRequest);
 	}
 
+	@Test
+	public void update_notcrecitcard() {
+		getCreditCard(Mono.empty());
+
+		assertThrows(Exception.class, () -> {
+			creditCardService.updateBalance("123", 234.00);
+		});
+	}
+
+	@Test
+	public void update_sucess() {
+		getCreditCard(Mono.just(getCreditCardEntity(true)));
+		saveCreditCard();
+		creditCardService.updateBalance("123", 234.00);
+	}
+
 	private ConsumptionRequest getConsumptionRequest(Double amount) {
 		ConsumptionRequest consumptionRequest = new ConsumptionRequest();
 		consumptionRequest.setAmount(amount);

@@ -306,4 +306,18 @@ public class CreditCardServiceImpl implements CreditCardService {
 		return creditCardNumber;
 	}
 
+	@Override
+	public CreditCardEntity updateBalance(String creditCardNumber, Double balanceReturned) {
+	    CreditCardEntity entity = creditCardRepository
+	            .findByCreditCardNumberAndIsActiveTrue(creditCardNumber)
+	            .toFuture().join();
+
+	    if (entity == null) {
+	        throw new IllegalArgumentException("Credit card number not found.");
+	    }
+
+	    entity.setAvailableCredit(entity.getAvailableCredit() + balanceReturned);
+	    return creditCardRepository.save(entity).block();
+	}
+
 }

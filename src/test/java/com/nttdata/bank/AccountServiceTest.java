@@ -130,7 +130,6 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(false, true);
 
 		assertThrows(Exception.class, () -> {
@@ -144,7 +143,6 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, false);
 
 		assertThrows(Exception.class, () -> {
@@ -158,7 +156,6 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_PYME);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(false, false);
 
 		assertThrows(Exception.class, () -> {
@@ -172,13 +169,11 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
 		when(customerRepository.findByDocumentNumberAndIsActiveTrue(any(String.class)))
 				.thenReturn(Mono.empty());
@@ -196,15 +191,14 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -220,12 +214,12 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux
-						.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
-								Arrays.asList("123"), Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux
+				.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
+						Arrays.asList("123"), Constants.ACCOUNT_TYPE_CHECKING))));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -240,12 +234,12 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_PERSONAL)));
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux
-						.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
-								Arrays.asList("123"), Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux
+				.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
+						Arrays.asList("123"), Constants.ACCOUNT_TYPE_CHECKING))));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -260,12 +254,12 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux
-						.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
-								Arrays.asList("123"), Constants.ACCOUNT_TYPE_SAVINGS))));
+		findByHolder(Flux
+				.fromIterable(Arrays.asList(getAccountEntity("123", Arrays.asList("123"),
+						Arrays.asList("123"), Constants.ACCOUNT_TYPE_SAVINGS))));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -279,15 +273,14 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_PYME);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays.asList(
-						getAccountEntity("123", Arrays.asList("123"), Arrays.asList(),
-								Constants.ACCOUNT_TYPE_VIP))));
+		findByHolder(Flux.fromIterable(Arrays.asList(
+				getAccountEntity("123", Arrays.asList("123"), Arrays.asList(),
+						Constants.ACCOUNT_TYPE_VIP))));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -302,15 +295,14 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_BUSINESS)));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -326,12 +318,12 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -347,12 +339,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
+		;
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -368,12 +361,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
+		;
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -388,15 +382,15 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_VIP);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
+		;
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -412,12 +406,11 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("123", Arrays.asList("123"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("123", Arrays.asList("123"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("123", Constants.DOCUMENT_TYPE_RUC, "INVALID");
+		getCustomer(Mono.just(getCustomerEntity("123", Constants.DOCUMENT_TYPE_RUC, "INVALID")));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.registerAccount(accountRequest);
@@ -433,12 +426,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -452,15 +446,15 @@ public class AccountServiceTest {
 				Constants.ACCOUNT_TYPE_PYME);
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
-
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_RUC, Constants.PERSON_TYPE_BUSINESS);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_RUC,
+				Constants.PERSON_TYPE_BUSINESS)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -475,12 +469,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -495,12 +490,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -515,12 +511,13 @@ public class AccountServiceTest {
 
 		assertTrue(validator.validate(accountRequest).isEmpty());
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -537,12 +534,13 @@ public class AccountServiceTest {
 
 		validVipOrPyme(true, true);
 
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
-		getCustomer("36548214", Constants.DOCUMENT_TYPE_DNI, Constants.PERSON_TYPE_PERSONAL);
+		getCustomer(Mono.just(getCustomerEntity("36548214", Constants.DOCUMENT_TYPE_DNI,
+				Constants.PERSON_TYPE_PERSONAL)));
+
 		existsAccountNumber();
 		saveAccount();
 		makeDeposit();
@@ -551,8 +549,7 @@ public class AccountServiceTest {
 
 	@Test
 	public void checkBalance_NotFound() {
-		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.empty());
+		getAccountRepo(Mono.empty());
 
 		assertThrows(Exception.class, () -> {
 			accountsService.checkBalance("123");
@@ -561,16 +558,17 @@ public class AccountServiceTest {
 
 	@Test
 	public void checkBalance_Success() {
-		getAccountRepo();
+		getAccountRepo(Mono.just(getAccountEntity("123", Arrays.asList("123"), null,
+				Constants.ACCOUNT_TYPE_CHECKING)));
+
 		accountsService.checkBalance("123");
 	}
 
 	@Test
 	public void listCustomer_success() {
-		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
-				.thenReturn(Flux.fromIterable(Arrays
-						.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
-								Constants.ACCOUNT_TYPE_CHECKING))));
+		findByHolder(Flux.fromIterable(Arrays
+				.asList(getAccountEntity("07474589", Arrays.asList("12345678"), null,
+						Constants.ACCOUNT_TYPE_CHECKING))));
 
 		assertNotNull(accountsService.findAllAccounts("123"));
 	}
@@ -580,11 +578,8 @@ public class AccountServiceTest {
 		UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
 		updateAccountRequest.setAccountNumber("12345678914785");
 		updateAccountRequest.setAmount(100.00);
-
 		assertTrue(validator.validate(updateAccountRequest).isEmpty());
-
-		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.empty());
+		getAccountRepo(Mono.empty());
 
 		assertThrows(Exception.class, () -> {
 			accountsService.updateAccount(updateAccountRequest);
@@ -597,14 +592,17 @@ public class AccountServiceTest {
 		updateAccountRequest.setAccountNumber("12345678914785");
 		updateAccountRequest.setAmount(100.00);
 		assertTrue(validator.validate(updateAccountRequest).isEmpty());
-		getAccountRepo();
+
+		getAccountRepo(Mono.just(getAccountEntity("123", Arrays.asList("123"), null,
+				Constants.ACCOUNT_TYPE_CHECKING)));
+
 		saveAccount();
 		accountsService.updateAccount(updateAccountRequest);
 	}
 
 	@Test
 	public void deleteAccount_debitCardPrimary() {
-		existsDebitCard(true);
+		existsDebitCard(Mono.just(true));
 
 		assertThrows(Exception.class, () -> {
 			accountsService.deleteAccount("123");
@@ -613,10 +611,8 @@ public class AccountServiceTest {
 
 	@Test
 	public void deleteAccount_notFound() {
-		existsDebitCard(false);
-
-		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.empty());
+		existsDebitCard(Mono.just(false));
+		getAccountRepo(Mono.empty());
 
 		assertThrows(Exception.class, () -> {
 			accountsService.deleteAccount("123");
@@ -625,9 +621,12 @@ public class AccountServiceTest {
 
 	@Test
 	public void deleteAccount_Yanki() {
-		existsDebitCard(false);
-		getAccountRepo();
-		existsYanki(true);
+		existsDebitCard(Mono.just(false));
+
+		getAccountRepo(Mono.just(getAccountEntity("123", Arrays.asList("123"), null,
+				Constants.ACCOUNT_TYPE_CHECKING)));
+
+		existsYanki(Mono.just(true));
 		saveAccount();
 
 		assertThrows(Exception.class, () -> {
@@ -637,16 +636,19 @@ public class AccountServiceTest {
 
 	@Test
 	public void deleteAccount_Success() {
-		existsDebitCard(false);
-		getAccountRepo();
-		existsYanki(false);
+		existsDebitCard(Mono.just(false));
+
+		getAccountRepo(Mono.just(getAccountEntity("123", Arrays.asList("123"), null,
+				Constants.ACCOUNT_TYPE_CHECKING)));
+
+		existsYanki(Mono.just(false));
 		saveAccount();
 		accountsService.deleteAccount("123");
 	}
 
 	private void validVipOrPyme(Boolean existsCreditCard, Boolean existsCredit) {
-		existsCreditCard(existsCredit);
-		existsCredit(existsCredit);
+		existsCreditCard(Mono.just(existsCreditCard));
+		existsCredit(Mono.just(existsCredit));
 	}
 
 	private void saveAccount() {
@@ -656,39 +658,29 @@ public class AccountServiceTest {
 		});
 	}
 
-	private CustomerEntity getCustomer(String documentNumber, String documentType,
-			String personType) {
-		CustomerEntity customerEntity = getCustomerEntity(documentNumber, documentType, personType);
-
+	private void getCustomer(Mono<CustomerEntity> customerEntity) {
 		when(customerRepository.findByDocumentNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(customerEntity));
-
-		return customerEntity;
+				.thenReturn(customerEntity);
 	}
 
-	private AccountEntity getAccountRepo() {
-		AccountEntity accountEntity = getAccountEntity("123", Arrays.asList("123"), null,
-				Constants.ACCOUNT_TYPE_CHECKING);
-
+	private void getAccountRepo(Mono<AccountEntity> accountEntity) {
 		when(accountRepository.findByAccountNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(accountEntity));
-
-		return accountEntity;
+				.thenReturn(accountEntity);
 	}
 
-	private void existsCreditCard(Boolean exists) {
+	private void existsCreditCard(Mono<Boolean> exists) {
 		when(creditCardRepository.existsByDocumentNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(exists));
+				.thenReturn(exists);
 	}
 
-	private void existsYanki(Boolean exists) {
+	private void existsYanki(Mono<Boolean> exists) {
 		when(yankiRepository.existsByAccountNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(exists));
+				.thenReturn(exists);
 	}
 
-	private void existsDebitCard(Boolean exists) {
+	private void existsDebitCard(Mono<Boolean> exists) {
 		when(debitCardRepository.existsByPrimaryAccountAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(exists));
+				.thenReturn(exists);
 	}
 
 	private void existsAccountNumber() {
@@ -696,9 +688,9 @@ public class AccountServiceTest {
 				.thenReturn(Mono.just(false));
 	}
 
-	private void existsCredit(Boolean exists) {
+	private void existsCredit(Mono<Boolean> exists) {
 		when(creditRepository.existsByDocumentNumberAndIsActiveTrue(any(String.class)))
-				.thenReturn(Mono.just(exists));
+				.thenReturn(exists);
 	}
 
 	private void makeDeposit() {
@@ -747,6 +739,11 @@ public class AccountServiceTest {
 		accountEntity.setCreateDate(LocalDateTime.now());
 		accountEntity.setIsActive(true);
 		return accountEntity;
+	}
+
+	private void findByHolder(Flux<AccountEntity> accountEntity) {
+		when(accountRepository.findByHolderDocContainingAndIsActiveTrue(any(String.class)))
+				.thenReturn(accountEntity);
 	}
 
 }

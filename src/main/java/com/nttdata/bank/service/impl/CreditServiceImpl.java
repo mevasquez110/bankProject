@@ -98,20 +98,24 @@ public class CreditServiceImpl implements CreditService {
 	 */
 	private void validateCredit(CreditRequest creditRequest) {
 		Optional.ofNullable(
-				creditRepository.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
+				creditRepository
+						.existsByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber())
+						.block())
 				.filter(Boolean::booleanValue).ifPresent(exists -> {
 					throw new RuntimeException("The customer already has an active credit");
 				});
 
 		Optional.ofNullable(
-				creditCardRepository.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber()).block())
+				creditCardRepository
+						.findByDocumentNumberAndIsActiveTrue(creditRequest.getDocumentNumber())
+						.block())
 				.ifPresent(creditCardEntity -> {
 					List<CreditCardScheduleEntity> paymentSchedule = creditCardScheduleRepository
 							.findByCreditCardNumberAndPaidFalseAndPaymentDateLessThanEqual(
 									creditCardEntity.getCreditCardNumber(), LocalDate.now())
 							.collectList().block();
 
-					if (paymentSchedule.isEmpty()) {
+					if (!paymentSchedule.isEmpty()) {
 						throw new RuntimeException("The client has active debt");
 					}
 				});
@@ -133,7 +137,8 @@ public class CreditServiceImpl implements CreditService {
 		logger.debug("Generating payment schedule for credit: {}", creditEntity.getId());
 		List<CreditScheduleEntity> schedule = new ArrayList<>();
 		LocalDate firstPaymentDate = LocalDate.now().withDayOfMonth(creditEntity.getPaymentDay());
-		Double monthlyInterestRate = Utility.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
+		Double monthlyInterestRate = Utility
+				.getMonthlyInterestRate(creditEntity.getAnnualInterestRate());
 		Double totalDebt = creditEntity.getAmount();
 		Double principalAmount = totalDebt / creditEntity.getNumberOfInstallments();
 
@@ -155,7 +160,7 @@ public class CreditServiceImpl implements CreditService {
 		logger.info("Payment schedule generated for credit: {}", creditEntity.getId());
 		return schedule;
 	}
-
+	
 	/**
 	 * Checks the debt for a given credit ID. Finds the credit entity by ID,
 	 * retrieves unpaid payment schedule entries, calculates the total debt and the
@@ -170,17 +175,19 @@ public class CreditServiceImpl implements CreditService {
 	public CreditDebtResponse checkDebtCredit(String creditId) {
 		logger.debug("Checking debt for credit: {}", creditId);
 
-		creditRepository.findByIdAndIsActiveTrue(creditId).blockOptional().orElseThrow(() -> {
-			logger.error("Credit not found: {}", creditId);
-			return new RuntimeException("Credit not found");
-		});
+		if (!creditRepository.existsByIdAndIsActiveTrue(creditId).block()) {
+			throw new RuntimeException("Credit not found");
+		}
 
 		Double share = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId, LocalDateTime.now()).collectList()
+				.findByCreditIdAndPaidFalseAndPaymentDateLessThanEqual(creditId,
+						LocalDateTime.now())
+				.collectList()
 				.block().stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum();
 
 		Double totalDebt = creditScheduleRepository
-				.findByCreditIdAndPaidFalseAndPaymentDateAfter(creditId, LocalDateTime.now()).collectList().block()
+				.findByCreditIdAndPaidFalseAndPaymentDateAfter(creditId, LocalDateTime.now())
+				.collectList().block()
 				.stream().mapToDouble(CreditScheduleEntity::getCurrentDebt).sum() + share;
 
 		CreditDebtResponse response = new CreditDebtResponse();
@@ -200,7 +207,8 @@ public class CreditServiceImpl implements CreditService {
 	@Override
 	public List<CreditResponse> findAllCredits() {
 		logger.debug("Finding all credits");
-		return creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse).collectList().block();
+		return creditRepository.findByIsActiveTrue().map(CreditMapper::mapperToResponse)
+				.collectList().block();
 	}
 
 	/**

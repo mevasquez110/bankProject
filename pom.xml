@@ -223,13 +223,15 @@
 				</executions>
 				<configuration>
 					<excludes>
-						<exclude>**/com/nttdata/bank/job/bean/**</exclude>
+						<exclude>**/com/nttdata/bank/exception/**</exclude>
+						<exclude>**/com/nttdata/bank/job/**</exclude>
 						<exclude>**/com/nttdata/bank/entity/**</exclude>
 						<exclude>**/com/nttdata/bank/controller/**</exclude>
 						<exclude>**/com/nttdata/bank/request/**</exclude>
 						<exclude>**/com/nttdata/bank/response/**</exclude>
 						<exclude>**/com/nttdata/bank/mapper/**</exclude>
 						<exclude>**/com/nttdata/bank/util/**</exclude>
+						<exclude>**/*Application.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>

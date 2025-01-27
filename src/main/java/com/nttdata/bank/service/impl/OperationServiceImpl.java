@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.nttdata.bank.entity.Consumption;
-import com.nttdata.bank.entity.CreditCardEntity;
 import com.nttdata.bank.entity.CreditCardScheduleEntity;
 import com.nttdata.bank.entity.CreditScheduleEntity;
 import com.nttdata.bank.entity.CustomerEntity;
@@ -38,6 +37,7 @@ import com.nttdata.bank.request.WithdrawalRequest;
 import com.nttdata.bank.response.ProductResponse;
 import com.nttdata.bank.response.TransactionResponse;
 import com.nttdata.bank.service.AccountsService;
+import com.nttdata.bank.service.CreditCardService;
 import com.nttdata.bank.service.CreditService;
 import com.nttdata.bank.service.OperationService;
 import com.nttdata.bank.util.Constants;
@@ -75,6 +75,9 @@ public class OperationServiceImpl implements OperationService {
 
 	@Autowired
 	private CreditService creditService;
+
+	@Autowired
+	private CreditCardService creditCardService;
 
 	@Autowired
 	private CreditCardRepository creditCardRepository;
@@ -237,9 +240,9 @@ public class OperationServiceImpl implements OperationService {
 		accountTransferRequest.setAccountNumberWithdraws(yankiWithdraws.getAccountNumber());
 		accountTransferRequest.setAccountNumberReceive(yankiReceive.getAccountNumber());
 		accountTransferRequest
-				.setAccountNumberWithdraws(mobileTransferRequest.getDocumentNumberWithdraws());
+				.setDocumentNumberWithdraws(mobileTransferRequest.getDocumentNumberWithdraws());
 		accountTransferRequest
-				.setAccountNumberReceive(mobileTransferRequest.getDocumentNumberReceive());
+				.setDocumentNumberReceive(mobileTransferRequest.getDocumentNumberReceive());
 		accountTransferRequest.setAmount(mobileTransferRequest.getAmount());
 		return makeAccountTransfer(accountTransferRequest);
 	}
@@ -443,12 +446,8 @@ public class OperationServiceImpl implements OperationService {
 				overduePaymentSchedule, share,
 				upcomingPaymentSchedule, totalDebt);
 
-		CreditCardEntity entity = creditCardRepository
-				.findByCreditCardNumberAndIsActiveTrue(payCreditCardRequest.getCreditCardNumber())
-				.toFuture().join();
-
-		entity.setAvailableCredit(entity.getAvailableCredit() + balanceReturned);
-		creditCardRepository.save(entity);
+		creditCardService.updateBalance(payCreditCardRequest.getCreditCardNumber(),
+				balanceReturned);
 		return Mono.just(transactionResponse);
 	}
 
@@ -506,7 +505,7 @@ public class OperationServiceImpl implements OperationService {
 		List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue()
 				.toStream()
 				.filter(transaction -> (transaction.getTransactionType()
-						.equals(Constants.TRANSACTION_TYPE_WITHDRAWAL)
+						.equalsIgnoreCase(Constants.TRANSACTION_TYPE_WITHDRAWAL)
 						|| transaction.getTransactionType()
 								.equals(Constants.TRANSACTION_TYPE_DEPOSIT))
 						&& !transaction.getCreateDate().isBefore(startOfMonth)
@@ -534,12 +533,18 @@ public class OperationServiceImpl implements OperationService {
 	 * @throws IllegalArgumentException if the debit card does not exist
 	 */
 	private String getPrimaryAccount(DepositRequest depositRequest) {
+		String accountNumber = depositRequest.getAccountNumber();
+
+		if (accountNumber != null) {
+			return accountNumber;
+		}
+
 		return Optional.ofNullable(depositRequest.getDebitCardNumber()).map(debitCardNumber -> {
 			DebitCardEntity debitCardEntity = Optional
 					.ofNullable(debitCardRepository
 							.findByDebitCardNumberAndIsActiveTrue(debitCardNumber).toFuture()
 							.join())
-					.orElseThrow(() -> new IllegalArgumentException("card does not exist"));
+					.orElseThrow(() -> new IllegalArgumentException("Card does not exist"));
 			return debitCardEntity.getPrimaryAccount();
 		}).orElse(null);
 	}

@@ -81,8 +81,6 @@ public class YankiServiceImpl implements YankiService {
 
 					List<AccountEntity> accounts = accountRepository
 							.findByHolderDocContainingAndIsActiveTrue(yankiRequest.getDocumentNumber())
-							.filter(account -> account.getAccountType()
-									.equalsIgnoreCase(Constants.ACCOUNT_TYPE_CODE_SAVINGS))
 							.collectList().block();
 
 					if (!accounts.isEmpty()) {
