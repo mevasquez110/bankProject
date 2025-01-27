@@ -1,6 +1,7 @@
 package com.nttdata.bank.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -124,7 +125,7 @@ public class DebitCardServiceImpl implements DebitCardService {
 					return new RuntimeException("Debit card not found");
 				});
 
-		List<String> accounts = associateAccountRequest.getAssociatedAccounts();
+		List<String> accounts = new ArrayList<>(associateAccountRequest.getAssociatedAccounts());
 		accounts.add(associateAccountRequest.getPrimaryAccount());
 		validateClientAccount(debitCardEntity.getDocumentNumber(), accounts);
 		debitCardEntity.setAssociatedAccounts(associateAccountRequest.getAssociatedAccounts());
