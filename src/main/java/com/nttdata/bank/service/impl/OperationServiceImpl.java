@@ -104,9 +104,9 @@ public class OperationServiceImpl implements OperationService {
 
 		TransactionEntity transactionEntity = transactionRepository
 				.save(TransactionMapper.mapperToEntity(transactionDate, commission, transactionType,
-						depositRequest.getAmount() + commission, null,
+						depositRequest.getAmount() + commission, accountReceive,
 						generateUniqueOperationNumber(), null,
-						accountReceive, null, null, getName(depositRequest.getDocumentNumber())))
+						null, null, null, getName(depositRequest.getDocumentNumber())))
 				.toFuture().join();
 
 		updateAccount(transactionEntity.getAccountNumberReceive(), transactionEntity.getAmount());
@@ -495,34 +495,37 @@ public class OperationServiceImpl implements OperationService {
 	 *         given type in the current month exceeds 10, otherwise 0.00
 	 */
 	private Double getCommission(String accountNumber) {
-		Double commission = 0.00;
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime startOfMonth = now.withDayOfMonth(1).with(LocalTime.MIN);
-		LocalDateTime endOfMonth = now
-				.withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
-				.with(LocalTime.MAX);
+	    Double commission = 0.00;
+	    LocalDateTime now = LocalDateTime.now();
+	    LocalDateTime startOfMonth = now.withDayOfMonth(1).with(LocalTime.MIN);
+	    LocalDateTime endOfMonth = now
+	            .withDayOfMonth(now.getMonth().length(now.toLocalDate().isLeapYear()))
+	            .with(LocalTime.MAX);
 
-		List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue()
-				.toStream()
-				.filter(transaction -> (transaction.getTransactionType()
-						.equalsIgnoreCase(Constants.TRANSACTION_TYPE_WITHDRAWAL)
-						|| transaction.getTransactionType()
-								.equals(Constants.TRANSACTION_TYPE_DEPOSIT))
-						&& !transaction.getCreateDate().isBefore(startOfMonth)
-						&& !transaction.getCreateDate().isAfter(endOfMonth)
-						&& (transaction.getAccountNumberReceive().equalsIgnoreCase(accountNumber)
-								|| transaction.getAccountNumberWithdraws()
-										.equalsIgnoreCase(accountNumber)))
-				.collect(Collectors.toList());
+	    List<TransactionEntity> transactions = transactionRepository.findAllByIsActiveTrue()
+	            .toStream()
+	            .filter(transaction -> (transaction.getTransactionType()
+	                    .equalsIgnoreCase(Constants.TRANSACTION_TYPE_WITHDRAWAL)
+	                    || transaction.getTransactionType()
+	                            .equals(Constants.TRANSACTION_TYPE_DEPOSIT))
+	                    && !transaction.getCreateDate().isBefore(startOfMonth)
+	                    && !transaction.getCreateDate().isAfter(endOfMonth)
+	                    && (accountNumber.equalsIgnoreCase(transaction.getAccountNumberReceive())
+	                            || accountNumber
+	                                    .equalsIgnoreCase(transaction.getAccountNumberWithdraws())))
+	            .collect(Collectors.toList());
 
-		boolean isExceeded = transactions.size() > 10;
+	    if (transactions != null) {
+	        boolean isExceeded = transactions.size() > 10;
 
-		if (isExceeded) {
-			commission = Constants.COMMISSION_ADD;
-		}
+	        if (isExceeded) {
+	            commission = Constants.COMMISSION_ADD;
+	        }
+	    }
 
-		return commission;
+	    return commission;
 	}
+
 
 	/**
 	 * Retrieves the primary account associated with the given deposit request.

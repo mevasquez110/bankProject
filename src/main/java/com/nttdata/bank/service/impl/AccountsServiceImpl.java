@@ -275,7 +275,8 @@ public class AccountsServiceImpl implements AccountsService {
 			throw new IllegalArgumentException("The holder must have only CE or DNI.");
 		}
 
-		if (accountRequest.getAuthorizedSignatoryDoc().size() > 0) {
+		if (accountRequest.getAuthorizedSignatoryDoc() != null
+				&& accountRequest.getAuthorizedSignatoryDoc().size() > 0) {
 			throw new IllegalArgumentException(
 					"A personal account does not have authorized signatories.");
 		}

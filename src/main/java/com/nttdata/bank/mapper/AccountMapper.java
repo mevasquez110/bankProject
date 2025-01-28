@@ -30,6 +30,7 @@ public class AccountMapper {
 		accountEntity.setCurrency(Constants.CURRENCY_SOL);
 		accountEntity.setCommissionPending(0.00);
 		accountEntity.setCreateDate(LocalDateTime.now());
+		accountEntity.setAmount(0.00);
 		accountEntity.setIsActive(true);
 		return accountEntity;
 	}
