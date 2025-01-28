@@ -155,21 +155,18 @@ public class AccountsServiceImpl implements AccountsService {
 						+ " is the primary account of an active debit card and cannot be deleted."));
 
 		accountRepository.findByAccountNumberAndIsActiveTrue(accountNumber)
-				.flatMap(accountEntity -> {
-					return Mono
-							.just(yankiRepository
-									.existsByAccountNumberAndIsActiveTrue(accountNumber).block())
-							.doOnNext(existsYanki -> {
-								if (existsYanki) {
-									throw new IllegalArgumentException(
-											"Cannot delete account with associated Yanki");
-								}
-							}).thenReturn(accountEntity).flatMap(entity -> {
-								entity.setDeleteDate(LocalDateTime.now());
-								entity.setIsActive(false);
-								return accountRepository.save(entity);
-							});
-				}).switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
+				.flatMap(accountEntity -> yankiRepository
+						.existsByAccountNumberAndIsActiveTrue(accountNumber)
+						.flatMap(existsYanki -> {
+							if (existsYanki) {
+								return Mono.error(new IllegalArgumentException(
+										"Cannot delete account with associated Yanki"));
+							}
+							accountEntity.setDeleteDate(LocalDateTime.now());
+							accountEntity.setIsActive(false);
+							return accountRepository.save(accountEntity);
+						}))
+				.switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
 				.block();
 	}
 
