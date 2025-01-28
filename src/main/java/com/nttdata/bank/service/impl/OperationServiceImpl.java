@@ -569,14 +569,14 @@ public class OperationServiceImpl implements OperationService {
 		combinedSchedule.addAll(overduePaymentSchedule);
 		combinedSchedule.addAll(upcomingPaymentSchedule);
 
-		if (totalDebt > amount) {
+		if (totalDebt.compareTo(amount) < 0) {
 			throw new IllegalArgumentException("the amount exceeds the total debt");
-		} else if (totalDebt == amount) {
+		} else if (totalDebt.compareTo(amount) == 0) {
 			payCreditCurrentInstallments(combinedSchedule, totalDebt);
-		} else if (totalDebt < amount) {
-			if (share > amount) {
+		} else if (totalDebt.compareTo(amount) > 0) {
+			if (share < amount.doubleValue()) {
 				payCreditCurrentInstallments(combinedSchedule, amount);
-			} else if (share <= amount) {
+			} else if (share >= amount.doubleValue()) {
 				payCreditCurrentInstallments(overduePaymentSchedule, amount);
 			}
 		}
@@ -601,21 +601,22 @@ public class OperationServiceImpl implements OperationService {
 			List<CreditCardScheduleEntity> upcomingPaymentSchedule, Double totalDebt) {
 		Double balanceReturned = 0.00;
 
-		if (totalDebt > amount) {
+		if (totalDebt.compareTo(amount) < 0) {
 			throw new IllegalArgumentException("the amount exceeds the total debt");
-		} else if (totalDebt == amount) {
+		} else if (totalDebt.compareTo(amount) == 0) {
 			balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, share);
 			balanceReturned += totalDebt - share;
 			payConsumptionCreditCard(upcomingPaymentSchedule, totalDebt - share);
-		} else if (totalDebt < amount) {
-			if (share > amount) {
+		} else if (totalDebt.compareTo(amount) > 0) {
+			if (share.compareTo(amount) < 0) {
 				balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, amount);
 				balanceReturned += totalDebt - amount;
 				payConsumptionCreditCard(upcomingPaymentSchedule, totalDebt - amount);
-			} else if (share <= amount) {
+			} else if (share.compareTo(amount) <= 0) {
 				balanceReturned += payCreditCardCurrentInstallments(overduePaymentSchedule, amount);
 			}
 		}
+
 		return balanceReturned;
 	}
 
@@ -664,12 +665,12 @@ public class OperationServiceImpl implements OperationService {
 	private void payCreditCurrentInstallments(List<CreditScheduleEntity> listSchedule,
 			Double amount) {
 		for (CreditScheduleEntity creditScheduleEntity : listSchedule) {
-			if (creditScheduleEntity.getCurrentDebt() > amount) {
+			if (creditScheduleEntity.getCurrentDebt().compareTo(amount) > 0) {
 				processCreditPayment(creditScheduleEntity, amount);
 				continue;
-			} else if (creditScheduleEntity.getCurrentDebt() < amount) {
+			} else if (creditScheduleEntity.getCurrentDebt().compareTo(amount) < 0) {
 				paidCreditDebt(creditScheduleEntity, 0.00, 0.00, 0.00, true);
-			} else if (creditScheduleEntity.getCurrentDebt() == amount) {
+			} else if (creditScheduleEntity.getCurrentDebt().compareTo(amount) == 0) {
 				paidCreditDebt(creditScheduleEntity, 0.00, 0.00, 0.00, true);
 				continue;
 			}
@@ -690,13 +691,13 @@ public class OperationServiceImpl implements OperationService {
 		Double balanceReturned = 0.00;
 
 		for (CreditCardScheduleEntity creditCardScheduleEntity : listSchedule) {
-			if (creditCardScheduleEntity.getCurrentDebt() > amount) {
+			if (creditCardScheduleEntity.getCurrentDebt().compareTo(amount) > 0) {
 				balanceReturned += processCreditCardPayment(creditCardScheduleEntity, amount);
 				continue;
-			} else if (creditCardScheduleEntity.getCurrentDebt() < amount) {
+			} else if (creditCardScheduleEntity.getCurrentDebt().compareTo(amount) < 0) {
 				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
 						true);
-			} else if (creditCardScheduleEntity.getCurrentDebt() == amount) {
+			} else if (creditCardScheduleEntity.getCurrentDebt().compareTo(amount) == 0) {
 				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
 						true);
 				continue;
@@ -718,13 +719,14 @@ public class OperationServiceImpl implements OperationService {
 	 */
 	private void processCreditPayment(CreditScheduleEntity creditScheduleEntity, Double amount) {
 		while (true) {
-			if (creditScheduleEntity.getPrincipalAmount() > amount) {
-				Double principalAmount = creditScheduleEntity.getPrincipalAmount() - amount;
-				paidCreditDebt(creditScheduleEntity, principalAmount, null, null, null);
+			if (creditScheduleEntity.getPrincipalAmount().compareTo(amount) > 0) {
+				paidCreditDebt(creditScheduleEntity,
+						creditScheduleEntity.getPrincipalAmount() - amount, null, null, null);
 				continue;
-			} else if (creditScheduleEntity.getPrincipalAmount() < amount) {
+			} else if (creditScheduleEntity.getPrincipalAmount().compareTo(amount) < 0) {
+				amount -= creditScheduleEntity.getPrincipalAmount();
 				processCreditInterestAndLateAmount(creditScheduleEntity, amount);
-			} else if (creditScheduleEntity.getPrincipalAmount() == amount) {
+			} else if (creditScheduleEntity.getPrincipalAmount().compareTo(amount) == 0) {
 				paidCreditDebt(creditScheduleEntity, 0.00, null, null, null);
 				continue;
 			}
@@ -744,14 +746,15 @@ public class OperationServiceImpl implements OperationService {
 			Double amount) {
 		Double balanceReturned = 0.00;
 
-		if (creditCardScheduleEntity.getPrincipalAmount() > amount) {
-			Double principalAmount = creditCardScheduleEntity.getPrincipalAmount() - amount;
-			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, principalAmount, null,
+		if (creditCardScheduleEntity.getPrincipalAmount().compareTo(amount) > 0) {
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, amount, null,
 					null, null);
-		} else if (creditCardScheduleEntity.getPrincipalAmount() < amount) {
+		} else if (creditCardScheduleEntity.getPrincipalAmount().compareTo(amount) < 0) {
+			amount -= creditCardScheduleEntity.getPrincipalAmount();
+
 			balanceReturned += processCreditCardInterestAndLateAmount(creditCardScheduleEntity,
 					amount);
-		} else if (creditCardScheduleEntity.getPrincipalAmount() == amount) {
+		} else if (creditCardScheduleEntity.getPrincipalAmount().compareTo(amount) == 0) {
 			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, null, null, null);
 		}
 
@@ -770,13 +773,13 @@ public class OperationServiceImpl implements OperationService {
 			Double amount) {
 		amount -= creditScheduleEntity.getPrincipalAmount();
 
-		if (creditScheduleEntity.getInterestAmount() > amount) {
-			Double interestAmount = creditScheduleEntity.getInterestAmount() - amount;
-			paidCreditDebt(creditScheduleEntity, 0.00, interestAmount, null, null);
-		} else if (creditScheduleEntity.getInterestAmount() < amount) {
+		if (creditScheduleEntity.getInterestAmount().compareTo(amount) > 0) {
+			paidCreditDebt(creditScheduleEntity, 0.00,
+					creditScheduleEntity.getInterestAmount() - amount, null, null);
+		} else if (creditScheduleEntity.getInterestAmount().compareTo(amount) < 0) {
 			amount -= creditScheduleEntity.getInterestAmount();
 			processCreditLateAmount(creditScheduleEntity, amount);
-		} else if (creditScheduleEntity.getInterestAmount() == amount) {
+		} else if (creditScheduleEntity.getInterestAmount().compareTo(amount) == 0) {
 			processCreditLateAmount(creditScheduleEntity, amount);
 		}
 	}
@@ -797,14 +800,13 @@ public class OperationServiceImpl implements OperationService {
 
 		amount -= creditCardScheduleEntity.getPrincipalAmount();
 
-		if (creditCardScheduleEntity.getInterestAmount() > amount) {
-			Double interestAmount = creditCardScheduleEntity.getInterestAmount() - amount;
-			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, interestAmount,
+		if (creditCardScheduleEntity.getInterestAmount().compareTo(amount) > 0) {
+			balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, amount,
 					null, null);
-		} else if (creditCardScheduleEntity.getInterestAmount() < amount) {
+		} else if (creditCardScheduleEntity.getInterestAmount().compareTo(amount) < 0) {
 			amount -= creditCardScheduleEntity.getInterestAmount();
 			balanceReturned += processCrediCardLateAmount(creditCardScheduleEntity, amount);
-		} else if (creditCardScheduleEntity.getInterestAmount() == amount) {
+		} else if (creditCardScheduleEntity.getInterestAmount().compareTo(amount) == 0) {
 			balanceReturned += processCrediCardLateAmount(creditCardScheduleEntity, amount);
 		}
 
@@ -821,12 +823,12 @@ public class OperationServiceImpl implements OperationService {
 	 */
 	private void processCreditLateAmount(CreditScheduleEntity creditScheduleEntity, double amount) {
 		if (creditScheduleEntity.getLateAmount() > 0) {
-			if (creditScheduleEntity.getLateAmount() > amount) {
-				Double lateAmount = creditScheduleEntity.getLateAmount() - amount;
-				paidCreditDebt(creditScheduleEntity, 0.00, 0.00, lateAmount, null);
-			} else if (creditScheduleEntity.getLateAmount() < amount) {
+			if (creditScheduleEntity.getLateAmount().compareTo(amount) > 0) {
+				paidCreditDebt(creditScheduleEntity, 0.00, 0.00,
+						creditScheduleEntity.getLateAmount() - amount, null);
+			} else if (creditScheduleEntity.getLateAmount().compareTo(amount) < 0) {
 				paidCreditDebt(creditScheduleEntity, 0.00, 0.00, 0.00, true);
-			} else if (creditScheduleEntity.getLateAmount() == amount) {
+			} else if (creditScheduleEntity.getLateAmount().compareTo(amount) == 0) {
 				paidCreditDebt(creditScheduleEntity, 0.00, 0.00, 0.00, true);
 			}
 		} else {
@@ -848,14 +850,13 @@ public class OperationServiceImpl implements OperationService {
 		Double balanceReturned = 0.00;
 
 		if (creditCardScheduleEntity.getLateAmount() > 0) {
-			if (creditCardScheduleEntity.getLateAmount() > amount) {
-				Double lateAmount = creditCardScheduleEntity.getLateAmount() - amount;
+			if (creditCardScheduleEntity.getLateAmount().compareTo(amount) > 0) {
 				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00,
-						lateAmount, null);
-			} else if (creditCardScheduleEntity.getLateAmount() < amount) {
+						amount, null);
+			} else if (creditCardScheduleEntity.getLateAmount().compareTo(amount) < 0) {
 				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
 						true);
-			} else if (creditCardScheduleEntity.getLateAmount() == amount) {
+			} else if (creditCardScheduleEntity.getLateAmount().compareTo(amount) == 0) {
 				balanceReturned += paidCreditCardDebt(creditCardScheduleEntity, 0.00, 0.00, 0.00,
 						true);
 			}
